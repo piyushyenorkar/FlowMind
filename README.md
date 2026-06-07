@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="flowmind/flowmind.png" alt="Flowmind Logo" height="150"/>
+  <img src="flowmind/flowmind.png" alt="Flowmind Logo" height="250"/>
   
   <h1>🧠 FlowMind — The PM That Never Forgets</h1>
   
