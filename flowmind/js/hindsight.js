@@ -137,7 +137,7 @@ export async function memRiskFlagged(description, projectName) {
   });
 }
 
-// ── Recall context for AI chat ───────────────────────────────
+// ── Recall context for AI Assistant ───────────────────────────────
 export async function recallForChat(query, projectName) {
   const results = await recallMemory({
     query,

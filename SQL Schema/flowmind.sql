@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.teams (
   description TEXT,
   deadline TEXT,
   leader_name TEXT NOT NULL,
+  group_chat_name TEXT,
   created_by TEXT REFERENCES public.users(email),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -86,6 +87,8 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   title TEXT NOT NULL,
   date TEXT,
   attendees JSONB,
+  leader TEXT,
+  agenda TEXT,
   duration NUMERIC DEFAULT 0,
   summary TEXT,
   key_topics JSONB,
@@ -96,6 +99,11 @@ CREATE TABLE IF NOT EXISTS public.meetings (
   memory_stored BOOLEAN DEFAULT TRUE,
   analyzed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migration: If table already exists, add new columns
+-- Run this in the Supabase SQL editor:
+-- ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS leader TEXT;
+-- ALTER TABLE public.meetings ADD COLUMN IF NOT EXISTS agenda TEXT;
 
 -- Member Profiles
 CREATE TABLE IF NOT EXISTS public.member_profiles (
