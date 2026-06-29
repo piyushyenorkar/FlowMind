@@ -177,7 +177,7 @@
 .signInBtn {
   background: var(--surface2);
   border: none;
-  color: var(--text);
+  color: var(--accent2);
   padding: 10px 24px;
   border-radius: 50px;
   font-size: 13px;
