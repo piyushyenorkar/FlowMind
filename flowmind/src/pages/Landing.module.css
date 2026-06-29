@@ -24,7 +24,7 @@
   transform: translateX(-50%);
   width: 700px;
   height: 700px;
-  background: radial-gradient(circle, rgba(124,106,255,0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(62, 207, 142, 0.1) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -34,7 +34,7 @@
   right: -100px;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(34,211,160,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -55,7 +55,7 @@
 
 .logoMark {
   background: var(--accent);
-  color: white;
+  color: black;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 14px;
@@ -101,9 +101,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--accent-glow);
-  border: 1px solid rgba(124,106,255,0.3);
-  color: var(--accent2);
+  background: rgba(62, 207, 142, 0.08);
+  border: 1px solid rgba(62, 207, 142, 0.3);
+  color: var(--accent);
   padding: 6px 16px;
   border-radius: 100px;
   font-size: 13px;
@@ -134,7 +134,7 @@
 }
 
 .accent {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--green) 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -159,8 +159,10 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
+  background: rgba(23, 23, 23, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px 24px;
   min-width: 260px;
@@ -174,7 +176,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, var(--accent-glow), transparent);
+  background: linear-gradient(135deg, rgba(62, 207, 142, 0.05), transparent);
   opacity: 0;
   transition: opacity 0.25s;
 }
@@ -182,7 +184,7 @@
 .activeCard {
   border-color: var(--accent);
   transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(124,106,255,0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .activeCard::before { opacity: 1; }
@@ -215,7 +217,7 @@
 
 .activeCard .actionArrow {
   transform: translateX(3px);
-  color: var(--accent2);
+  color: var(--accent);
 }
 
 .features {
@@ -229,7 +231,8 @@
 }
 
 .featureCard {
-  background: var(--bg2);
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px;

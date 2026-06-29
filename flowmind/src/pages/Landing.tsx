@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
+import { User, LogOut, Crown, Search, Brain, AlertTriangle, MessageCircle } from 'lucide-react'
 import TeamSwitcher from '../components/TeamSwitcher'
 import styles from './Landing.module.css'
 
@@ -34,8 +35,8 @@ export default function Landing() {
           <span className={styles.navTag}>AI Group Project Manager</span>
           {isAuthenticated ? (
             <div ref={menuRef} style={{ position: 'relative' }}>
-              <button className="btn-ghost" onClick={() => setShowMenu(!showMenu)} style={{ fontSize: '13px' }}>
-                👤 {user.name}
+              <button className="btn-ghost" onClick={() => setShowMenu(!showMenu)} style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <User size={14} /> {user.name}
               </button>
               {showMenu && (
                 <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '10px', padding: '6px', minWidth: '160px', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
@@ -45,7 +46,7 @@ export default function Landing() {
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,80,80,0.1)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'none'}
                   >
-                    🚪 Log Out
+                    <LogOut size={14} /> Log Out
                   </button>
                 </div>
               )}
@@ -80,10 +81,10 @@ export default function Landing() {
             onMouseLeave={() => setHovered(null)}
             onClick={() => {
               if (!isAuthenticated) { navigate('auth'); return }
-              navigate('leader-setup')
+              navigate('user-dashboard')
             }}
           >
-            <div className={styles.actionIcon}>👑</div>
+            <div className={styles.actionIcon}><Crown size={24} /></div>
             <div className={styles.actionContent}>
               <div className={styles.actionTitle}>Create a Team</div>
               <div className={styles.actionDesc}>I'm the project leader</div>
@@ -99,10 +100,10 @@ export default function Landing() {
             onMouseLeave={() => setHovered(null)}
             onClick={() => {
               if (!isAuthenticated) { navigate('auth'); return }
-              navigate('member-join')
+              navigate('user-dashboard')
             }}
           >
-            <div className={styles.actionIcon}>🧑‍💻</div>
+            <div className={styles.actionIcon}><User size={24} /></div>
             <div className={styles.actionContent}>
               <div className={styles.actionTitle}>Join a Team</div>
               <div className={styles.actionDesc}>I have a team code</div>
@@ -121,7 +122,7 @@ export default function Landing() {
               navigate('find-teams')
             }}
           >
-            <div className={styles.actionIcon}>🔍</div>
+            <div className={styles.actionIcon}><Search size={24} /></div>
             <div className={styles.actionContent}>
               <div className={styles.actionTitle}>Find a Team</div>
               <div className={styles.actionDesc}>Browse universal teams</div>
@@ -135,9 +136,9 @@ export default function Landing() {
 
       <div className={styles.features}>
         {[
-          { icon: '🧠', title: 'Persistent Memory', desc: 'Every action, decision, and outcome is stored and recalled by AI' },
-          { icon: '⚠️', title: 'Conflict Predictor', desc: 'AI warns you before delays happen, based on past patterns' },
-          { icon: '💬', title: 'Memory-Backed Chat', desc: "Ask anything. Get answers grounded in your team's actual history" },
+          { icon: <Brain size={24} />, title: 'Persistent Memory', desc: 'Every action, decision, and outcome is stored and recalled by AI' },
+          { icon: <AlertTriangle size={24} />, title: 'Conflict Predictor', desc: 'AI warns you before delays happen, based on past patterns' },
+          { icon: <MessageCircle size={24} />, title: 'Memory-Backed Chat', desc: "Ask anything. Get answers grounded in your team's actual history" },
         ].map((f, i) => (
           <div key={i} className={styles.featureCard} style={{ animationDelay: `${i * 0.1}s` }}>
             <div className={styles.featureIcon}>{f.icon}</div>
