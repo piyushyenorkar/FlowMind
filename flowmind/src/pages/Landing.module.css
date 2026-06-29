@@ -6,90 +6,130 @@
   overflow: hidden;
 }
 
-.grid {
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 60px 60px;
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.glow1 {
-  position: fixed;
-  top: -200px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, rgba(62, 207, 142, 0.1) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.glow2 {
-  position: fixed;
-  bottom: -100px;
-  right: -100px;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
-  pointer-events: none;
-}
-
 .nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 40px;
+  padding: 24px 80px;
   position: relative;
   z-index: 10;
 }
 
-.logo {
+.navLeft {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.logoMark {
-  background: var(--accent);
-  color: black;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 14px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  letter-spacing: 0.05em;
-}
-
-.logoText {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.navTag {
-  font-size: 12px;
-  color: var(--text3);
-  border: 1px solid var(--border);
-  padding: 4px 12px;
-  border-radius: 100px;
 }
 
 .hero {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 60px 24px 40px;
+  padding: 20px 24px 40px;
   position: relative;
   z-index: 10;
-  animation: fadeIn 0.6s ease forwards;
+  gap: 120px;
+  width: 100%;
+}
+
+.brandSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  flex: none;
+  width: 480px;
+  /* (gap 120px + actions width 140px) / 2 = 130px shift for perfect center */
+  transform: translateX(130px);
+  animation: slideBrandLeft 1.2s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards;
+}
+
+@keyframes slideBrandLeft {
+  100% { transform: translateX(0); }
+}
+
+.actionsSection {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logoContainer {
+  position: relative;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.waveSvg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 140px;
+  transform: translate(-50%, -50%);
+  filter: blur(6px) drop-shadow(0 0 12px rgba(20, 184, 166, 0.7));
+  opacity: 0.9;
+  mix-blend-mode: screen;
+  
+  /* The mask sweeps from left to right, fading out from behind */
+  -webkit-mask-image: linear-gradient(to right, transparent 33%, black 45%, black 55%, transparent 66%);
+  -webkit-mask-size: 300% 100%;
+  -webkit-mask-position: 100% 0;
+  -webkit-mask-repeat: no-repeat;
+  
+  /* Exactly 1.5s linear for a very quick sweep */
+  animation: dreamySweep 1.5s linear forwards;
+  z-index: 2;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.wavePath1 { animation: drift 2s linear infinite; }
+.wavePath2 { animation: drift 3s linear infinite reverse; }
+.wavePath3 { animation: drift 2.5s linear infinite; }
+
+@keyframes drift {
+  0% { transform: translateX(0px); }
+  100% { transform: translateX(100px); }
+}
+
+@keyframes dreamySweep {
+  0% { -webkit-mask-position: 100% 0; }
+  100% { -webkit-mask-position: 0% 0; }
+}
+
+.animatedLogo {
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  
+  /* Mask with black on the LEFT, transparent on the RIGHT */
+  -webkit-mask-image: linear-gradient(to right, black 40%, transparent 60%);
+  -webkit-mask-size: 300% 100%;
+  -webkit-mask-position: 100% 0;
+  
+  /* Wave hits logo at 0.5s and leaves at 1.0s. Duration = 0.5s */
+  animation: revealLeftToRight 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+@keyframes revealLeftToRight {
+  0% { -webkit-mask-position: 100% 0; opacity: 1; }
+  100% { -webkit-mask-position: 0% 0; opacity: 1; }
+}
+
+.tagline {
+  font-family: 'Caveat', cursive;
+  font-size: 28px;
+  color: var(--text2);
+  margin: 0;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  animation: fadeIn 1s ease forwards 1.7s;
 }
 
 @keyframes fadeIn {
@@ -97,153 +137,120 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(62, 207, 142, 0.08);
-  border: 1px solid rgba(62, 207, 142, 0.3);
-  color: var(--accent);
-  padding: 6px 16px;
-  border-radius: 100px;
-  font-size: 13px;
-  margin-bottom: 32px;
-}
-
-.badgeDot {
-  width: 7px;
-  height: 7px;
-  background: var(--accent);
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.8); }
-}
-
-.headline {
-  font-family: var(--font-display);
-  font-size: clamp(48px, 7vw, 82px);
-  font-weight: 800;
-  line-height: 1.05;
-  color: var(--text);
-  margin-bottom: 24px;
-  letter-spacing: -0.02em;
-}
-
-.accent {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.sub {
-  font-size: 17px;
-  color: var(--text2);
-  max-width: 520px;
-  margin-bottom: 48px;
-  line-height: 1.7;
-}
-
 .actions {
   display: flex;
+  flex-direction: column;
   gap: 16px;
-  flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 
 .actionCard {
+  background: var(--surface2);
+  border: none;
+  width: 140px;
+  height: 140px;
+  padding: 16px;
+  border-radius: 32px;
+  cursor: pointer;
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
   gap: 16px;
-  background: rgba(23, 23, 23, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px 24px;
-  min-width: 260px;
-  text-align: left;
-  transition: all 0.25s;
-  position: relative;
-  overflow: hidden;
-}
-
-.actionCard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(62, 207, 142, 0.05), transparent);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+  text-align: center;
+  box-shadow: none;
+  margin: 0;
   opacity: 0;
-  transition: opacity 0.25s;
+  animation: slideInFromRight 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.activeCard {
-  border-color: var(--accent);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+@keyframes slideInFromRight {
+  0% { transform: translateX(40px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
 }
 
-.activeCard::before { opacity: 1; }
+.signInBtn {
+  background: var(--surface2);
+  border: none;
+  color: var(--text);
+  padding: 10px 24px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: slideInSignIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 2.2s forwards;
+}
 
-.actionIcon {
-  font-size: 28px;
+@keyframes slideInSignIn {
+  0% { transform: translateY(-20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.signInBtn:hover {
+  background: var(--surface);
+  transform: translateY(-1px);
+}
+
+.actionCard:hover {
+  transform: translateY(-2px);
+  background: var(--surface);
+}
+
+.actionIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: all 0.2s;
   flex-shrink: 0;
 }
 
-.actionContent { flex: 1; }
+.actionCard:hover .actionIconWrapper {
+  transform: scale(1.1);
+}
 
 .actionTitle {
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 2px;
+  margin: 0;
+  line-height: 1.2;
 }
 
-.actionDesc {
-  font-size: 13px;
-  color: var(--text2);
+/* Sequence the appearance */
+.actionCard:nth-child(1) { animation-delay: 2.0s; }
+.actionCard:nth-child(2) { animation-delay: 2.15s; }
+.actionCard:nth-child(3) { animation-delay: 2.3s; }
+
+@media (max-width: 1024px) {
+  .hero {
+    flex-direction: column;
+  }
+  .brandSection {
+    transform: translateY(40px);
+    animation: slideBrandUp 1s cubic-bezier(0.4, 0, 0.2, 1) 1.5s forwards;
+  }
+  .actionsSection {
+    padding-left: 0;
+    margin-top: 60px;
+  }
+  .actions {
+    flex-wrap: wrap;
+  }
 }
 
-.actionArrow {
-  color: var(--text3);
-  flex-shrink: 0;
-  transition: transform 0.2s, color 0.2s;
+@keyframes slideBrandUp {
+  100% { transform: translateY(0); }
 }
-
-.activeCard .actionArrow {
-  transform: translateX(3px);
-  color: var(--accent);
-}
-
-.features {
-  display: flex;
-  gap: 16px;
-  padding: 0 40px 48px;
-  flex-wrap: wrap;
-  justify-content: center;
-  position: relative;
-  z-index: 10;
-}
-
-.featureCard {
-  background: rgba(10, 10, 10, 0.4);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  flex: 1;
-  min-width: 200px;
-  max-width: 280px;
-  animation: fadeIn 0.5s ease forwards;
-  opacity: 0;
-  animation-fill-mode: both;
-}
-
-.featureIcon { font-size: 22px; margin-bottom: 10px; }
-.featureTitle { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-.featureDesc { font-size: 13px; color: var(--text2); line-height: 1.5; }
