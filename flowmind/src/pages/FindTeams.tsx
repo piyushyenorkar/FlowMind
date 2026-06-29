@@ -216,7 +216,7 @@ export default function FindTeams() {
       <nav className={styles.topNav} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className={styles.logo}>
           <img src={new URL('../assets/flowmind.png', import.meta.url).href} alt="FlowMind" style={{ height: '35px', width: 'auto' }} />
-          <span className={styles.logoMark}>FM</span>
+
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

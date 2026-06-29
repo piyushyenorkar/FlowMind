@@ -67,7 +67,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         {/* Clickable logo → team switcher */}
         <div className={styles.logo} onClick={() => setShowSwitcher(true)} style={{ cursor: 'pointer' }} title="Switch team">
           <img src={new URL('../assets/flowmind.png', import.meta.url).href} alt="FlowMind" style={{ height: '35px', width: 'auto' }} />
-          <span className={styles.logoMark}>FM</span>
+
         </div>
 
         <div className={styles.project}>

@@ -147,12 +147,16 @@ export default function LeaderSetup({ onClose, defaultUniversal }: { onClose?: (
   }
 
   return (
-    <div style={{ margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 className={styles.title} style={{ margin: 0, fontSize: '20px' }}>Create New Team</h2>
+    <div style={{ maxWidth: '520px', width: '100%', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-10px', position: 'relative', zIndex: 10 }}>
         <button className="btn-ghost" onClick={onClose} style={{ padding: '4px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
       </div>
-      <p className={styles.sub} style={{ marginBottom: '20px' }}>Set up your project and get a shareable team code for your members</p>
+
+      <div className={styles.header}>
+        <div className={styles.iconWrap}><Crown size={24} /></div>
+        <h2 className={styles.title} style={{ margin: '16px 0 8px 0', fontSize: '24px' }}>Create New Team</h2>
+        <p className={styles.sub} style={{ marginBottom: '24px' }}>Set up your project and get a shareable team code for your members</p>
+      </div>
 
       <div className={styles.form}>
         {/* Universal Toggle */}

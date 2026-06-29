@@ -99,10 +99,11 @@
 }
 
 .nameHighlight {
-  background: linear-gradient(135deg, #14b8a6, #3b82f6);
+  /* background: linear-gradient(135deg, #14b8a6, #3b82f6);
   -webkit-background-clip: text;
   background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent; */
+  color: #ffffff;
 }
 
 .sub {
@@ -294,7 +295,7 @@
 }
 
 .teamCodeBadge {
-  background: var(--accent);
+  background: #4977c1;
   color: #ffffff;
   padding: 3px 10px;
   border-radius: 100px;

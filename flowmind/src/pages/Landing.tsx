@@ -28,7 +28,7 @@ export default function Landing() {
 
       <nav className={styles.nav}>
         <div className={styles.logo} onClick={() => isAuthenticated && setShowSwitcher(true)} style={isAuthenticated ? { cursor: 'pointer' } : {}}>
-          <span className={styles.logoMark}>FM</span>
+
           <span className={styles.logoText}>FlowMind</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

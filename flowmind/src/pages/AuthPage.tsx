@@ -70,7 +70,7 @@ export default function AuthPage({ onClose }: { onClose?: () => void }) {
         )}
         <div className={styles.logo}>
           <img src={flowmindImg} alt="FlowMind" style={{ width: '130px', height: '36px', borderRadius: '6px' }} />
-          <span className={styles.logoMark}>FM</span>
+
         </div>
 
         <div className={styles.title}>{mode === 'signup' ? 'Create Account' : 'Welcome Back'}</div>
