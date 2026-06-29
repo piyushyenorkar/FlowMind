@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
-import { User, LogOut, Crown, Search, Zap, Globe, Edit, Clock, Info } from 'lucide-react'
+import { User, LogOut, Crown, Search, Zap, Globe, Edit, Clock, Info, X } from 'lucide-react'
 import styles from './UserDashboard.module.css'
 import MemberProfile from '../components/MemberProfile'
 import LeaderSetup from './LeaderSetup'
@@ -152,6 +152,9 @@ export default function UserDashboard() {
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 1000 }} onClick={() => setShowProfileModal(false)} />
           <div style={{ position: 'fixed', top: '76px', right: '32px', zIndex: 1001, background: '#1a1a1a', borderRadius: '24px', border: '1px solid var(--border)', width: '420px', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+            <button onClick={() => setShowProfileModal(false)} style={{ position: 'absolute', top: '24px', right: '24px', background: 'transparent', border: 'none', color: 'var(--text3)', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', zIndex: 10 }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.background = 'var(--surface)'; }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.background = 'transparent'; }}>
+              <X size={16} />
+            </button>
             <div style={{ maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', padding: '24px' }}>
               <MemberProfile />
             </div>
