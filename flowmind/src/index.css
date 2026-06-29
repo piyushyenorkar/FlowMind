@@ -131,6 +131,15 @@ input, textarea, select { font-family: var(--font-body); }
 .input:focus { border-color: var(--accent); background: var(--bg2); box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.15); }
 .input::placeholder { color: var(--text3); }
 
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover, 
+.input:-webkit-autofill:focus, 
+.input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1e1e1e inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
   cursor: pointer;

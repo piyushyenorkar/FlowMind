@@ -6,16 +6,16 @@ import styles from './AuthPage.module.css'
 import flowmindImg from '../assets/flowmind.png'
 
 export default function AuthPage({ onClose }: { onClose?: () => void }) {
-  const { signup, signin, signout, user } = useAuth()
+  const { signup, signin, user } = useAuth()
   const { navigate } = useApp()
-  const [mode, setMode] = useState('signin')
+  const [isSignUp, setIsSignUp] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setError('') }
+  const set = (k: string, v: string) => { setForm(p => ({ ...p, [k]: v })); setError('') }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (mode: 'signin' | 'signup') => {
     if (mode === 'signup') {
       if (!form.name.trim() || !form.email.trim() || !form.password) {
         setError('Please fill in all fields.')
@@ -29,7 +29,6 @@ export default function AuthPage({ onClose }: { onClose?: () => void }) {
       const result = await signup(form.name, form.email, form.password)
       setLoading(false)
       if (result.error) { setError(result.error) }
-      // On success, component re-renders showing welcome screen
     } else {
       if (!form.email.trim() || !form.password) {
         setError('Please fill in all fields.')
@@ -58,75 +57,115 @@ export default function AuthPage({ onClose }: { onClose?: () => void }) {
 
   // ── Not signed in: Sign in / Sign up form ─────────────────────────────
   return (
-    <div 
-      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
-      onClick={() => onClose && onClose()}
-    >
-      <div className={styles.card} onClick={e => e.stopPropagation()}>
+    <div className={styles.overlay} onClick={() => onClose && onClose()}>
+      <div className={styles.glow} />
+      
+      <div className={`${styles.card} ${isSignUp ? styles.signUpMode : ''}`} onClick={e => e.stopPropagation()}>
         {onClose && (
-          <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer' }}>
+          <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', zIndex: 100 }}>
             <X size={20} />
           </button>
         )}
-        <div className={styles.logo}>
-          <img src={flowmindImg} alt="FlowMind" style={{ width: '130px', height: '36px', borderRadius: '6px' }} />
 
-        </div>
-
-        <div className={styles.title}>{mode === 'signup' ? 'Create Account' : 'Welcome Back'}</div>
-        <div className={styles.sub}>
-          {mode === 'signup'
-            ? 'Sign up to save your teams and access them from anywhere.'
-            : 'Sign in to access your teams and projects.'
-          }
-        </div>
-
-        <div className={styles.form}>
-          {mode === 'signup' && (
-            <div className={styles.field}>
-              <label className="label">Your Name</label>
-              <input className="input" placeholder="Piyush" value={form.name} onChange={e => set('name', e.target.value)} />
+        {/* SIGN IN FORM (LEFT) */}
+        <div className={`${styles.formContainer} ${styles.signInContainer}`}>
+          <div className={styles.formContent}>
+            <div className={styles.title}>Sign In</div>
+            
+            <div className={styles.form}>
+              <div className={styles.field}>
+                <label className="label">Email</label>
+                <input className="input" type="email" placeholder="piyush@example.com" value={form.email} onChange={e => set('email', e.target.value)} />
+              </div>
+              <div className={styles.field}>
+                <label className="label">Password</label>
+                <input
+                  className="input"
+                  type="password"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={e => set('password', e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSubmit('signin')}
+                />
+              </div>
+              {error && !isSignUp && <div className={styles.error}>{error}</div>}
+              <button
+                className={`btn-primary ${styles.submit}`}
+                onClick={() => handleSubmit('signin')}
+                disabled={loading}
+              >
+                {loading && !isSignUp ? <><span className="spinner" /> Signing in...</> : <><LogIn size={16} /> Sign In</>}
+              </button>
             </div>
-          )}
-
-          <div className={styles.field}>
-            <label className="label">Email</label>
-            <input className="input" type="email" placeholder="piyush@example.com" value={form.email} onChange={e => set('email', e.target.value)} />
+            
+            <div className={styles.mobileToggle}>
+              Don't have an account? <button className={styles.toggleLink} onClick={() => { setIsSignUp(true); setError(''); }}>Sign Up</button>
+            </div>
           </div>
-
-          <div className={styles.field}>
-            <label className="label">Password</label>
-            <input
-              className="input"
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={e => set('password', e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-            />
-          </div>
-
-          {error && <div className={styles.error}>{error}</div>}
-
-          <button
-            className={`btn-primary ${styles.submit}`}
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading
-              ? <><span className="spinner" /> {mode === 'signup' ? 'Creating...' : 'Signing in...'}</>
-              : mode === 'signup' ? <><UserPlus size={16} /> Create Account</> : <><LogIn size={16} /> Sign In</>
-            }
-          </button>
         </div>
 
-        <div className={styles.toggle}>
-          {mode === 'signup' ? (
-            <>Already have an account? <button className={styles.toggleLink} onClick={() => { setMode('signin'); setError('') }}>Sign In</button></>
-          ) : (
-            <>Don't have an account? <button className={styles.toggleLink} onClick={() => { setMode('signup'); setError('') }}>Sign Up</button></>
-          )}
+        {/* SIGN UP FORM (RIGHT) */}
+        <div className={`${styles.formContainer} ${styles.signUpContainer}`}>
+          <div className={styles.formContent}>
+            <div className={styles.title}>Sign Up</div>
+            
+            <div className={styles.form}>
+              <div className={styles.field}>
+                <label className="label">Your Name</label>
+                <input className="input" placeholder="Piyush" value={form.name} onChange={e => set('name', e.target.value)} />
+              </div>
+              <div className={styles.field}>
+                <label className="label">Email</label>
+                <input className="input" type="email" placeholder="piyush@example.com" value={form.email} onChange={e => set('email', e.target.value)} />
+              </div>
+              <div className={styles.field}>
+                <label className="label">Password</label>
+                <input
+                  className="input"
+                  type="password"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={e => set('password', e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSubmit('signup')}
+                />
+              </div>
+              {error && isSignUp && <div className={styles.error}>{error}</div>}
+              <button
+                className={`btn-primary ${styles.submit}`}
+                onClick={() => handleSubmit('signup')}
+                disabled={loading}
+              >
+                {loading && isSignUp ? <><span className="spinner" /> Creating...</> : <><UserPlus size={16} /> Create Account</>}
+              </button>
+            </div>
+
+            <div className={styles.mobileToggle}>
+              Already have an account? <button className={styles.toggleLink} onClick={() => { setIsSignUp(false); setError(''); }}>Sign In</button>
+            </div>
+          </div>
         </div>
+
+        {/* SLIDING PANEL */}
+        <div className={styles.slidingPanel}>
+          <div className={styles.panelContent}>
+            <div className={styles.panelTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span>{isSignUp ? 'Create New Account in' : 'Welcome Back to'}</span>
+              <img src={flowmindImg} alt="FlowMind" className={styles.animatedLogo} style={{ width: 'auto', height: '28px' }} />
+            </div>
+            <div className={styles.panelSub}>
+              {isSignUp
+                ? 'Sign up to save your teams and access them from anywhere.'
+                : 'Sign in to access your teams and projects.'}
+            </div>
+            <button
+              className={styles.ghostBtn}
+              onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
+            >
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   )
