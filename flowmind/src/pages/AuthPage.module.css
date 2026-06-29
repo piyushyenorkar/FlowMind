@@ -6,6 +6,7 @@
   position: relative;
   overflow: hidden;
   background: var(--bg);
+  padding: 24px;
 }
 
 .glow {
@@ -13,7 +14,7 @@
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(124,106,255,0.15), transparent 70%);
+  background: radial-gradient(circle, rgba(62, 207, 142, 0.08), transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -23,13 +24,20 @@
 .card {
   position: relative;
   background: var(--bg2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 24px;
   padding: 44px 40px;
   width: 100%;
   max-width: 420px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
   text-align: center;
+  box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.15);
 }
+
+
 
 .back {
   position: absolute;
@@ -48,7 +56,7 @@
 
 .logoMark {
   background: var(--accent);
-  color: white;
+  color: black;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 12px;
@@ -115,7 +123,7 @@
 .toggleLink {
   background: none;
   border: none;
-  color: var(--accent2);
+  color: var(--accent);
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -153,7 +161,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  background: var(--surface);
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
@@ -162,7 +171,7 @@
 
 .teamItem:hover {
   border-color: var(--accent);
-  background: var(--surface2);
+  background: rgba(23, 23, 23, 0.4);
 }
 
 .teamName {
@@ -180,7 +189,7 @@
 .teamCode {
   font-family: monospace;
   font-size: 12px;
-  color: var(--accent2);
+  color: var(--accent);
   letter-spacing: 0.1em;
 }
 

@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useApp } from '../context/AppContext'
+import { UserPlus, LogIn, X } from 'lucide-react'
 import styles from './AuthPage.module.css'
+import flowmindImg from '../assets/flowmind.png'
 
-export default function AuthPage() {
+export default function AuthPage({ onClose }: { onClose?: () => void }) {
   const { signup, signin, signout, user } = useAuth()
   const { navigate } = useApp()
   const [mode, setMode] = useState('signin')
@@ -13,7 +15,7 @@ export default function AuthPage() {
 
   const set = (k, v) => { setForm(p => ({ ...p, [k]: v })); setError('') }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (mode === 'signup') {
       if (!form.name.trim() || !form.email.trim() || !form.password) {
         setError('Please fill in all fields.')
@@ -24,7 +26,7 @@ export default function AuthPage() {
         return
       }
       setLoading(true)
-      const result = signup(form.name, form.email, form.password)
+      const result = await signup(form.name, form.email, form.password)
       setLoading(false)
       if (result.error) { setError(result.error) }
       // On success, component re-renders showing welcome screen
@@ -34,26 +36,41 @@ export default function AuthPage() {
         return
       }
       setLoading(true)
-      const result = signin(form.email, form.password)
+      const result = await signin(form.email, form.password)
       setLoading(false)
       if (result.error) { setError(result.error) }
     }
   }
 
-  // ── Signed in: redirect to landing ─────────────────────────────────────
-  if (user) {
-    navigate('landing')
-    return null
-  }
+  // ── Signed in: redirect to dashboard ─────────────────────────────────────
+  useEffect(() => {
+    if (user) {
+      navigate('user-dashboard')
+    }
+  }, [user, navigate])
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  if (user) return null
 
   // ── Not signed in: Sign in / Sign up form ─────────────────────────────
   return (
-    <div className={styles.page}>
-      <div className={styles.glow} />
-      <div className={styles.card}>
+    <div 
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+      onClick={() => onClose && onClose()}
+    >
+      <div className={styles.card} onClick={e => e.stopPropagation()}>
+        {onClose && (
+          <button onClick={onClose} style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer' }}>
+            <X size={20} />
+          </button>
+        )}
         <div className={styles.logo}>
+          <img src={flowmindImg} alt="FlowMind" style={{ width: '130px', height: '36px', borderRadius: '6px' }} />
           <span className={styles.logoMark}>FM</span>
-          <span className={styles.logoText}>FlowMind</span>
         </div>
 
         <div className={styles.title}>{mode === 'signup' ? 'Create Account' : 'Welcome Back'}</div>
@@ -68,13 +85,13 @@ export default function AuthPage() {
           {mode === 'signup' && (
             <div className={styles.field}>
               <label className="label">Your Name</label>
-              <input className="input" placeholder="e.g. Piyush" value={form.name} onChange={e => set('name', e.target.value)} />
+              <input className="input" placeholder="Piyush" value={form.name} onChange={e => set('name', e.target.value)} />
             </div>
           )}
 
           <div className={styles.field}>
             <label className="label">Email</label>
-            <input className="input" type="email" placeholder="e.g. piyush@example.com" value={form.email} onChange={e => set('email', e.target.value)} />
+            <input className="input" type="email" placeholder="piyush@example.com" value={form.email} onChange={e => set('email', e.target.value)} />
           </div>
 
           <div className={styles.field}>
@@ -98,7 +115,7 @@ export default function AuthPage() {
           >
             {loading
               ? <><span className="spinner" /> {mode === 'signup' ? 'Creating...' : 'Signing in...'}</>
-              : mode === 'signup' ? '🚀 Create Account' : '⚡ Sign In'
+              : mode === 'signup' ? <><UserPlus size={16} /> Create Account</> : <><LogIn size={16} /> Sign In</>
             }
           </button>
         </div>
