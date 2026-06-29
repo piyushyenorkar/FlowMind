@@ -1,29 +1,40 @@
 .wrap { display: flex; flex-direction: column; gap: 20px; }
 
-.topBar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.topBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
 .pageTitle { font-family: var(--font-display); font-size: 20px; font-weight: 800; color: var(--text); }
 .pageSub { font-size: 13px; color: var(--text2); margin-top: 3px; }
 
-.formCard { }
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.formCard { 
+  position: absolute;
+  width: 500px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  z-index: 1001;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.8);
+  padding: 24px;
+}
 .formFields { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
 .twoCol { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .formActions { display: flex; justify-content: flex-end; }
 
-.emptyState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-  background: var(--bg2);
-  border: 1px dashed var(--border2);
-  border-radius: var(--radius-lg);
-  gap: 12px;
+.emptyState { 
+  border: 1px solid var(--border); 
+  border-radius: 24px; 
+  padding: 90px; 
+  text-align: center; 
+  background: var(--surface); 
+  box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.15); 
 }
-.emptyIcon { font-size: 40px; }
-.emptyTitle { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text); }
-.emptySub { font-size: 13px; color: var(--text2); max-width: 300px; }
+.emptyIcon { font-size: 40px; margin-bottom: 8px; }
+.emptyTitle { font-size: 16px; font-weight: 600; color: var(--text2); }
+.emptySub { font-size: 13px; color: var(--text3); margin: 4px auto 16px; max-width: 300px; }
 
 .timeline { display: flex; flex-direction: column; gap: 0; position: relative; }
 
@@ -45,38 +56,81 @@
 
 .timelineLine {
   position: absolute;
-  left: 10px;
-  top: 20px;
+  left: 12px;
+  top: 0;
   bottom: 0;
   width: 1px;
   background: var(--border);
 }
 
-.decisionCard:last-child .timelineLine { display: none; }
+.decisionCard:first-child .timelineLine {
+  top: 26px;
+}
+
+.decisionCard:last-child .timelineLine {
+  bottom: auto;
+  height: 26px;
+}
+
+.decisionCard:first-child:last-child .timelineLine {
+  display: none;
+}
 
 .timelineDot {
   position: absolute;
-  left: 5px;
-  top: 6px;
-  width: 12px;
-  height: 12px;
-  background: var(--accent);
+  left: 6px;
+  top: 20px;
+  width: 13px;
+  height: 13px;
+  background: linear-gradient(135deg, var(--accent) 0%, #10b981 100%);
   border-radius: 50%;
-  border: 2px solid var(--bg);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 3px rgba(62, 207, 142, 0.15), 0 0 10px rgba(62, 207, 142, 0.3);
+  z-index: 2;
+}
+
+
+.timelineConnector {
+  position: absolute;
+  left: 12px;
+  top: 26px;
+  width: 20px;
+  height: 1px;
+  background: var(--border);
+  z-index: 1;
 }
 
 .decisionContent {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: rgba(23, 23, 23, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: none;
+  border-radius: 25px;
+  box-shadow: 20px 20px 20px rgba(43, 40, 40, 0.15);
   padding: 16px;
   flex: 1;
-  transition: border-color 0.2s;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  height: 155px;
 }
-.decisionContent:hover { border-color: var(--border2); }
+.decisionContent:hover { 
+  background: rgba(15, 15, 15, 0.7);
+  transform: translateY(-2px);
+}
 
 .decisionHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.impactTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--surface2);
+  color: var(--text2);
+  border: none;
+}
 .decisionDate { font-size: 11px; color: var(--text3); }
 
 .decisionText { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 8px; }
