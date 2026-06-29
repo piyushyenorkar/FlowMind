@@ -1,4 +1,5 @@
 import React from 'react'
+import { Radio, Rocket, UserPlus, Pin, CheckCircle, Zap, ClipboardList, FileText, Scale, Mic, User, Link as LinkIcon } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import styles from './TeamFeed.module.css'
 
@@ -33,7 +34,7 @@ export default function TeamFeed() {
 
       {memoryFeed.length === 0 && (
         <div className={styles.empty}>
-          <div className={styles.emptyIcon}>📡</div>
+          <div className={styles.emptyIcon}><Radio size={40} /></div>
           <div className={styles.emptyTitle}>No activity yet</div>
           <div className={styles.emptySub}>Team events will appear here as your leader assigns tasks and logs decisions</div>
         </div>
@@ -42,13 +43,46 @@ export default function TeamFeed() {
       <div className={styles.feed}>
         {memoryFeed.map((entry, i) => {
           const style = TYPE_STYLES[entry.type] || TYPE_STYLES['task_update']
+          
+          let IconComponent = Radio;
+          switch(entry.icon) {
+            case 'Rocket': IconComponent = Rocket; break;
+            case 'UserPlus': IconComponent = UserPlus; break;
+            case 'Pin': IconComponent = Pin; break;
+            case 'CheckCircle': IconComponent = CheckCircle; break;
+            case 'Zap': IconComponent = Zap; break;
+            case 'ClipboardList': IconComponent = ClipboardList; break;
+            case 'FileText': IconComponent = FileText; break;
+            case 'Scale': IconComponent = Scale; break;
+            case 'Mic': IconComponent = Mic; break;
+            case 'User': IconComponent = User; break;
+            case 'LinkIcon': IconComponent = LinkIcon; break;
+            // Fallback for older emoji entries
+            default:
+              if (typeof entry.icon === 'string' && entry.icon.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]/)) {
+                return (
+                  <div
+                    key={entry.id}
+                    className={styles.entry}
+                    style={{ background: style.bg, borderColor: style.border, animationDelay: `${i * 0.05}s` }}
+                  >
+                    <span className={styles.icon}>{entry.icon}</span>
+                    <div className={styles.content}>
+                      <div className={styles.text} style={{ color: style.color }}>{entry.text}</div>
+                      <div className={styles.time}>{timeAgo(entry.timestamp)}</div>
+                    </div>
+                  </div>
+                )
+              }
+          }
+
           return (
             <div
               key={entry.id}
               className={styles.entry}
               style={{ background: style.bg, borderColor: style.border, animationDelay: `${i * 0.05}s` }}
             >
-              <span className={styles.icon}>{entry.icon}</span>
+              <span className={styles.icon} style={{ display: 'flex', alignItems: 'center' }}><IconComponent size={16} /></span>
               <div className={styles.content}>
                 <div className={styles.text} style={{ color: style.color }}>{entry.text}</div>
                 <div className={styles.time}>{timeAgo(entry.timestamp)}</div>
