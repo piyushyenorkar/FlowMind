@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 80px;
+  padding: 18px 32px;
   position: relative;
   z-index: 10;
 }
@@ -21,39 +21,42 @@
 }
 
 .hero {
-  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 32px;
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  padding: 20px 24px 40px;
+  justify-content: space-between;
+  align-items: stretch;
+  width: 100%;
+  flex: 1;
   position: relative;
   z-index: 10;
-  gap: 120px;
-  width: 100%;
 }
 
 .brandSection {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
   flex: none;
   width: 480px;
-  /* (gap 120px + actions width 140px) / 2 = 130px shift for perfect center */
-  transform: translateX(130px);
-  animation: slideBrandLeft 1.2s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  margin-left: calc(50% - 240px);
+  position: relative;
+  top: -2vh;
+  animation: slideBrandLeftMargin 1.2s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards;
 }
 
-@keyframes slideBrandLeft {
-  100% { transform: translateX(0); }
+@keyframes slideBrandLeftMargin {
+  100% { margin-left: 0; }
 }
 
 .actionsSection {
-  flex: none;
+  width: 13%;
+  flex-shrink: 0;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
 }
 
 .logoContainer {
@@ -141,8 +144,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  justify-content: flex-end;
-  align-items: flex-end;
+  position: sticky;
+  top: 142px;
 }
 
 .actionCard {
@@ -239,15 +242,20 @@
     flex-direction: column;
   }
   .brandSection {
+    margin-left: 0;
     transform: translateY(40px);
     animation: slideBrandUp 1s cubic-bezier(0.4, 0, 0.2, 1) 1.5s forwards;
   }
   .actionsSection {
+    width: 100%;
     padding-left: 0;
     margin-top: 60px;
   }
   .actions {
     flex-wrap: wrap;
+    position: static;
+    flex-direction: row;
+    justify-content: center;
   }
 }
 
