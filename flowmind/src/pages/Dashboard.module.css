@@ -1,26 +1,35 @@
 .layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: 260px 1fr 280px;
+  gap: 24px;
+  padding: 24px;
   min-height: 100vh;
   background: var(--bg);
+  box-sizing: border-box;
 }
 
 .main {
-  flex: 1;
+  background: #1e1e1e;
+  border: 1px solid var(--border);
+  border-radius: 28px;
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
+  height: calc(100vh - 48px);
 }
 
 .topBar {
-  padding: 20px 28px 0;
+  padding: 24px 32px 16px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 0;
-  background: var(--bg);
   position: sticky;
   top: 0;
   z-index: 10;
-  padding-bottom: 16px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  height: 68px;
 }
 
 .pageTitle {
@@ -28,11 +37,12 @@
   font-size: 22px;
   font-weight: 800;
   color: var(--text);
+  line-height: 1;
 }
 
 .content {
   flex: 1;
-  padding: 24px 28px;
+  padding: 32px 40px;
   overflow-y: auto;
-  height: calc(100vh - 65px);
+  background: transparent;
 }
