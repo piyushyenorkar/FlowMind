@@ -10,6 +10,7 @@
     <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" />
     <img src="https://img.shields.io/badge/Groq%20%2F%20Llama%203.3-F55036?style=for-the-badge&logo=openai&logoColor=white" alt="Groq AI" />
     <img src="https://img.shields.io/badge/Hindsight_API-00599C?style=for-the-badge&logo=vectorworks&logoColor=white" alt="Vectorize Hindsight" />
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
   </p>
 </div>
 
@@ -29,6 +30,7 @@ Instead of just listing tasks, FlowMind tracks decisions, bottlenecks, and team 
 - ⚡ **Groq-Powered Insights:** Leverages Llama 3.3 via the Groq API to instantly analyze task completion patterns, calculate risk scores, and generate specific actionable recommendations.
 - 💬 **Context-Aware Chat:** Ask the embedded AI questions about past project decisions, blockers, or task history. It answers accurately by semantically retrieving past team memories.
 - 👥 **Role-Based Workspaces:** Distinct flows for Team Leaders (to orchestrate members, tasks, and view AI insights) and Members (to update tasks and log progress).
+- 🔐 **Secure & Real-Time DB:** Powered by Supabase to handle authentication, manage team data, and ensure seamless state synchronization.
 
 ---
 
@@ -38,7 +40,8 @@ Unlike standard task trackers, FlowMind shifts heavy context retention to specia
 
 1. **Memory Layer (Hindsight):** Integrates directly with the `api.hindsight.vectorize.io` service to `retain` and `recall` text-based memory embeddings effortlessly.
 2. **AI Layer (Groq):** Uses a highly constrained system prompt with `llama-3.3-70b-versatile` to interpret JSON project data alongside semantic memory context, outputting structured JSON insights.
-3. **Frontend Application:** Built with React and Vite for a blazing-fast, modern UI experience, utilizing React Context for state management and Lucide for iconography.
+3. **Database Layer (Supabase):** Manages user authentication, team relationships, and structured project data reliably in real-time.
+4. **Frontend Application:** Built with React and Vite for a blazing-fast, modern UI experience, utilizing React Context for state management and Lucide for iconography.
 
 ---
 
@@ -73,7 +76,10 @@ npm install
 # 3. Add your API Keys
 # Create a .env file in the flowmind directory:
 echo "VITE_HINDSIGHT_API_KEY=your_hindsight_key_here" > .env
+echo "VITE_HINDSIGHT_BASE_URL=https://api.hindsight.vectorize.io" >> .env
 echo "VITE_GROQ_API_KEY=gsk_your_groq_key_here" >> .env
+echo "VITE_SUPABASE_URL=your_supabase_url_here" >> .env
+echo "VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here" >> .env
 
 # 4. Start the Dev Server!
 npm run dev
@@ -94,16 +100,18 @@ FlowMind/
 ├── README.md
 └── flowmind/
     ├── package.json            ← 📦 Project dependencies
-    ├── vite.config.js          ← ⚡ Vite configuration
+    ├── vite.config.ts          ← ⚡ Vite configuration
+    ├── tsconfig.json           ← ⚙️ TypeScript configuration
     ├── index.html              ← 📄 Application entry point
     │
     └── src/
-        ├── App.jsx             ← 🔀 Application Router & Setup
+        ├── App.tsx             ← 🔀 Application Router & Setup
         ├── context/            ← 🌍 Global state (App, Auth)
         ├── pages/              ← 🖥️ UI pages (Leader/Member Dashboards, Setup)
         ├── components/         ← 🧩 Reusable React UI components
+        ├── utils/              ← 🛠️ Utility functions and helpers
         └── services/
-            └── api.js          ← 🧠 Core Hindsight & Groq API integrations
+            └── api.ts          ← 🧠 Core Hindsight & Groq API integrations
 ```
 
 ---
