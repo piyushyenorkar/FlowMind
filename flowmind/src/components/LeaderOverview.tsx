@@ -1,12 +1,26 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import styles from './LeaderOverview.module.css'
-import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, MessageSquare, Plus, ChevronRight, X } from 'lucide-react'
+import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, MessageSquare, Plus, ChevronRight, X, AlertTriangle, Lightbulb } from 'lucide-react'
 import TeamMembers from './TeamMembers'
 import Avatar from './Avatar'
+import { generateInsights } from '../services/api'
 
 export default function LeaderOverview({ setActiveTab }) {
   const { team, tasks, decisions, members, memoryFeed, memberProfiles, role } = useApp()
+  const [showMembersModal, setShowMembersModal] = useState(false)
+  const [insights, setInsights] = useState<any>(null)
+  const [loadingInsights, setLoadingInsights] = useState(false)
+
+  useEffect(() => {
+    if (team?.code && tasks.length > 0) {
+      setLoadingInsights(true)
+      generateInsights(team.code, tasks, decisions, members).then(res => {
+        setInsights(res)
+        setLoadingInsights(false)
+      })
+    }
+  }, [team?.code, tasks.length, decisions.length])
   const [showMembersModal, setShowMembersModal] = useState(false)
 
   const done = tasks.filter(t => t.status === 'done').length
@@ -130,6 +144,81 @@ export default function LeaderOverview({ setActiveTab }) {
         })}
       </div>
 
+      {/* AI Graph Insights (Neo4j + Groq) */}
+      {(insights || loadingInsights) && (
+        <div className={styles.section} style={{ marginTop: '32px' }}>
+          <div className={styles.sectionHeader} style={{ marginBottom: '16px' }}>
+            <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
+              <Sparkles size={20} />
+              Neo4j Graph Insights
+            </div>
+            {loadingInsights && <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderColor: 'var(--accent) transparent var(--accent) transparent' }} />}
+          </div>
+          
+          {insights && !loadingInsights && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              {/* Bottlenecks (Powered by Graph) */}
+              <div className={styles.card} style={{ background: 'linear-gradient(145deg, rgba(239, 68, 68, 0.05), rgba(20, 20, 20, 0.5))', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--red)' }}>
+                  <AlertTriangle size={18} />
+                  <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>Graph Bottlenecks</span>
+                </div>
+                {insights.bottlenecks?.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {insights.bottlenecks.map((b: any, i: number) => (
+                      <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <strong style={{ fontSize: '14px' }}>{b.person}</strong>
+                          <span style={{ fontSize: '12px', color: 'var(--red)', background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '100px' }}>{b.waiting} days</span>
+                        </div>
+                        <div style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '8px' }}>Blocking: {b.task}</div>
+                        {b.graph_insight && (
+                          <div style={{ fontSize: '12px', color: 'var(--text3)', borderLeft: '2px solid var(--red)', paddingLeft: '8px' }}>
+                            {b.graph_insight}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--text3)', fontSize: '14px' }}>No graph bottlenecks detected.</div>
+                )}
+              </div>
+
+              {/* General Risks & Recommendations */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className={styles.card} style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--yellow)' }}>
+                    <Lightbulb size={18} />
+                    <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>AI Recommendation</span>
+                  </div>
+                  <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text2)' }}>
+                    {insights.recommendation || "Maintain current task velocity."}
+                  </p>
+                </div>
+
+                <div className={styles.card} style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text)' }}>
+                    <Activity size={18} />
+                    <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>Detected Risks</span>
+                  </div>
+                  {insights.risks?.length > 0 ? (
+                    <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text2)', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {insights.risks.map((r: any, i: number) => (
+                        <li key={i}>
+                          <strong>{r.member}</strong>: {r.reason}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div style={{ color: 'var(--text3)', fontSize: '14px' }}>No immediate risks detected.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* Recent tasks */}
       {tasks.length > 0 && (
         <div className={styles.section}>
