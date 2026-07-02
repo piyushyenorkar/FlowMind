@@ -113,8 +113,23 @@ export async function syncTaskToGraph(teamCode: string, taskId: string, title: s
     }
 }
 
+export async function fetchGraphInsights(teamCode: string) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/neo4j/graph-insights`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ teamCode }),
+    })
+    if (!res.ok) return null
+    return await res.json()
+  } catch (err: any) {
+    console.warn('[Neo4j] Graph insights error:', err.message)
+    return null
+  }
+}
+
 /**
- * Generate AI insights using recalled Hindsight memories + Groq
+ * Generate AI insights using recalled Hindsight memories + Groq + Neo4j Graph
  */
 export async function generateInsights(teamCode: string, tasks: any[], decisions: any[], members: any[]) {
   // Step 1: Recall multiple memory contexts
@@ -139,7 +154,10 @@ export async function generateInsights(teamCode: string, tasks: any[], decisions
     memoryContext = 'No memories found in Hindsight for this team yet.'
   }
 
-  // Step 2: Build structured data
+  // Step 2: Fetch Graph Data (Neo4j)
+  const graphData = await fetchGraphInsights(teamCode)
+
+  // Step 3: Build structured data
   const taskData = tasks.map(t => ({
     title: t.title, assignedTo: t.assignedTo, status: t.status, deadline: t.deadline || 'not set', estimatedHours: t.estimatedHours || 0, createdAt: t.createdAt,
   }))
@@ -150,7 +168,7 @@ export async function generateInsights(teamCode: string, tasks: any[], decisions
     name: m.name, role: m.role, isLeader: m.isLeader,
   }))
 
-  const systemPrompt = `You are FlowMind AI — a project intelligence engine. You analyze REAL team data stored in Hindsight memory to surface actionable insights.
+  const systemPrompt = `You are FlowMind AI — a project intelligence engine. You analyze REAL team data stored in Hindsight memory and Neo4j Graph Database to surface actionable insights.
 
 CRITICAL: Your analysis must be SPECIFIC to this team. Use actual task names, member names, deadlines, and memory context. Do NOT generate generic insights.
 
@@ -158,6 +176,9 @@ TEAM DATA:
 • ${tasks.length} tasks: ${tasks.filter(t => t.status === 'done').length} done, ${tasks.filter(t => t.status === 'in-progress').length} in-progress, ${tasks.filter(t => t.status === 'todo').length} todo
 • ${decisions.length} decisions logged
 • ${members.length} team members: ${members.map(m => m.name).join(', ')}
+
+NEO4J GRAPH INSIGHTS (Bottlenecks & Workload):
+${JSON.stringify(graphData, null, 1)}
 
 TASKS:
 ${JSON.stringify(taskData, null, 1)}
@@ -173,14 +194,14 @@ RULES:
 1. Reference ACTUAL task names and member names from the data above
 2. Calculate risk scores based on deadline proximity, workload, and memory patterns
 3. Identify patterns from the Hindsight memory — recurring issues, communication gaps, workload imbalances
-4. For bottlenecks, identify tasks that are blocking others or have been in-progress too long
+4. For bottlenecks, heavily rely on the Neo4j Graph Insights. If someone is overloaded or tasks are chaining, point it out explicitly ("Task A is delayed, which is connected to Member Raj, who is also assigned to Task B, creating a bottleneck").
 5. Recommendation must be a specific, actionable paragraph referencing real data
 
 Respond with ONLY valid JSON, no markdown, no explanation:
 {
   "risks": [{"member": "real name", "task": "real task title", "risk": 0-100, "reason": "specific explanation from data"}],
   "patterns": [{"icon": "emoji", "title": "Pattern Name", "detail": "specific detail from memory"}],
-  "bottlenecks": [{"task": "real task title", "person": "real name", "waiting": days_number}],
+  "bottlenecks": [{"task": "real task title", "person": "real name", "waiting": days_number, "graph_insight": "Detailed explanation using Graph data"}],
   "recommendation": "Specific actionable recommendation paragraph"
 }
 Provide 2-4 items per category.`
