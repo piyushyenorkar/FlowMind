@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../services/supabase'
 import Avatar from './Avatar'
 import { analyzeMeeting } from '../utils/meetingAnalyzer'
 import { storeMeeting, storeTask } from '../utils/hindsightClient'
@@ -604,21 +605,37 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const [micStatus, setMicStatus] = useState('idle') // idle | requesting | listening | paused | denied | unsupported
   const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
   
+  // Sync meetingState from meeting status (realtime updates)
   useEffect(() => {
     if (meeting?.status === 'ongoing' && meetingState === 'idle') {
       setMeetingState('active')
     }
   }, [meeting?.status, meetingState])
+
+  // Auto-exit when host ends meeting (status changes to 'completed')
+  useEffect(() => {
+    if (meeting?.status === 'completed' && meetingState === 'active') {
+      stoppedByUserRef.current = true
+      clearInterval(timerRef.current)
+      recognitionRef.current?.stop()
+      mediaStreamRef.current?.getTracks().forEach(t => t.stop())
+      agora.leave()
+      onLeave?.()
+    }
+  }, [meeting?.status])
+
   const [showTranscript, setShowTranscript] = useState(true)
   const [showManualInput, setShowManualInput] = useState(false)
   const [manualNoteError, setManualNoteError] = useState(false)
   const [interimText, setInterimText] = useState('')
-  const timerRef = useRef(null)
-  const recognitionRef = useRef(null)
+  const timerRef = useRef<any>(null)
+  const recognitionRef = useRef<any>(null)
   const finalTranscriptRef = useRef(transcript || '')
   const stoppedByUserRef = useRef(false)
-  const mediaStreamRef = useRef(null)
-  const transcriptEndRef = useRef(null)
+  const mediaStreamRef = useRef<any>(null)
+  const transcriptEndRef = useRef<any>(null)
+  const transcriptSyncRef = useRef<any>(null)
+  const startTimeRef = useRef<number>(Date.now()) // Track when this user's meeting started
 
   // ── Agora Live Audio ─────────────────────────────────────────────────
   const agora = useAgora(meeting?.id || '', user?.id || user?.name || 'anonymous')
@@ -630,15 +647,54 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meetingState, agora.isConnected, agora.isConnecting])
 
+  // Auto-start mic for ALL users when meeting becomes active
+  useEffect(() => {
+    if (meetingState === 'active' && micStatus === 'idle') {
+      // Small delay to avoid race with Agora join
+      const t = setTimeout(() => startListening(), 500)
+      return () => clearTimeout(t)
+    }
+  }, [meetingState])
+
+  // ── Sync transcript TO Supabase (debounced) ──────────────────────────
+  useEffect(() => {
+    if (!meeting?.id || !transcript) return
+    clearTimeout(transcriptSyncRef.current)
+    transcriptSyncRef.current = setTimeout(() => {
+      supabase.from('meetings').update({ transcript }).eq('id', meeting.id).then(({ error }) => {
+        if (error) console.warn('[VoiceRoom] Transcript sync error:', error.message)
+      })
+    }, 1500) // Debounce 1.5s
+    return () => clearTimeout(transcriptSyncRef.current)
+  }, [transcript, meeting?.id])
+
+  // ── Sync transcript FROM Supabase (via realtime meeting object) ──────
+  // Merge incoming lines that we don't have locally instead of overwriting
+  useEffect(() => {
+    if (!meeting?.transcript || meeting.transcript === finalTranscriptRef.current) return
+    const incomingLines = meeting.transcript.split('\n').filter(l => l.trim())
+    const localLines = finalTranscriptRef.current.split('\n').filter(l => l.trim())
+    // Find lines in incoming that are not in our local transcript
+    const newLines = incomingLines.filter(line => !localLines.includes(line))
+    if (newLines.length > 0) {
+      const merged = finalTranscriptRef.current + newLines.join('\n') + '\n'
+      finalTranscriptRef.current = merged
+      setTranscript(merged)
+    }
+  }, [meeting?.transcript])
+
   // Auto-scroll transcript
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [transcript, interimText])
 
-  // Timer
+  // ── Timer ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (meetingState === 'active') {
-      timerRef.current = setInterval(() => setDuration(d => d + 1), 1000)
+      startTimeRef.current = Date.now()
+      timerRef.current = setInterval(() => {
+        setDuration(Math.floor((Date.now() - startTimeRef.current) / 1000))
+      }, 1000)
       return () => clearInterval(timerRef.current)
     }
   }, [meetingState, setDuration])
@@ -760,6 +816,16 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     agora.leave()
     // Ensure final transcript is set
     setTranscript(finalTranscriptRef.current)
+    // Update Supabase so other participants get notified via realtime
+    if (meeting?.id) {
+      supabase.from('meetings').update({
+        status: 'completed',
+        transcript: finalTranscriptRef.current,
+        duration,
+      }).eq('id', meeting.id).then(({ error }) => {
+        if (error) console.warn('[VoiceRoom] End meeting sync error:', error.message)
+      })
+    }
     onEnd()
   }
 
@@ -825,9 +891,12 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           const isMe = name === user?.name;
           const isJoined = activeAttendees.includes(name);
           const isSpeaking = isMe && micStatus === 'listening';
+          // Check if remote user has audio via Agora (for non-self participants)
+          const hasRemoteAudio = !isMe && isJoined && agora.remoteUsers.some(u => u.hasAudio);
+          const isParticipantHost = name === meeting?.leader;
           
           return (
-          <div key={i} className={`${styles.participantCard} ${isSpeaking ? styles.pCardSpeaking : ''}`} style={{ opacity: isJoined ? 1 : 0.5 }}>
+          <div key={i} className={`${styles.participantCard} ${(isSpeaking || hasRemoteAudio) ? styles.pCardSpeaking : ''}`} style={{ opacity: isJoined || isMe ? 1 : 0.5 }}>
             
             <div className={styles.micCornerIndicator}>
               {isMe ? (
@@ -847,7 +916,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                 </button>
               ) : (
                 <div className={styles.micCornerStatus}>
-                  <MicOff size={14} color="var(--text3)" />
+                  {isJoined && hasRemoteAudio ? <Mic size={14} color="var(--green)" /> : <MicOff size={14} color="var(--text3)" />}
                 </div>
               )}
             </div>
@@ -860,13 +929,13 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
               )}
             </div>
             <div className={styles.pName}>{name} {isMe && '(You)'}</div>
-            {isSpeaking ? (
+            {(isSpeaking || hasRemoteAudio) ? (
               <div className={styles.speakingBars}>
                 <div className={styles.bar} /><div className={styles.bar} /><div className={styles.bar} /><div className={styles.bar} />
               </div>
             ) : (
               <div className={styles.pSub}>
-                {isJoined ? '—' : (name === meeting?.leader || (isMe && isLeader)) ? 'Host' : 'Invited'}
+                {isParticipantHost ? 'Host' : isJoined ? 'Connected' : 'Invited'}
               </div>
             )}
           </div>

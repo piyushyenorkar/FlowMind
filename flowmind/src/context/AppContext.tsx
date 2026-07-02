@@ -127,7 +127,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const meetings = meetData?.map(m => ({
       id: m.id, title: m.title, date: m.date, attendees: m.attendees, duration: m.duration, summary: m.summary, keyTopics: m.key_topics, transcript: m.transcript, followUpItems: m.follow_up_items, tasksCreated: [], decisionsLogged: [],
       status: m.status || 'completed', activeAttendees: m.active_attendees || [],
-      leader: m.leader || null, agenda: m.agenda || ''
+      leader: m.leader || null, agenda: m.agenda || '',
+      startedAt: m.started_at || null,
     })) || []
 
     // Fetch profiles (local team overrides)
@@ -170,7 +171,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             const updatedMeeting = {
               id: m.id, title: m.title, date: m.date, attendees: m.attendees, duration: m.duration, summary: m.summary, keyTopics: m.key_topics, transcript: m.transcript, followUpItems: m.follow_up_items, tasksCreated: [], decisionsLogged: [],
               status: m.status || 'completed', activeAttendees: m.active_attendees || [],
-              leader: m.leader || null, agenda: m.agenda || ''
+              leader: m.leader || null, agenda: m.agenda || '',
+              startedAt: m.started_at || null,
             }
 
             const exists = prev.meetings.find((prevM: any) => prevM.id === m.id)
@@ -615,17 +617,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const meetingIdx = prev.meetings.findIndex((m: any) => m.id === meetingId)
       if (meetingIdx === -1) return prev
 
+      const startedAt = new Date().toISOString()
       const newMeetings = [...prev.meetings]
       newMeetings[meetingIdx] = {
         ...newMeetings[meetingIdx],
         status: 'ongoing',
         activeAttendees: [prev.currentUser?.name],
+        startedAt,
       }
 
       if (prev.team?.code) {
         supabase.from('meetings').update({
           status: 'ongoing',
-          active_attendees: [prev.currentUser?.name]
+          active_attendees: [prev.currentUser?.name],
         }).eq('id', meetingId).then(({ error }) => {
           if (error) console.error('Error starting live meeting:', error)
         })

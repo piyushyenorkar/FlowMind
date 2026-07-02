@@ -3,7 +3,8 @@ import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cors from 'cors'
 import { mergeTeam, mergeMember, mergeTask, closeDriver } from './services/neo4j'
-import { RtcTokenBuilder, RtcRole } from 'agora-token'
+import agoraToken from 'agora-token'
+const { RtcTokenBuilder, RtcRole } = agoraToken
 
 const app = express()
 app.use(cors())
