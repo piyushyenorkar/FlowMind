@@ -29,7 +29,7 @@ export default function TeamFeed() {
     <div className={styles.wrap}>
       <div className={styles.header}>
         <div className={styles.title}>Team Feed</div>
-        <div className={styles.sub}>Live activity from your project — powered by Hindsight memory</div>
+        <div className={styles.sub}>Live activity from your project — powered by FlowMind Memory</div>
       </div>
 
       {memoryFeed.length === 0 && (

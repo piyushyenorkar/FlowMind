@@ -63,7 +63,7 @@ export default function DirectChat({ targetMember, onClose }: any) {
     
     setMessages(prev => [...prev, msg])
 
-    // Store in Hindsight memory
+    // Store in FlowMind Memory
     retainMemory(
       team?.code,
       `Direct message from ${currentUser?.name} to ${targetMember?.name}: "${msg.text}"`,

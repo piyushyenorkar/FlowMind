@@ -39,7 +39,7 @@ export default function DecisionsTab() {
       <div className={styles.topBar}>
         <div>
           <div className={styles.pageTitle}>Decision Log</div>
-          <div className={styles.pageSub}>Every decision stored in Hindsight memory with full context</div>
+          <div className={styles.pageSub}>Every decision stored in FlowMind Memory with full context</div>
         </div>
         {role === 'leader' && (
           <button className="btn-primary" onClick={(e) => setAnchorEl(anchorEl ? null : e.currentTarget)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

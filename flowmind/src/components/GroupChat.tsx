@@ -69,7 +69,7 @@ export default function GroupChat() {
 
     setMessages(prev => [...prev, msg])
 
-    // Store in Hindsight memory
+    // Store in FlowMind Memory
     retainMemory(
       teamCode,
       `Group chat message from ${currentUser?.name}: "${msg.text}"`,

@@ -18,7 +18,7 @@ export default function ChatTab() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      text: `Hey ${currentUser?.name || 'there'}! I'm your AI project assistant. I have access to your team's full Hindsight memory — all tasks, decisions, and activity. Ask me anything about your project.`,
+      text: `Hey ${currentUser?.name || 'there'}! I'm your AI project assistant. I have access to your team's full FlowMind Memory — all tasks, decisions, and activity. Ask me anything about your project.`,
     }
   ])
   const [input, setInput] = useState('')

@@ -500,7 +500,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
       {step === 3 && success && (
         <div className={styles.successScreen}>
           <div className={styles.successIcon}><CheckCircle2 size={40} /></div>
-          <div className={styles.successTitle}>Meeting saved to Hindsight memory</div>
+          <div className={styles.successTitle}>Meeting saved to FlowMind Memory</div>
           <div className={styles.successStat} style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}><Pin size={16} /> {Object.values(checkedTasks).filter(Boolean).length} tasks created and assigned</div>
           <div className={styles.successStat} style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}><Scale size={16} /> {Object.values(checkedDecisions).filter(Boolean).length} decisions logged</div>
           <div className={styles.successActions}>

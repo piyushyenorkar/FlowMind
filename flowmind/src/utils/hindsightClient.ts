@@ -3,7 +3,7 @@
 import { retainMemory, recallMemory } from '../services/api'
 
 /**
- * Store a meeting in Hindsight memory
+ * Store a meeting in FlowMind Memory
  */
 export async function storeMeeting(meetingData) {
   try {
