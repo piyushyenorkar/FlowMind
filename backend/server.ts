@@ -3,6 +3,7 @@ import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cors from 'cors'
 import { mergeTeam, mergeMember, mergeTask, closeDriver } from './services/neo4j'
+import { RtcTokenBuilder, RtcRole } from 'agora-token'
 
 const app = express()
 app.use(cors())
@@ -11,6 +12,8 @@ app.use(express.json())
 const HINDSIGHT_BASE = process.env.HINDSIGHT_BASE_URL!
 const HINDSIGHT_KEY  = process.env.HINDSIGHT_API_KEY!
 const GROQ_KEY       = process.env.GROQ_API_KEY!
+const AGORA_APP_ID   = process.env.AGORA_APP_ID!
+const AGORA_CERT     = process.env.AGORA_APP_CERTIFICATE!
 
 // ── Health check ────────────────────────────────────────────────────────────────
 
@@ -138,6 +141,42 @@ app.post('/api/neo4j/sync-task', async (req: Request, res: Response) => {
     console.error('[Neo4j sync-task]', err.message)
     res.status(500).json({ error: err.message })
   }
+})
+
+// ── Agora Token Route ───────────────────────────────────────────────────────────
+
+app.get('/api/agora/token', (req: Request, res: Response) => {
+  const { channelName, uid } = req.query
+  if (!channelName || !uid) {
+    res.status(400).json({ error: 'channelName and uid are required' })
+    return
+  }
+  if (!AGORA_APP_ID || !AGORA_CERT) {
+    res.status(500).json({ error: 'Agora credentials not configured' })
+    return
+  }
+
+  // Token expires in 1 hour
+  const expirationInSeconds = 3600
+  const currentTimestamp = Math.floor(Date.now() / 1000)
+  const privilegeExpiredTs = currentTimestamp + expirationInSeconds
+
+  const token = RtcTokenBuilder.buildTokenWithUid(
+    AGORA_APP_ID,
+    AGORA_CERT,
+    String(channelName),
+    Number(uid),
+    RtcRole.PUBLISHER,
+    privilegeExpiredTs,
+    privilegeExpiredTs
+  )
+
+  res.json({
+    token,
+    appId: AGORA_APP_ID,
+    channel: channelName,
+    uid: Number(uid),
+  })
 })
 
 // ── Start ───────────────────────────────────────────────────────────────────────

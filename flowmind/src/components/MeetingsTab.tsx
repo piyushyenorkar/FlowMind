@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import Avatar from './Avatar'
 import { analyzeMeeting } from '../utils/meetingAnalyzer'
 import { storeMeeting, storeTask } from '../utils/hindsightClient'
+import { useAgora } from '../hooks/useAgora'
 import styles from './MeetingsTab.module.css'
 
 const AVATAR_COLORS = ['#7c6aff','#22d3a0','#ff6b6b','#fbbf24','#a78bfa','#34bfff']
@@ -533,6 +534,16 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const mediaStreamRef = useRef(null)
   const transcriptEndRef = useRef(null)
 
+  // ── Agora Live Audio ─────────────────────────────────────────────────
+  const agora = useAgora(meeting?.id || '', user?.id || user?.name || 'anonymous')
+
+  // Auto-join Agora when meeting becomes active
+  useEffect(() => {
+    if (meetingState === 'active' && !agora.isConnected && !agora.isConnecting) {
+      agora.join()
+    }
+  }, [meetingState, agora.isConnected, agora.isConnecting])
+
   // Auto-scroll transcript
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -551,6 +562,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     return () => {
       recognitionRef.current?.stop()
       mediaStreamRef.current?.getTracks().forEach(t => t.stop())
+      agora.leave()
     }
   }, [])
 
@@ -659,6 +671,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     clearInterval(timerRef.current)
     recognitionRef.current?.stop()
     mediaStreamRef.current?.getTracks().forEach(t => t.stop())
+    agora.leave()
     // Ensure final transcript is set
     setTranscript(finalTranscriptRef.current)
     onEnd()
@@ -695,6 +708,31 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           </div>
         </div>
       </div>
+
+      {/* Agora Live Audio Status */}
+      {meetingState === 'active' && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+          padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
+          background: agora.isConnected ? 'rgba(34,211,160,0.1)' : agora.isConnecting ? 'rgba(251,191,36,0.1)' : agora.error ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.05)',
+          color: agora.isConnected ? 'var(--green)' : agora.isConnecting ? 'var(--yellow)' : agora.error ? 'var(--red)' : 'var(--text3)',
+          border: `1px solid ${agora.isConnected ? 'rgba(34,211,160,0.2)' : agora.isConnecting ? 'rgba(251,191,36,0.2)' : agora.error ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)'}`,
+          marginBottom: '8px',
+        }}>
+          <div style={{
+            width: '8px', height: '8px', borderRadius: '50%',
+            background: agora.isConnected ? 'var(--green)' : agora.isConnecting ? 'var(--yellow)' : agora.error ? 'var(--red)' : 'var(--text3)',
+            animation: agora.isConnecting ? 'pulse 1s infinite' : 'none',
+          }} />
+          {agora.isConnected
+            ? `🔊 Live Audio Active — ${agora.remoteUsers.length} other${agora.remoteUsers.length !== 1 ? 's' : ''} connected`
+            : agora.isConnecting
+              ? '🔄 Connecting to voice channel...'
+              : agora.error
+                ? `⚠️ ${agora.error}`
+                : '🔇 Voice not connected'}
+        </div>
+      )}
 
       <div className={styles.participantGrid}>
         {attendees.map((name, i) => {
@@ -861,6 +899,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                 stoppedByUserRef.current = true;
                 recognitionRef.current?.stop();
                 mediaStreamRef.current?.getTracks().forEach(t => t.stop());
+                agora.leave();
                 onLeave?.();
               }}>
                 Leave Meeting

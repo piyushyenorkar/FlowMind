@@ -155,7 +155,7 @@ export default function LeaderSetup({ onClose, defaultUniversal }: { onClose?: (
       <div className={styles.header}>
         <div className={styles.iconWrap}><Crown size={24} /></div>
         <h2 className={styles.title} style={{ margin: '16px 0 8px 0', fontSize: '24px' }}>Create New Team</h2>
-        <p className={styles.sub} style={{ marginBottom: '24px' }}>Set up your project and share a team code</p>
+        <p className={styles.sub} style={{ marginBottom: '24px' }}>Set up your project and get a shareable team code</p>
       </div>
 
       <div className={styles.form}>
