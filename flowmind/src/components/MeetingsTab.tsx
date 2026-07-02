@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History } from 'lucide-react'
+import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import Avatar from './Avatar'
@@ -88,11 +88,29 @@ export default function MeetingsTab() {
 function ListView({ meetings, members, setView, setSelected, currentUser, joinLiveMeeting, scheduleMeeting, startLiveMeeting }) {
   const pastMeetings = meetings.filter(m => m.status === 'completed')
   const liveMeetings = meetings.filter(m => m.status === 'ongoing')
-  const scheduledMeetings = meetings.filter(m => m.status === 'scheduled')
+  const allScheduled = meetings.filter(m => m.status === 'scheduled')
+
+  // Split scheduled into truly upcoming vs overdue (date has passed)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const upcomingMeetings = allScheduled.filter(m => {
+    if (!m.date) return true // No date = treat as upcoming
+    return new Date(m.date) >= today
+  })
+  const overdueMeetings = allScheduled.filter(m => {
+    if (!m.date) return false
+    return new Date(m.date) < today
+  })
 
   const totalTasks = pastMeetings.reduce((s, m) => s + (m.tasksCreated?.length || 0), 0)
   const totalDecisions = pastMeetings.reduce((s, m) => s + (m.decisionsLogged?.length || 0), 0)
   const lastDate = pastMeetings.length > 0 ? new Date(pastMeetings[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'
+
+  // Reschedule handler: opens create form pre-filled with meeting data
+  const handleReschedule = (m) => {
+    setSelected({ ...m, _reschedule: true })
+    setView('create')
+  }
 
   return (
     <div className={styles.wrap}>
@@ -119,74 +137,127 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
       </div>
 
       {/* ── Upcoming Meetings ─────────────────────────────── */}
-      {scheduledMeetings.length > 0 && (() => {
-        if (scheduledMeetings.length === 0) return null
-        return (
-          <div style={{ marginTop: '24px' }}>
-            <h3 style={{ fontSize: '14px', marginBottom: '12px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={16} /> Upcoming Meetings</h3>
-            <div className={styles.grid}>
-              {scheduledMeetings.map(m => {
-                const isHost = isHostOfMeeting(m, currentUser?.name);
-                const isInvited = m.attendees?.includes(currentUser?.name) || isHost;
-                
-                return (
-                  <div key={m.id} className={styles.meetingCard} style={{ cursor: isHost ? 'pointer' : 'default' }} onClick={() => {
-                    if (isHost) {
-                      // Host clicks → go to create flow to start the meeting
-                      setSelected(m); setView('create');
-                    }
-                    // Non-hosts cannot open upcoming meetings until started
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div className={styles.cardTitle}>{m.title}</div>
-                        <div className={styles.cardDate}>{m.date ? new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Scheduled'}</div>
-                      </div>
-                      {isHost ? (
-                        <button
-                          className="btn-primary"
-                          style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelected(m); setView('create');
-                          }}
-                        >
-                          <Play size={12} /> Start
-                        </button>
-                      ) : (
-                        <div style={{ fontSize: '11px', color: 'var(--text3)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--surface2)', padding: '4px 8px', borderRadius: '12px' }}>
-                          <Clock size={12} /> Waiting for host
-                        </div>
-                      )}
+      {upcomingMeetings.length > 0 && (
+        <div style={{ marginTop: '24px' }}>
+          <h3 style={{ fontSize: '14px', marginBottom: '12px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={16} /> Upcoming Meetings</h3>
+          <div className={styles.grid}>
+            {upcomingMeetings.map(m => {
+              const isHost = isHostOfMeeting(m, currentUser?.name);
+              const isInvited = m.attendees?.includes(currentUser?.name) || isHost;
+              
+              return (
+                <div key={m.id} className={styles.meetingCard} style={{ cursor: isHost ? 'pointer' : 'default' }} onClick={() => {
+                  if (isHost) {
+                    setSelected(m); setView('create');
+                  }
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div className={styles.cardTitle}>{m.title}</div>
+                      <div className={styles.cardDate}>{m.date ? new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Scheduled'}</div>
                     </div>
-                    <div className={styles.cardAvatars}>
-                      {m.attendees?.slice(0, 4).map((a, i) => (
-                        <div key={i} className={styles.avatarWrapper}>
-                          <Avatar name={a} size={28} />
-                        </div>
-                      ))}
-                      {(m.attendees?.length || 0) > 4 && <div className={styles.cardAvatar} style={{ background: 'var(--surface2)' }}>+{m.attendees.length - 4}</div>}
-                    </div>
-                    <div className={styles.cardSummary}>
-                      {isHost
-                        ? 'You are the host — click to start'
-                        : isInvited 
-                          ? `Hosted by ${m.leader || 'team member'} — waiting to start` 
-                          : `Hosted by ${m.leader || 'team member'}`
-                      }
-                    </div>
-                    {m.agenda && (
-                      <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '4px', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        📋 {m.agenda}
+                    {isHost ? (
+                      <button
+                        className="btn-primary"
+                        style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelected(m); setView('create');
+                        }}
+                      >
+                        <Play size={12} /> Start
+                      </button>
+                    ) : (
+                      <div style={{ fontSize: '11px', color: 'var(--text3)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--surface2)', padding: '4px 8px', borderRadius: '12px' }}>
+                        <Clock size={12} /> Waiting for host
                       </div>
                     )}
                   </div>
-                )
-              })}
-            </div>
+                  <div className={styles.cardAvatars}>
+                    {m.attendees?.slice(0, 4).map((a, i) => (
+                      <div key={i} className={styles.avatarWrapper}>
+                        <Avatar name={a} size={28} />
+                      </div>
+                    ))}
+                    {(m.attendees?.length || 0) > 4 && <div className={styles.cardAvatar} style={{ background: 'var(--surface2)' }}>+{m.attendees.length - 4}</div>}
+                  </div>
+                  <div className={styles.cardSummary}>
+                    {isHost
+                      ? 'You are the host — click to start'
+                      : isInvited 
+                        ? `Hosted by ${m.leader || 'team member'} — waiting to start` 
+                        : `Hosted by ${m.leader || 'team member'}`
+                    }
+                  </div>
+                  {m.agenda && (
+                    <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '4px', lineHeight: '1.4', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      📋 {m.agenda}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
-        )
-      })()}
+        </div>
+      )}
+
+      {/* ── Overdue / Missed Meetings ─────────────────────────────── */}
+      {overdueMeetings.length > 0 && (
+        <div style={{ marginTop: '24px' }}>
+          <h3 style={{ fontSize: '14px', marginBottom: '12px', color: 'var(--red, #ef4444)', display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={16} /> Missed Meetings</h3>
+          <div className={styles.grid}>
+            {overdueMeetings.map(m => {
+              const isHost = isHostOfMeeting(m, currentUser?.name);
+              const isInvited = m.attendees?.includes(currentUser?.name) || isHost;
+
+              return (
+                <div key={m.id} className={styles.meetingCard} style={{ border: '1px solid rgba(239,68,68,0.3)', opacity: 0.85 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div className={styles.cardTitle}>{m.title}</div>
+                      <div className={styles.cardDate} style={{ color: 'var(--red, #ef4444)' }}>
+                        {m.date ? new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Overdue'} — Missed
+                      </div>
+                    </div>
+                    {isHost ? (
+                      <button
+                        className="btn-primary"
+                        style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--yellow, #f59e0b)', color: '#000' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReschedule(m);
+                        }}
+                      >
+                        <RefreshCw size={12} /> Reschedule
+                      </button>
+                    ) : (
+                      <div style={{ fontSize: '11px', color: 'var(--red, #ef4444)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(239,68,68,0.1)', padding: '4px 8px', borderRadius: '12px' }}>
+                        <Clock size={12} /> Missed
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.cardAvatars}>
+                    {m.attendees?.slice(0, 4).map((a, i) => (
+                      <div key={i} className={styles.avatarWrapper}>
+                        <Avatar name={a} size={28} />
+                      </div>
+                    ))}
+                    {(m.attendees?.length || 0) > 4 && <div className={styles.cardAvatar} style={{ background: 'var(--surface2)' }}>+{m.attendees.length - 4}</div>}
+                  </div>
+                  <div className={styles.cardSummary} style={{ color: 'var(--text3)' }}>
+                    {isHost
+                      ? 'This meeting was missed — click Reschedule to pick a new date'
+                      : isInvited
+                        ? `Hosted by ${m.leader || 'team member'} — meeting was not started`
+                        : `Hosted by ${m.leader || 'team member'} — missed`
+                    }
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Live Meetings ─────────────────────────────── */}
       {liveMeetings.length > 0 && (
@@ -266,9 +337,13 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
 
 // ═══════════ CREATE FLOW ═══════════════════════════════════════════════════
 function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDecision, addMeeting, scheduleMeeting, startLiveMeeting, addMemory, team, setView, setSelected, selectedMeeting, currentUser, meetings }) {
-  const [step, setStep] = useState(() => selectedMeeting?.status === 'scheduled' ? 2 : 1)
+  const isReschedule = selectedMeeting?._reschedule === true
+  const [step, setStep] = useState(() => {
+    if (isReschedule) return 1 // Go back to setup to change date
+    return selectedMeeting?.status === 'scheduled' ? 2 : 1
+  })
   const [title, setTitle] = useState(selectedMeeting?.title || '')
-  const [date, setDate] = useState(selectedMeeting?.date || '')
+  const [date, setDate] = useState(isReschedule ? '' : (selectedMeeting?.date || ''))
   const [attendees, setAttendees] = useState(selectedMeeting?.attendees || [])
   const [agenda, setAgenda] = useState(selectedMeeting?.agenda || '')
   const [transcript, setTranscript] = useState('')
@@ -391,7 +466,12 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
       {/* STEP 1: Setup */}
       {step === 1 && (
         <div className={styles.setupForm}>
-          <div className="section-title">Meeting Setup</div>
+          <div className="section-title">{isReschedule ? 'Reschedule Meeting' : 'Meeting Setup'}</div>
+          {isReschedule && (
+            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: 'var(--yellow, #f59e0b)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RefreshCw size={14} /> Pick a new date for this meeting. Title, attendees, and agenda are preserved.
+            </div>
+          )}
           
           <div className={styles.setupMasterBox}>
             <div className={styles.setupGridContent}>
