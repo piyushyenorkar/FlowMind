@@ -148,9 +148,12 @@ export default function AuthPage({ onClose }: { onClose?: () => void }) {
         {/* SLIDING PANEL */}
         <div className={styles.slidingPanel}>
           <div className={styles.panelContent}>
-            <div className={styles.panelTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <span>{isSignUp ? 'Create New Account in' : 'Welcome Back to'}</span>
-              <img src={flowmindImg} alt="FlowMind" className={styles.animatedLogo} style={{ width: 'auto', height: '28px' }} />
+            <div className={styles.panelTitle} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <span>{isSignUp ? 'Create New Account' : 'Welcome Back'}</span>
+                {!isSignUp && <span style={{ fontSize: '18px', fontWeight: 'normal', opacity: 0.8 }}>to</span>}
+              </div>
+              <img src={flowmindImg} alt="FlowMind" className={styles.animatedLogo} style={{ width: 'auto', height: '36px' }} />
             </div>
             <div className={styles.panelSub}>
               {isSignUp

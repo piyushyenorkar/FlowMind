@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
-import { retainMemory } from '../services/api'
+import { retainMemory, syncTeamToGraph, syncMemberToGraph, syncTaskToGraph } from '../services/api'
 import { supabase } from '../services/supabase'
 
 const AppContext = createContext<any>(null)
@@ -279,6 +279,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       throw memberError;
     }
 
+    // Neo4j sync
+    syncTeamToGraph(team.code, team.projectName);
+    syncMemberToGraph(team.code, leader.id, leader.name, leader.role);
+
     // Fetch leader's global profile so their avatar loads immediately
     const { data: leaderUser } = await supabase.from('users').select('name, profile_data').eq('name', leaderName).single()
     const leaderProfile = leaderUser?.profile_data ? { [leaderName]: leaderUser.profile_data } : {}
@@ -327,6 +331,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       role: member.role,
       is_leader: member.isLeader
     }])
+
+    // Neo4j sync
+    syncMemberToGraph(code, member.id, member.name, member.role);
 
     const mappedTeam = teamData ? {
       code: teamData.code,
@@ -423,6 +430,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           deadline: task.deadline,
           created_at: task.createdAt
         }]).then()
+
+        // Neo4j sync
+        syncTaskToGraph(prev.team.code, task.id, task.title, task.status, task.assignedTo);
 
         retainMemory(prev.team.code, `Task "${task.title}" was assigned to ${task.assignedTo}. Description: ${task.description || 'N/A'}. Deadline: ${task.deadline || 'Not set'}. Estimated hours: ${task.estimatedHours}.`, {
           type: 'task_assigned',
