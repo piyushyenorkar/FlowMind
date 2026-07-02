@@ -181,39 +181,39 @@ Be concise but comprehensive. Use bullet points.`
                   </div>
                 )}
                 <div className={`${styles.msgRow} ${isMine ? styles.msgRowMine : styles.msgRowOther}`}>
-                {isMine ? (
-                  <div className={`${styles.msgBubble} ${styles.msgMine}`}>
-                    <span className={styles.msgText}>{msg.text?.trim()}</span>
-                    <span className={styles.msgTimeBelow}>
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', maxWidth: '90%' }}>
-                      {showAvatar ? (
-                        <div className={styles.msgAvatar} style={{ marginTop: '4px' }}>
-                          {avatarUrl ? (
-                            <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
-                          ) : (
-                            <div style={{ width: '100%', height: '100%', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
-                              {msg.from_name?.charAt(0)?.toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div style={{ width: '24px', flexShrink: 0 }} />
-                      )}
-                      <div style={{ position: 'relative', padding: '6px 10px', borderRadius: '14px', borderBottomLeftRadius: '4px', fontSize: '13px', lineHeight: 1.5, wordBreak: 'break-word' as const, background: 'rgba(23, 23, 23, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', color: 'var(--text)' }}>
-                        {showSender && <div style={{ fontSize: '11px', fontWeight: 600, color: getMemberColor(msg.from_name), marginBottom: '4px' }}>{msg.from_name}</div>}
-                        <span className={styles.msgText}>{msg.text?.trim()}</span>
-                        <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '9px', color: 'var(--text3)', opacity: 0.7, lineHeight: 1 }}>
-                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
+                  {isMine ? (
+                    <div className={`${styles.msgBubble} ${styles.msgMine}`}>
+                      <span className={styles.msgText}>{msg.text?.trim()}</span>
+                      <span className={styles.msgTimeBelow}>
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', maxWidth: '90%' }}>
+                        {showAvatar ? (
+                          <div className={styles.msgAvatar} style={{ marginTop: '4px' }}>
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ width: '100%', height: '100%', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+                                {msg.from_name?.charAt(0)?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ width: '24px', flexShrink: 0 }} />
+                        )}
+                        <div style={{ position: 'relative', padding: '6px 10px', borderRadius: '14px', borderBottomLeftRadius: '4px', fontSize: '13px', lineHeight: 1.5, wordBreak: 'break-word' as const, background: 'rgba(23, 23, 23, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', color: 'var(--text)' }}>
+                          {showSender && <div style={{ fontSize: '11px', fontWeight: 600, color: getMemberColor(msg.from_name), marginBottom: '4px' }}>{msg.from_name}</div>}
+                          <span className={styles.msgText}>{msg.text?.trim()}</span>
+                          <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '9px', color: 'var(--text3)', opacity: 0.7, lineHeight: 1 }}>
+                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </React.Fragment>
             )
@@ -237,14 +237,14 @@ Be concise but comprehensive. Use bullet points.`
         {/* Summarize button bar */}
         {messages.length >= 3 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
-            <button 
+            <button
               className={styles.summarizeToggle}
               onClick={() => setShowSummarize(!showSummarize)}
             >
               <span>Summarize Chat</span>
               {showSummarize ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
             </button>
-            
+
             {showSummarize && (
               <div className={styles.summarizeBar}>
                 <button

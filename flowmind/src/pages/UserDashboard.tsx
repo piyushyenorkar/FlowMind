@@ -167,8 +167,8 @@ export default function UserDashboard() {
           {showCreateTeamModal && (
             <>
               <div style={{ position: 'fixed', inset: 0, zIndex: 1000 }} onClick={() => setShowCreateTeamModal(false)} />
-              <div style={{ position: 'absolute', top: '45%', transform: 'translateY(-50%)', right: 'calc(100% + 24px)', zIndex: 1001, background: 'var(--bg2)', borderRadius: '24px', border: '1px solid var(--border)', width: '450px', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
-                <div style={{ maxHeight: 'calc(100vh - 100px)', overflowY: 'auto', padding: '24px' }}>
+              <div style={{ position: 'absolute', top: '45%', transform: 'translateY(-50%)', right: 'calc(100% + 24px)', zIndex: 1001, background: 'var(--bg2)', borderRadius: '24px', border: '1px solid var(--border)', width: '520px', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+                <div style={{ maxHeight: '95vh', overflowY: 'auto', padding: '24px' }}>
                   <LeaderSetup onClose={() => setShowCreateTeamModal(false)} />
                 </div>
               </div>

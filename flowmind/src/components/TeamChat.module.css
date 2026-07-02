@@ -185,7 +185,7 @@
   border-radius: 50px;
   padding: 6px 6px 6px 20px;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   z-index: 10;
   flex-shrink: 0;
 }
@@ -201,6 +201,7 @@
   width: calc(100% - 40px);
   align-self: center;
 }
+
 .inputBar:focus-within {
   background: rgba(255, 255, 255, 0.04);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
@@ -219,6 +220,7 @@
   font-size: 14px;
   transform: translateY(-1px);
 }
+
 .inputBar input::placeholder {
   color: var(--text3);
 }
@@ -319,9 +321,10 @@
   border-radius: 12px;
   transition: all 0.2s;
 }
+
 .summarizeToggle:hover {
   color: var(--text);
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .summarizeBar {
