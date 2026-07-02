@@ -204,14 +204,14 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
       {/* ── Overdue / Missed Meetings ─────────────────────────────── */}
       {overdueMeetings.length > 0 && (
         <div style={{ marginTop: '24px' }}>
-          <h3 style={{ fontSize: '14px', marginBottom: '12px', color: 'var(--red, #ef4444)', display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={16} /> Missed Meetings</h3>
+          <h3 style={{ fontSize: '14px', marginBottom: '12px', color: 'var(--white)', display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={16} /> Missed Meetings</h3>
           <div className={styles.grid}>
             {overdueMeetings.map(m => {
               const isHost = isHostOfMeeting(m, currentUser?.name);
               const isInvited = m.attendees?.includes(currentUser?.name) || isHost;
 
               return (
-                <div key={m.id} className={styles.meetingCard} style={{ border: '1px solid rgba(239,68,68,0.3)', opacity: 0.85 }}>
+                <div key={m.id} className={styles.meetingCard} style={{ opacity: 0.85 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <div className={styles.cardTitle}>{m.title}</div>
@@ -468,8 +468,8 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
         <div className={styles.setupForm}>
           <div className="section-title">{isReschedule ? 'Reschedule Meeting' : 'Meeting Setup'}</div>
           {isReschedule && (
-            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: 'var(--yellow, #f59e0b)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <RefreshCw size={14} /> Pick a new date for this meeting. Title, attendees, and agenda are preserved.
+            <div style={{ background: 'var(--surface2)', borderRadius: '16px', padding: '12px 16px', marginBottom: '16px', fontSize: '13px', color: 'var(--white, #fff)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RefreshCw size={14} style={{ color: 'var(--primary)' }} /> Pick a new date for this meeting. Title, attendees, and agenda are preserved.
             </div>
           )}
           
