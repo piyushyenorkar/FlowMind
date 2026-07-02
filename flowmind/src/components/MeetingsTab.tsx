@@ -859,7 +859,9 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                 <div className={styles.bar} /><div className={styles.bar} /><div className={styles.bar} /><div className={styles.bar} />
               </div>
             ) : (
-              <div className={styles.pSub}>{isJoined ? '—' : 'Invited'}</div>
+              <div className={styles.pSub}>
+                {isJoined ? '—' : (name === meeting?.leader || (isMe && isLeader)) ? 'Host' : 'Invited'}
+              </div>
             )}
           </div>
           );
