@@ -602,7 +602,13 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const activeAttendees = meeting?.activeAttendees || []
 
   const [micStatus, setMicStatus] = useState('idle') // idle | requesting | listening | paused | denied | unsupported
-  const [meetingState, setMeetingState] = useState('idle') // idle | active | paused
+  const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
+  
+  useEffect(() => {
+    if (meeting?.status === 'ongoing' && meetingState === 'idle') {
+      setMeetingState('active')
+    }
+  }, [meeting?.status, meetingState])
   const [showTranscript, setShowTranscript] = useState(true)
   const [showManualInput, setShowManualInput] = useState(false)
   const [manualNoteError, setManualNoteError] = useState(false)
