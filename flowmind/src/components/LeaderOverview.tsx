@@ -21,8 +21,6 @@ export default function LeaderOverview({ setActiveTab }) {
       })
     }
   }, [team?.code, tasks.length, decisions.length])
-  const [showMembersModal, setShowMembersModal] = useState(false)
-
   const done = tasks.filter(t => t.status === 'done').length
   const inProgress = tasks.filter(t => t.status === 'in-progress').length
   const todo = tasks.filter(t => t.status === 'todo').length
