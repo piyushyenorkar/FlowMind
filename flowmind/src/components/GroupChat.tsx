@@ -17,6 +17,7 @@ function getMemberColor(name: string) {
 export default function GroupChat() {
   const { team, currentUser, members, memberProfiles } = useApp()
   const [messages, setMessages] = useState<any[]>([])
+  const [memberReads, setMemberReads] = useState<Record<string, string>>({})
   const [text, setText] = useState('')
   const [summarizing, setSummarizing] = useState(false)
   const [showSummarize, setShowSummarize] = useState(false)
@@ -24,19 +25,26 @@ export default function GroupChat() {
   const bottomRef = useRef<any>(null)
   const teamCode = team?.code || ''
 
-  // Load messages
+  // Load messages & read receipts
   useEffect(() => {
-    const loadMessages = async () => {
+    const loadData = async () => {
       if (!teamCode) return
       const { data, error } = await supabase.from('group_chats').select('*').eq('team_code', teamCode).order('timestamp', { ascending: true })
       if (!error && data) {
         setMessages(data)
       }
+      
+      const { data: readData } = await supabase.from('team_chat_reads').select('*').eq('team_code', teamCode)
+      if (readData) {
+        const reads: Record<string, string> = {}
+        readData.forEach((r: any) => reads[r.user_name] = r.last_read_timestamp)
+        setMemberReads(reads)
+      }
     }
-    loadMessages()
+    loadData()
   }, [teamCode])
 
-  // Poll for new messages every 2s
+  // Poll for new messages and reads every 2s
   useEffect(() => {
     const interval = setInterval(async () => {
       if (!teamCode) return
@@ -44,9 +52,31 @@ export default function GroupChat() {
       if (!error && data) {
         setMessages(data)
       }
+
+      const { data: readData } = await supabase.from('team_chat_reads').select('*').eq('team_code', teamCode)
+      if (readData) {
+        const reads: Record<string, string> = {}
+        readData.forEach((r: any) => reads[r.user_name] = r.last_read_timestamp)
+        setMemberReads(reads)
+      }
     }, 2000)
     return () => clearInterval(interval)
   }, [teamCode])
+
+  // Upsert current user's read receipt
+  useEffect(() => {
+    if (messages.length > 0 && teamCode && currentUser?.name) {
+      const latestTimestamp = messages[messages.length - 1].timestamp;
+      console.log('Upserting read receipt for:', currentUser.name, latestTimestamp)
+      supabase.from('team_chat_reads').upsert([{
+        team_code: teamCode,
+        user_name: currentUser.name,
+        last_read_timestamp: latestTimestamp
+      }], { onConflict: 'team_code, user_name' }).then(({ error }) => {
+        if (error) console.error('Upsert read receipt error:', error)
+      })
+    }
+  }, [messages, teamCode, currentUser])
 
   // Auto-scroll
   useEffect(() => {
@@ -86,19 +116,16 @@ export default function GroupChat() {
     setSummary(null)
 
     try {
-      // Step 1: Get recent messages for context
       const recentMsgs = messages.slice(-30)
       const chatLog = recentMsgs.map(m =>
         `[${new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}] ${m.from_name}: ${m.text}`
       ).join('\n')
 
-      // Step 2: Recall from Hindsight for extra context
       const recalled = await recallMemory(teamCode, 'group chat discussions decisions actions')
       const memoryContext = recalled
         ? JSON.stringify(recalled).substring(0, 2000)
         : 'No additional memories available.'
 
-      // Step 3: Summarize using Groq
       const systemPrompt = `You are FlowMind AI. Summarize the following team group chat conversation. Include:
 1. **Key points** discussed
 2. **Decisions** made (if any)
@@ -117,7 +144,6 @@ Be concise but comprehensive. Use bullet points.`
       const summaryText = reply || 'Unable to generate summary. Please try again.'
       setSummary(summaryText)
 
-      // Store summary in Hindsight
       retainMemory(
         teamCode,
         `Group chat summary generated: ${summaryText}`,
@@ -132,6 +158,33 @@ Be concise but comprehensive. Use bullet points.`
 
   const myName = currentUser?.name || ''
   const memberCount = members?.length || 0
+
+  // Pre-calculate the latest read message index for each user
+  const readReceiptsByIndex: Record<number, string[]> = {}
+  Object.keys(memberReads).forEach(userName => {
+    if (userName === myName) return // Don't show my own read receipt
+    const readTs = new Date(memberReads[userName]).getTime()
+    
+    let lastIdx = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (new Date(messages[i].timestamp).getTime() <= readTs) {
+        lastIdx = i;
+        break;
+      }
+    }
+    if (lastIdx !== -1) {
+      // Don't show a user's read receipt on their own message
+      if (messages[lastIdx].from_name !== userName) {
+        if (!readReceiptsByIndex[lastIdx]) {
+          readReceiptsByIndex[lastIdx] = []
+        }
+        readReceiptsByIndex[lastIdx].push(userName)
+      }
+    }
+  })
+
+  // Debug log to see calculated read receipts
+  console.log('readReceiptsByIndex:', readReceiptsByIndex)
 
   return (
     <div className={styles.groupWrap}>
@@ -169,9 +222,10 @@ Be concise but comprehensive. Use bullet points.`
             }
 
             const showSender = !isMine && (!prevMsg || prevMsg.from_name !== msg.from_name || showDateDivider)
-
             const avatarUrl = memberProfiles?.[msg.from_name]?.photoUrl || null
             const showAvatar = !isMine && (!prevMsg || prevMsg.from_name !== msg.from_name || showDateDivider)
+
+            const readers = readReceiptsByIndex[i] || []
 
             return (
               <React.Fragment key={i}>
@@ -181,40 +235,73 @@ Be concise but comprehensive. Use bullet points.`
                   </div>
                 )}
                 <div className={`${styles.msgRow} ${isMine ? styles.msgRowMine : styles.msgRowOther}`}>
-                {isMine ? (
-                  <div className={`${styles.msgBubble} ${styles.msgMine}`}>
-                    <span className={styles.msgText}>{msg.text?.trim()}</span>
-                    <span className={styles.msgTimeBelow}>
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                ) : (
-                  <>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', maxWidth: '90%' }}>
-                      {showAvatar ? (
-                        <div className={styles.msgAvatar} style={{ marginTop: '4px' }}>
-                          {avatarUrl ? (
-                            <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
+                  {isMine ? (
+                    <div className={`${styles.msgBubble} ${styles.msgMine}`}>
+                      <span className={styles.msgText}>{msg.text?.trim()}</span>
+                      <span className={styles.msgTimeBelow}>
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', maxWidth: '90%' }}>
+                        {showAvatar ? (
+                          <div className={styles.msgAvatar} style={{ marginTop: '4px' }}>
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ width: '100%', height: '100%', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+                                {msg.from_name?.charAt(0)?.toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ width: '24px', flexShrink: 0 }} />
+                        )}
+                        <div style={{ position: 'relative', padding: '6px 10px', borderRadius: '14px', borderBottomLeftRadius: '4px', fontSize: '13px', lineHeight: 1.5, wordBreak: 'break-word' as const, background: 'rgba(23, 23, 23, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', color: 'var(--text)' }}>
+                          {showSender && <div style={{ fontSize: '11px', fontWeight: 600, color: getMemberColor(msg.from_name), marginBottom: '4px' }}>{msg.from_name}</div>}
+                          <span className={styles.msgText}>{msg.text?.trim()}</span>
+                          <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '9px', color: 'var(--text3)', opacity: 0.7, lineHeight: 1 }}>
+                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {/* Instagram-style Read Receipts */}
+                {readers.length > 0 && (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: isMine ? 'flex-end' : 'flex-start', 
+                    gap: '4px', 
+                    marginTop: '2px', 
+                    marginBottom: '8px',
+                    padding: isMine ? '0 10px' : '0 40px' 
+                  }}>
+                    {readers.map(reader => {
+                      const rAvatar = memberProfiles?.[reader]?.photoUrl || null
+                      return (
+                        <div key={reader} className={styles.readReceiptAvatar}>
+                          {rAvatar ? (
+                            <img src={rAvatar} alt={reader} className={styles.readReceiptImg} />
                           ) : (
-                            <div style={{ width: '100%', height: '100%', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
-                              {msg.from_name?.charAt(0)?.toUpperCase()}
+                            <div 
+                              className={styles.readReceiptFallback}
+                              style={{ background: getMemberColor(reader) }}
+                            >
+                              {reader.charAt(0).toUpperCase()}
                             </div>
                           )}
+                          <div className={styles.readReceiptTooltip}>
+                            Seen by {reader}
+                          </div>
                         </div>
-                      ) : (
-                        <div style={{ width: '24px', flexShrink: 0 }} />
-                      )}
-                      <div style={{ position: 'relative', padding: '6px 10px', borderRadius: '14px', borderBottomLeftRadius: '4px', fontSize: '13px', lineHeight: 1.5, wordBreak: 'break-word' as const, background: 'rgba(23, 23, 23, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', color: 'var(--text)' }}>
-                        {showSender && <div style={{ fontSize: '11px', fontWeight: 600, color: getMemberColor(msg.from_name), marginBottom: '4px' }}>{msg.from_name}</div>}
-                        <span className={styles.msgText}>{msg.text?.trim()}</span>
-                        <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '9px', color: 'var(--text3)', opacity: 0.7, lineHeight: 1 }}>
-                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                    </div>
-                  </>
+                      )
+                    })}
+                  </div>
                 )}
-                </div>
               </React.Fragment>
             )
           })}
@@ -237,31 +324,31 @@ Be concise but comprehensive. Use bullet points.`
         {/* Summarize button bar */}
         {messages.length >= 3 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
-            <button 
+            <button
               className={styles.summarizeToggle}
               onClick={() => setShowSummarize(!showSummarize)}
             >
               <span>Summarize Chat</span>
               {showSummarize ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
             </button>
-            
+
             {showSummarize && (
-              <div className={styles.summarizeBar}>
-                <button
-                  className={styles.summarizeBtn}
-                  onClick={handleSummarize}
-                  disabled={summarizing}
-                >
-                  {summarizing ? (
-                    <><span className="spinner" style={{ width: 14, height: 14 }} /> Summarizing...</>
-                  ) : (
-                    <><Brain size={14} /> Generate Summary</>
-                  )}
-                </button>
-                <span style={{ fontSize: '11px', color: 'var(--text3)' }}>
-                  {messages.length} messages · Powered by flowmind
-                </span>
-              </div>
+               <div className={styles.summarizeBar}>
+                 <button
+                   className={styles.summarizeBtn}
+                   onClick={handleSummarize}
+                   disabled={summarizing}
+                 >
+                   {summarizing ? (
+                     <><span className="spinner" style={{ width: 14, height: 14 }} /> Summarizing...</>
+                   ) : (
+                     <><Brain size={14} /> Generate Summary</>
+                   )}
+                 </button>
+                 <span style={{ fontSize: '11px', color: 'var(--text3)' }}>
+                   {messages.length} messages · Powered by flowmind
+                 </span>
+               </div>
             )}
           </div>
         )}
@@ -282,3 +369,4 @@ Be concise but comprehensive. Use bullet points.`
     </div>
   )
 }
+

@@ -182,3 +182,12 @@ ALTER TABLE public.direct_chats DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.applications DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.application_chats DISABLE ROW LEVEL SECURITY;
 
+-- Team Chat Reads (Read Receipts)
+CREATE TABLE IF NOT EXISTS public.team_chat_reads (
+  team_code TEXT NOT NULL REFERENCES public.teams(code) ON DELETE CASCADE,
+  user_name TEXT NOT NULL,
+  last_read_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (team_code, user_name)
+);
+
+ALTER TABLE public.team_chat_reads DISABLE ROW LEVEL SECURITY;
