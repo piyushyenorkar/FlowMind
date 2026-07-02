@@ -79,6 +79,122 @@ export async function mergeTask(
   }
 }
 
+// ── Graph Insight Queries ────────────────────────────────────────────────────────
+
+export interface MemberWorkload {
+  name: string
+  role: string
+  totalTasks: number
+  todoCount: number
+  inProgressCount: number
+  doneCount: number
+  taskTitles: string[]
+}
+
+export interface TaskChain {
+  memberName: string
+  tasks: string[]
+  statuses: string[]
+}
+
+export interface GraphInsightData {
+  memberWorkloads: MemberWorkload[]
+  taskChains: TaskChain[]
+  overloadedMembers: string[]
+  idleMembers: string[]
+  totalNodes: number
+  totalRelationships: number
+}
+
+export async function queryTeamGraph(teamCode: string): Promise<GraphInsightData> {
+  const session = driver.session()
+  try {
+    // 1. Member workload distribution
+    const workloadResult = await session.run(
+      `MATCH (m:Member)-[:BELONGS_TO]->(:Team {code: $teamCode})
+       OPTIONAL MATCH (m)-[:ASSIGNED_TO]->(task:Task)-[:BELONGS_TO]->(:Team {code: $teamCode})
+       WITH m,
+            collect(task) AS tasks,
+            count(task) AS totalTasks
+       RETURN m.name AS name,
+              m.role AS role,
+              totalTasks,
+              size([t IN tasks WHERE t.status = 'todo']) AS todoCount,
+              size([t IN tasks WHERE t.status = 'in-progress']) AS inProgressCount,
+              size([t IN tasks WHERE t.status = 'done']) AS doneCount,
+              [t IN tasks | t.title] AS taskTitles
+       ORDER BY totalTasks DESC`,
+      { teamCode }
+    )
+
+    const memberWorkloads: MemberWorkload[] = workloadResult.records.map(r => ({
+      name: r.get('name'),
+      role: r.get('role'),
+      totalTasks: (r.get('totalTasks') as any).toNumber?.() ?? r.get('totalTasks'),
+      todoCount: (r.get('todoCount') as any).toNumber?.() ?? r.get('todoCount'),
+      inProgressCount: (r.get('inProgressCount') as any).toNumber?.() ?? r.get('inProgressCount'),
+      doneCount: (r.get('doneCount') as any).toNumber?.() ?? r.get('doneCount'),
+      taskTitles: r.get('taskTitles'),
+    }))
+
+    // 2. Task chains: members who share multiple tasks (potential bottlenecks)
+    const chainResult = await session.run(
+      `MATCH (m:Member)-[:ASSIGNED_TO]->(task:Task)-[:BELONGS_TO]->(:Team {code: $teamCode})
+       WITH m, collect(task.title) AS tasks, collect(task.status) AS statuses
+       WHERE size(tasks) >= 2
+       RETURN m.name AS memberName, tasks, statuses
+       ORDER BY size(tasks) DESC`,
+      { teamCode }
+    )
+
+    const taskChains: TaskChain[] = chainResult.records.map(r => ({
+      memberName: r.get('memberName'),
+      tasks: r.get('tasks'),
+      statuses: r.get('statuses'),
+    }))
+
+    // 3. Graph stats
+    const statsResult = await session.run(
+      `MATCH (n)-[:BELONGS_TO]->(:Team {code: $teamCode})
+       WITH count(n) AS nodes
+       OPTIONAL MATCH ()-[r]->()-[:BELONGS_TO]->(:Team {code: $teamCode})
+       RETURN nodes, count(r) AS rels`,
+      { teamCode }
+    )
+
+    const totalNodes = statsResult.records.length > 0
+      ? ((statsResult.records[0].get('nodes') as any).toNumber?.() ?? 0)
+      : 0
+    const totalRelationships = statsResult.records.length > 0
+      ? ((statsResult.records[0].get('rels') as any).toNumber?.() ?? 0)
+      : 0
+
+    // Derive overloaded and idle members
+    const avgTasks = memberWorkloads.length > 0
+      ? memberWorkloads.reduce((sum, m) => sum + m.totalTasks, 0) / memberWorkloads.length
+      : 0
+
+    const overloadedMembers = memberWorkloads
+      .filter(m => m.totalTasks > avgTasks * 1.5 && m.totalTasks >= 2)
+      .map(m => m.name)
+
+    const idleMembers = memberWorkloads
+      .filter(m => m.totalTasks === 0)
+      .map(m => m.name)
+
+    return {
+      memberWorkloads,
+      taskChains,
+      overloadedMembers,
+      idleMembers,
+      totalNodes,
+      totalRelationships,
+    }
+  } finally {
+    await session.close()
+  }
+}
+
 // ── Graceful shutdown ───────────────────────────────────────────────────────────
 
 export async function closeDriver(): Promise<void> {
