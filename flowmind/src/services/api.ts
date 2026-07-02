@@ -151,7 +151,7 @@ export async function generateInsights(teamCode: string, tasks: any[], decisions
     } catch {}
   }
   if (!memoryContext.trim()) {
-    memoryContext = 'No memories found in Hindsight for this team yet.'
+    memoryContext = 'No memories found in FlowMind Memory for this team yet.'
   }
 
   // Step 2: Fetch Graph Data (Neo4j)
@@ -168,7 +168,7 @@ export async function generateInsights(teamCode: string, tasks: any[], decisions
     name: m.name, role: m.role, isLeader: m.isLeader,
   }))
 
-  const systemPrompt = `You are FlowMind AI — a project intelligence engine. You analyze REAL team data stored in Hindsight memory and Neo4j Graph Database to surface actionable insights.
+  const systemPrompt = `You are FlowMind AI — a project intelligence engine. You analyze REAL team data stored in FlowMind Memory and Neo4j Graph Database to surface actionable insights.
 
 CRITICAL: Your analysis must be SPECIFIC to this team. Use actual task names, member names, deadlines, and memory context. Do NOT generate generic insights.
 
@@ -187,13 +187,13 @@ ${JSON.stringify(decisionData, null, 1)}
 MEMBERS:
 ${JSON.stringify(memberData, null, 1)}
 
-HINDSIGHT MEMORY (past events, conversations, patterns):
+FLOWMIND MEMORY (past events, conversations, patterns):
 ${memoryContext.substring(0, 4000)}
 
 RULES:
 1. Reference ACTUAL task names and member names from the data above
 2. Calculate risk scores based on deadline proximity, workload, and memory patterns
-3. Identify patterns from the Hindsight memory — recurring issues, communication gaps, workload imbalances
+3. Identify patterns from the FlowMind Memory — recurring issues, communication gaps, workload imbalances
 4. For bottlenecks, heavily rely on the Neo4j Graph Insights. If someone is overloaded or tasks are chaining, point it out explicitly ("Task A is delayed, which is connected to Member Raj, who is also assigned to Task B, creating a bottleneck").
 5. Recommendation must be a specific, actionable paragraph referencing real data
 
@@ -207,7 +207,7 @@ Respond with ONLY valid JSON, no markdown, no explanation:
 Provide 2-4 items per category.`
 
   try {
-    const reply = await groqChat([{ role: 'user', content: 'Analyze this team data and Hindsight memory.' }], systemPrompt, { maxTokens: 3000 })
+    const reply = await groqChat([{ role: 'user', content: 'Analyze this team data and FlowMind Memory.' }], systemPrompt, { maxTokens: 3000 })
     if (!reply) return null
 
     const cleaned = reply.replace(/```json|```/g, '').trim()
@@ -230,14 +230,14 @@ export async function sendChatMessage(teamCode: string, userMessage: string, con
   const recalled = await recallMemory(teamCode, userMessage)
   const memoryContext = recalled ? JSON.stringify(recalled).substring(0, 2000) : 'No specific memories found.'
 
-  const systemPrompt = `You are FlowMind AI, an intelligent project assistant with access to Hindsight memory.
+  const systemPrompt = `You are FlowMind AI, an intelligent project assistant with access to FlowMind Memory.
 Team context:
 - ${context.tasks?.length || 0} tasks (${context.tasks?.filter((t: any) => t.status === 'done')?.length || 0} done)
 - ${context.decisions?.length || 0} decisions logged
 - ${context.members?.length || 0} team members active
 - Recent activity: ${context.memoryFeed?.slice(0, 5).map((m: any) => m.text).join('; ') || 'None'}
 
-Hindsight Memory Recall: ${memoryContext}
+FlowMind Memory Recall: ${memoryContext}
 Tasks: ${JSON.stringify(context.tasks?.map((t: any) => ({ title: t.title, assignedTo: t.assignedTo, status: t.status })) || [])}
 Decisions: ${JSON.stringify(context.decisions?.map((d: any) => ({ decision: d.decision, impact: d.impact })) || [])}
 
@@ -245,7 +245,7 @@ Rules:
 - Be concise but helpful
 - Reference specific tasks, decisions, and team members by name when relevant
 - Use **bold** for emphasis
-- Base your answers on the actual data and Hindsight memories provided`
+- Base your answers on the actual data and FlowMind Memories provided`
 
   const messages = conversationHistory
     .filter(m => m.role && m.text)
@@ -255,5 +255,5 @@ Rules:
   messages.push({ role: 'user', content: userMessage })
 
   const reply = await groqChat(messages, systemPrompt)
-  return reply || "I've searched Hindsight memory for context on your question..."
+  return reply || "I've searched FlowMind Memory for context on your question."
 }
