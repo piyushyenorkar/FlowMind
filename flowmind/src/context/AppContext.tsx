@@ -575,10 +575,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         status: 'scheduled',
         leader: prev.currentUser?.name,
       }
-      const newMeetings = [newMeeting, ...prev.meetings]
+      
+      const isUpdate = prev.meetings.some((m: any) => m.id === newMeeting.id)
+      const newMeetings = isUpdate 
+        ? prev.meetings.map((m: any) => m.id === newMeeting.id ? newMeeting : m)
+        : [newMeeting, ...prev.meetings]
 
       if (prev.team?.code) {
-        supabase.from('meetings').insert([{
+        supabase.from('meetings').upsert([{
           id: newMeeting.id,
           team_code: prev.team.code,
           title: newMeeting.title,
@@ -589,7 +593,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           leader: prev.currentUser?.name
         }]).then(({ error }) => {
           if (error) {
-            console.error('Error inserting scheduled meeting:', error)
+            console.error('Error upserting scheduled meeting:', error)
             alert(`Database Error: ${error.message}\n\nDid you run the SQL migration to add 'leader' and 'agenda' columns?`)
             // Revert optimistic update
             setState((s: any) => ({

@@ -469,7 +469,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
           <div className="section-title">{isReschedule ? 'Reschedule Meeting' : 'Meeting Setup'}</div>
           {isReschedule && (
             <div style={{ background: 'var(--surface2)', borderRadius: '16px', padding: '12px 16px', marginBottom: '16px', fontSize: '13px', color: 'var(--white, #fff)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <RefreshCw size={14} style={{ color: 'var(--primary)' }} /> Pick a new date for this meeting. Title, attendees, and agenda are preserved.
+              <RefreshCw size={14} style={{ color: 'var(--primary1)' }} /> Pick a new date for this meeting. Title, attendees, and agenda are preserved.
             </div>
           )}
           
@@ -489,7 +489,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
                   <textarea className="textarea" placeholder="What will be discussed..." value={agenda} onChange={e => setAgenda(e.target.value)} style={{ borderRadius: '16px' }} />
                 </div>
                 <button className="btn-primary" disabled={!title.trim() || attendees.length === 0} onClick={() => {
-                  const meetingId = 'meeting_' + Date.now()
+                  const meetingId = isReschedule ? selectedMeeting.id : 'meeting_' + Date.now()
                   const meetingObj = {
                     id: meetingId,
                     title,
