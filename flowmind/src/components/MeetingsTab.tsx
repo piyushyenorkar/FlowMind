@@ -1088,7 +1088,7 @@ function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting
       setTranscript={setTranscript}
       duration={duration}
       setDuration={setDuration}
-      onEnd={() => {}} // Only host in CreateFlow can end & analyze
+      onEnd={() => setView('list')} // handleEnd inside VoiceRoom already updates Supabase status
       onLeave={() => setView('list')}
       onStart={() => {
         // If the host re-enters a scheduled meeting via ListView card, start it
