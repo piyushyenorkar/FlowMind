@@ -9,7 +9,7 @@ import { storeMeeting, storeTask } from '../utils/hindsightClient'
 import { useAgora } from '../hooks/useAgora'
 import styles from './MeetingsTab.module.css'
 
-const AVATAR_COLORS = ['#7c6aff','#22d3a0','#ff6b6b','#fbbf24','#a78bfa','#34bfff']
+const AVATAR_COLORS = ['#7c6aff', '#22d3a0', '#ff6b6b', '#fbbf24', '#a78bfa', '#34bfff']
 
 // Helper: determine if current user is the host of a meeting
 // Falls back to attendee[0] / activeAttendee[0] for old meetings created before the `leader` column existed
@@ -117,10 +117,10 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
     <div className={styles.wrap}>
       <div className={styles.headerRow}>
         <div>
-          <div className={styles.headerTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mic size={20}/> AI Meetings</div>
+          <div className={styles.headerTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mic size={20} /> AI Meetings</div>
           <div className={styles.headerSub}>Voice meetings analyzed and converted to tasks</div>
         </div>
-        <button className="btn-primary" onClick={() => setView('create')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mic size={16}/> New Meeting</button>
+        <button className="btn-primary" onClick={() => setView('create')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mic size={16} /> New Meeting</button>
       </div>
 
       <div className={styles.statsRow}>
@@ -145,7 +145,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
             {upcomingMeetings.map(m => {
               const isHost = isHostOfMeeting(m, currentUser?.name);
               const isInvited = m.attendees?.includes(currentUser?.name) || isHost;
-              
+
               return (
                 <div key={m.id} className={styles.meetingCard} style={{ cursor: isHost ? 'pointer' : 'default' }} onClick={() => {
                   if (isHost) {
@@ -185,8 +185,8 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
                   <div className={styles.cardSummary}>
                     {isHost
                       ? 'You are the host — click to start'
-                      : isInvited 
-                        ? `Hosted by ${m.leader || 'team member'} — waiting to start` 
+                      : isInvited
+                        ? `Hosted by ${m.leader || 'team member'} — waiting to start`
                         : `Hosted by ${m.leader || 'team member'}`
                     }
                   </div>
@@ -269,9 +269,9 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
               const isJoined = m.activeAttendees?.includes(currentUser?.name);
               const isInvited = m.attendees?.includes(currentUser?.name);
               const isHost = isHostOfMeeting(m, currentUser?.name);
-              
+
               return (
-                <div key={m.id} className={styles.meetingCard} style={{ border: '1px solid var(--green)' }} onClick={() => { 
+                <div key={m.id} className={styles.meetingCard} style={{ border: '1px solid var(--green)' }} onClick={() => {
                   if (isJoined || isHost) {
                     setSelected(m); setView('voiceRoom');
                   } else if (isInvited) {
@@ -304,7 +304,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
       <h3 style={{ fontSize: '14px', margin: '4px 0 12px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}><History size={16} /> Past Meetings</h3>
       {pastMeetings.length === 0 ? (
         <div className={styles.emptyCard}>
-          <div className={styles.emptyIcon}><Mic size={40}/></div>
+          <div className={styles.emptyIcon}><Mic size={40} /></div>
           <div className={styles.emptyTitle}>No meetings yet</div>
           <div className={styles.emptySub}>Start a voice meeting and let AI auto-assign tasks</div>
           <button className="btn-primary" onClick={() => setView('create')}>Start New Meeting</button>
@@ -349,7 +349,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
   const [agenda, setAgenda] = useState(selectedMeeting?.agenda || '')
   const [transcript, setTranscript] = useState('')
   const [duration, setDuration] = useState(0)
-  
+
   const [analysis, setAnalysis] = useState(null)
   const [checkedTasks, setCheckedTasks] = useState({})
   const [checkedDecisions, setCheckedDecisions] = useState({})
@@ -473,7 +473,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
               <RefreshCw size={14} style={{ color: 'var(--primary1)' }} /> Pick a new date for this meeting. Title, attendees, and agenda are preserved.
             </div>
           )}
-          
+
           <div className={styles.setupMasterBox}>
             <div className={styles.setupGridContent}>
               <div className={styles.setupLeft}>
@@ -507,9 +507,9 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
                   Create Meeting
                 </button>
               </div>
-              
+
               <div className={styles.divider}></div>
-              
+
               <div className={styles.setupRight}>
                 <label className="label">Select Attendees</label>
                 <div className={styles.attendeeList}>
@@ -602,21 +602,9 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const attendees = meeting?.attendees || []
   const activeAttendees = meeting?.activeAttendees || []
 
-  const [micStatus, setMicStatus] = useState<'idle'|'requesting'|'listening'|'paused'|'denied'|'unsupported'>('idle')
+  const [micStatus, setMicStatus] = useState<'idle' | 'requesting' | 'listening' | 'paused' | 'denied' | 'unsupported'>('idle')
   const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
-  
-  // Track all users who have ever joined this meeting session to show 'Left' status
-  const [historicalAttendees, setHistoricalAttendees] = useState<Set<string>>(new Set(activeAttendees))
-  useEffect(() => {
-    if (activeAttendees.length > 0) {
-      setHistoricalAttendees(prev => {
-        const next = new Set(prev)
-        activeAttendees.forEach(a => next.add(a))
-        return next
-      })
-    }
-  }, [activeAttendees])
-  
+
   // Sync meetingState from meeting status (realtime updates)
   useEffect(() => {
     if (meeting?.status === 'ongoing' && meetingState === 'idle') {
@@ -642,7 +630,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const timerRef = useRef<any>(null)
   const recognitionRef = useRef<any>(null)
   const finalTranscriptRef = useRef(transcript || '')
-  
+
 
   const micStatusRef = useRef(micStatus)
   useEffect(() => { micStatusRef.current = micStatus }, [micStatus])
@@ -674,7 +662,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   // ── Real-time Transcript Broadcast ───────────────────────────────────
   const broadcastChannelRef = useRef<any>(null)
   const [broadcastStatus, setBroadcastStatus] = useState<string>('connecting')
-  
+
   useEffect(() => {
     if (!meeting?.id) return
     const channel = supabase.channel(`room-${meeting.id}`, {
@@ -682,7 +670,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
         broadcast: { ack: true },
       },
     })
-    
+
     channel.on('broadcast', { event: 'speech' }, (payload) => {
       console.log('[VoiceRoom] Received broadcast:', payload)
       const newLine = payload.payload?.text
@@ -709,7 +697,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     if (!meeting?.id || !transcript) return
     // ONLY the meeting leader (host) syncs the transcript to the database
     // This prevents RLS permission errors and concurrent write overwrites
-    if (user?.name !== meeting?.leader) return 
+    if (user?.name !== meeting?.leader) return
 
     clearTimeout(transcriptSyncRef.current)
     transcriptSyncRef.current = setTimeout(() => {
@@ -727,7 +715,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     const incomingLines = meeting.transcript.split('\n').filter(l => l.trim())
     const localLines = finalTranscriptRef.current.split('\n').filter(l => l.trim())
     const newLines = incomingLines.filter(line => !localLines.includes(line))
-    
+
     if (newLines.length > 0) {
       const merged = finalTranscriptRef.current + newLines.join('\n') + '\n'
       finalTranscriptRef.current = merged
@@ -792,19 +780,19 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           interim += result[0].transcript
         }
       }
-      
+
       if (newFinal) {
         console.log('[VoiceRoom] Final speech detected locally:', newFinal)
         finalTranscriptRef.current += newFinal
         setTranscript(finalTranscriptRef.current)
-        
+
         if (broadcastChannelRef.current && broadcastStatus === 'connected') {
           broadcastChannelRef.current.send({
             type: 'broadcast',
             event: 'speech',
             payload: { text: newFinal.trim() }
           }).then(() => console.log('[VoiceRoom] Broadcast sent successfully'))
-          .catch((e: any) => console.warn('[VoiceRoom] Broadcast error:', e))
+            .catch((e: any) => console.warn('[VoiceRoom] Broadcast error:', e))
         }
       }
       setInterimText(interim)
@@ -822,7 +810,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       if (micStatusRef.current === 'listening') {
         setTimeout(() => {
           if (micStatusRef.current === 'listening') {
-            try { recognition.start() } catch (e) {}
+            try { recognition.start() } catch (e) { }
           }
         }, 300)
       }
@@ -880,16 +868,16 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const mins = String(Math.floor(duration / 60)).padStart(2, '0')
   const secs = String(duration % 60).padStart(2, '0')
 
-  const micStatusLabel = meetingState === 'idle' 
+  const micStatusLabel = meetingState === 'idle'
     ? (isLeader ? 'Click "Start Meeting" to begin' : `Waiting for ${meeting?.leader || 'the host'} to start the meeting...`)
     : {
-        idle: 'Click mic icon to start recording',
-        requesting: 'Requesting microphone access...',
-        listening: 'Recording — speak clearly',
-        paused: 'Microphone off — click icon to speak',
-        denied: 'Microphone access denied — type your notes below',
-        unsupported: 'Voice not supported in this browser — type your notes below',
-      }[micStatus]
+      idle: 'Click mic icon to start recording',
+      requesting: 'Requesting microphone access...',
+      listening: 'Recording — speak clearly',
+      paused: 'Microphone off — click icon to speak',
+      denied: 'Microphone access denied — type your notes below',
+      unsupported: 'Voice not supported in this browser — type your notes below',
+    }[micStatus]
 
   return (
     <div className={styles.voiceRoom}>
@@ -946,59 +934,60 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       <div className={styles.participantGrid}>
         {attendees.map((name, i) => {
           const isMe = name === user?.name;
+          // Use BOTH Supabase activeAttendees AND Agora remoteUsers for real-time status
+          // Agora gives instant feedback, Supabase has slight delay
           const isInActiveAttendees = activeAttendees.includes(name);
-          const isConnectedViaAgora = !isMe && agora.remoteUsers.length > 0;
+          const isConnectedViaAgora = !isMe && agora.remoteUsers.length > 0; // In a 2-person call, if there's a remote user, the other person is connected
           const isJoined = isMe || isInActiveAttendees || isConnectedViaAgora;
           const isSpeaking = isMe && micStatus === 'listening';
+          // Check if remote user has audio via Agora (real-time mic status)
           const hasRemoteAudio = !isMe && isConnectedViaAgora && agora.remoteUsers.some(u => u.hasAudio);
           const isParticipantHost = name === meeting?.leader;
-          const hasLeft = !isJoined && historicalAttendees.has(name);
-          const participantStatusText = isParticipantHost ? 'Host' : (isJoined ? 'Connected' : (hasLeft ? 'Left' : 'Invited'));
-          
+
           return (
-          <div key={i} className={`${styles.participantCard} ${(isSpeaking || hasRemoteAudio) ? styles.pCardSpeaking : ''}`} style={{ opacity: isJoined || isMe ? 1 : 0.5 }}>
-            
-            <div className={styles.micCornerIndicator}>
-              {isMe ? (
-                <button 
-                  className={styles.micCornerBtn} 
-                  disabled={meetingState === 'idle'}
-                  style={meetingState === 'idle' ? { opacity: 0.5, cursor: 'default' } : {}}
-                  onClick={() => {
-                    if (meetingState === 'idle') return;
-                    if (micStatus === 'listening') pauseListening()
-                    else if (micStatus === 'paused') resumeListening()
-                    else if (micStatus === 'idle') startListening()
-                  }}
-                  title={meetingState === 'idle' ? "Start meeting to enable microphone" : "Toggle your microphone"}
-                >
-                  {micStatus === 'listening' ? <Mic size={14} color="var(--green)" /> : <MicOff size={14} color="var(--text3)" />}
-                </button>
+            <div key={i} className={`${styles.participantCard} ${(isSpeaking || hasRemoteAudio) ? styles.pCardSpeaking : ''}`} style={{ opacity: isJoined || isMe ? 1 : 0.5 }}>
+
+              <div className={styles.micCornerIndicator}>
+                {isMe ? (
+                  <button
+                    className={styles.micCornerBtn}
+                    disabled={meetingState === 'idle'}
+                    style={meetingState === 'idle' ? { opacity: 0.5, cursor: 'default' } : {}}
+                    onClick={() => {
+                      if (meetingState === 'idle') return;
+                      if (micStatus === 'listening') pauseListening()
+                      else if (micStatus === 'paused') resumeListening()
+                      else if (micStatus === 'idle') startListening()
+                    }}
+                    title={meetingState === 'idle' ? "Start meeting to enable microphone" : "Toggle your microphone"}
+                  >
+                    {micStatus === 'listening' ? <Mic size={14} color="var(--green)" /> : <MicOff size={14} color="var(--text3)" />}
+                  </button>
+                ) : (
+                  <div className={styles.micCornerStatus}>
+                    {isJoined && hasRemoteAudio ? <Mic size={14} color="var(--green)" /> : <MicOff size={14} color="var(--text3)" />}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.pAvatar} style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length], overflow: 'hidden' }}>
+                {memberProfiles?.[name]?.photoUrl ? (
+                  <img src={memberProfiles[name].photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  name[0]?.toUpperCase()
+                )}
+              </div>
+              <div className={styles.pName}>{name} {isMe && '(You)'}</div>
+              {(isSpeaking || hasRemoteAudio) ? (
+                <div className={styles.speakingBars}>
+                  <div className={styles.bar} /><div className={styles.bar} /><div className={styles.bar} /><div className={styles.bar} />
+                </div>
               ) : (
-                <div className={styles.micCornerStatus}>
-                  {isJoined && hasRemoteAudio ? <Mic size={14} color="var(--green)" /> : <MicOff size={14} color="var(--text3)" />}
+                <div className={styles.pSub}>
+                  {isParticipantHost ? 'Host' : isJoined ? 'Connected' : 'Invited'}
                 </div>
               )}
             </div>
-
-            <div className={styles.pAvatar} style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length], overflow: 'hidden' }}>
-              {memberProfiles?.[name]?.photoUrl ? (
-                <img src={memberProfiles[name].photoUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                name[0]?.toUpperCase()
-              )}
-            </div>
-            <div className={styles.pName}>{name} {isMe && '(You)'}</div>
-            {(isSpeaking || hasRemoteAudio) ? (
-              <div className={styles.speakingBars}>
-                <div className={styles.bar} /><div className={styles.bar} /><div className={styles.bar} /><div className={styles.bar} />
-              </div>
-            ) : (
-              <div className={styles.pSub}>
-                {isParticipantHost ? 'Host' : isJoined ? 'Connected' : 'Invited'}
-              </div>
-            )}
-          </div>
           );
         })}
         <div className={`${styles.participantCard} ${styles.pCardAI}`}>
@@ -1040,11 +1029,11 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           )}
           <div ref={transcriptEndRef} />
         </div>
-        
+
         {/* Floating manual input edit button and window */}
         {!showManualInput ? (
           <div style={{ position: 'absolute', bottom: '32px', right: '36px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', zIndex: 10 }}>
-            <button 
+            <button
               onClick={() => setShowManualInput(true)}
               style={{ background: 'var(--surface2)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
               title="Add manual note"
@@ -1060,10 +1049,10 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                 <X size={14} />
               </button>
             </div>
-            <input 
+            <input
               autoFocus
-              type="text" 
-              placeholder="Type note and press Enter..." 
+              type="text"
+              placeholder="Type note and press Enter..."
               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: '13px', outline: 'none' }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -1098,7 +1087,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           {/* Meeting Timer Controls */}
           {meetingState === 'idle' && isLeader && (
             <button className={styles.muteBtn} onClick={() => { setMeetingState('active'); onStart && onStart(); }} style={{ background: 'var(--green)', color: '#fff' }} title="Start Meeting Timer">
-               Start Meeting
+              Start Meeting
             </button>
           )}
           {meetingState === 'idle' && !isLeader && (
@@ -1116,10 +1105,6 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                 stoppedByUserRef.current = true;
                 recognitionRef.current?.stop();
                 agora.leave();
-                if (meeting?.id && user?.name) {
-                  const newActive = activeAttendees.filter(name => name !== user.name);
-                  supabase.from('meetings').update({ active_attendees: newActive }).eq('id', meeting.id).then();
-                }
                 onLeave?.();
               }}>
                 Leave Meeting
@@ -1273,8 +1258,8 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
           <div className={styles.headerSub}>{new Date(meeting.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
         </div>
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--surface)', color: 'var(--text2)', padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 500, border: 'none' }}>
-                    Analyzed by
-          <img src={new URL('../assets/flowmind.png', import.meta.url).href} alt="FM" style={{ height: '16px', width: 'auto' }} /> 
+          Analyzed by
+          <img src={new URL('../assets/flowmind.png', import.meta.url).href} alt="FM" style={{ height: '16px', width: 'auto' }} />
         </span>
       </div>
 
@@ -1338,13 +1323,13 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
             No decisions were logged from this meeting.
           </div>
         ) : meeting.decisionsLogged.map((d, i) => (
-            <div key={i} className={styles.decisionCard} style={{ cursor: 'default' }}>
-              <div className={styles.decisionContent}>
-                <div className={styles.decisionText}>{d.decision}</div>
-                <div className={styles.decisionReason}>{d.reason}</div>
-              </div>
+          <div key={i} className={styles.decisionCard} style={{ cursor: 'default' }}>
+            <div className={styles.decisionContent}>
+              <div className={styles.decisionText}>{d.decision}</div>
+              <div className={styles.decisionReason}>{d.reason}</div>
             </div>
-          ))}
+          </div>
+        ))}
       </div>
       {/* Follow-ups */}
       <div className={styles.detailSection}>
@@ -1363,9 +1348,9 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
       </div>
       {/* Transcript */}
       <div className={styles.detailSection}>
-        <div 
-          className={styles.detailTitle} 
-          onClick={() => setShowTranscript(!showTranscript)} 
+        <div
+          className={styles.detailTitle}
+          onClick={() => setShowTranscript(!showTranscript)}
           style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
