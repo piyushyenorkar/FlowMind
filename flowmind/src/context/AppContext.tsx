@@ -206,9 +206,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
       .subscribe()
 
+    // Polling fallback: refetch meetings every 5s to guarantee real-time list updates
+    // This covers cases where Supabase Realtime publication may not be enabled
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data: meetData } = await supabase.from('meetings').select('*').eq('team_code', state.team.code)
+        if (meetData) {
+          setState((prev: any) => {
+            const newMeetings = meetData.map(m => ({
+              id: m.id, title: m.title, date: m.date, attendees: m.attendees, duration: m.duration, summary: m.summary, keyTopics: m.key_topics, transcript: m.transcript, followUpItems: m.follow_up_items,
+              tasksCreated: prev.meetings.find((pm: any) => pm.id === m.id)?.tasksCreated || [],
+              decisionsLogged: prev.meetings.find((pm: any) => pm.id === m.id)?.decisionsLogged || [],
+              status: m.status || 'completed', activeAttendees: m.active_attendees || [],
+              leader: m.leader || null, agenda: m.agenda || '',
+              startedAt: m.started_at || null,
+            }))
+            // Only update if something actually changed
+            const prevIds = prev.meetings.map((m: any) => m.id + m.status).sort().join(',')
+            const newIds = newMeetings.map((m: any) => m.id + m.status).sort().join(',')
+            if (prevIds === newIds) return prev
+            return { ...prev, meetings: newMeetings }
+          })
+        }
+      } catch (e) {
+        // Silently ignore polling errors
+      }
+    }, 5000)
+
     return () => {
       supabase.removeChannel(channel)
       supabase.removeChannel(teamsChannel)
+      clearInterval(pollInterval)
     }
   }, [state.team?.code])
 
