@@ -612,17 +612,20 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meeting?.status, meetingState])
 
-  // Auto-exit when host ends meeting (status changes to 'completed')
+  // Auto-join Agora when meeting becomes active
   useEffect(() => {
-    if (meeting?.status === 'completed' && meetingState === 'active') {
-      stoppedByUserRef.current = true
-      clearInterval(timerRef.current)
-      recognitionRef.current?.stop()
-      mediaStreamRef.current?.getTracks().forEach(t => t.stop())
-      agora.leave()
-      onLeave?.()
+    if (meetingState === 'active' && !agora.isConnected && !agora.isConnecting) {
+      agora.join()
     }
-  }, [meeting?.status])
+  }, [meetingState, agora.isConnected, agora.isConnecting])
+
+  // ── Sync meeting state (if host ends) ─────────────────────────
+  useEffect(() => {
+    // Only auto-end if completed. DO NOT auto-start for non-host to enforce user gesture!
+    if (!isLeader && meeting?.status === 'completed' && meetingState === 'active') {
+      handleEnd()
+    }
+  }, [meeting?.status, isLeader, meetingState])
 
   const [showTranscript, setShowTranscript] = useState(true)
   const [showManualInput, setShowManualInput] = useState(false)
@@ -1104,14 +1107,27 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
         <div className={styles.controlsRight}>
           {/* Meeting Timer Controls */}
           {meetingState === 'idle' && isLeader && (
-            <button className={styles.muteBtn} onClick={() => { setMeetingState('active'); onStart && onStart(); }} style={{ background: 'var(--green)', color: '#fff' }} title="Start Meeting Timer">
+            <button className={styles.muteBtn} onClick={() => { 
+              setMeetingState('active'); 
+              onStart && onStart();
+              startListening(); // Direct user gesture
+            }} style={{ background: 'var(--green)', color: '#fff' }} title="Start Meeting Timer">
                Start Meeting
             </button>
           )}
           {meetingState === 'idle' && !isLeader && (
-            <div style={{ fontSize: '13px', color: 'var(--text3)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Loader2 size={14} className="spin" /> Waiting for host to start...
-            </div>
+            meeting?.status === 'active' ? (
+              <button className={styles.muteBtn} onClick={() => {
+                setMeetingState('active');
+                startListening(); // Direct user gesture
+              }} style={{ background: 'var(--green)', color: '#fff' }} title="Join Live Meeting">
+                 Join Live Audio
+              </button>
+            ) : (
+              <div style={{ fontSize: '13px', color: 'var(--text3)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Loader2 size={14} className="spin" /> Waiting for host to start...
+              </div>
+            )
           )}
           {meetingState !== 'idle' && (
             isLeader ? (
