@@ -628,6 +628,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const [showManualInput, setShowManualInput] = useState(false)
   const [manualNoteError, setManualNoteError] = useState(false)
   const [interimText, setInterimText] = useState('')
+  const [remoteInterim, setRemoteInterim] = useState<{ [key: string]: string }>({})
   const timerRef = useRef<any>(null)
   const recognitionRef = useRef<any>(null)
   const finalTranscriptRef = useRef(transcript || '')
@@ -635,6 +636,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const mediaStreamRef = useRef<any>(null)
   const transcriptEndRef = useRef<any>(null)
   const transcriptSyncRef = useRef<any>(null)
+  const broadcastChannelRef = useRef<any>(null)
   const startTimeRef = useRef<number>(Date.now()) // Track when this user's meeting started
 
   // ── Agora Live Audio ─────────────────────────────────────────────────
@@ -669,12 +671,11 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   }, [transcript, meeting?.id])
 
   // ── Sync transcript FROM Supabase (via realtime meeting object) ──────
-  // Merge incoming lines that we don't have locally instead of overwriting
+  // We keep this as a fallback to ensure we don't lose data, but real-time relies on Broadcast below
   useEffect(() => {
     if (!meeting?.transcript || meeting.transcript === finalTranscriptRef.current) return
     const incomingLines = meeting.transcript.split('\n').filter(l => l.trim())
     const localLines = finalTranscriptRef.current.split('\n').filter(l => l.trim())
-    // Find lines in incoming that are not in our local transcript
     const newLines = incomingLines.filter(line => !localLines.includes(line))
     if (newLines.length > 0) {
       const merged = finalTranscriptRef.current + newLines.join('\n') + '\n'
@@ -683,10 +684,39 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meeting?.transcript])
 
+  // ── REAL-TIME Broadcast (Instant Sync) ───────────────────────────────
+  useEffect(() => {
+    if (!meeting?.id) return
+    const channel = supabase.channel(`voice-room-${meeting.id}`)
+      .on('broadcast', { event: 'interim-text' }, ({ payload }) => {
+        if (payload.userName !== user?.name) {
+          setRemoteInterim(prev => ({ ...prev, [payload.userName]: payload.text }))
+        }
+      })
+      .on('broadcast', { event: 'final-text' }, ({ payload }) => {
+        if (payload.userName !== user?.name) {
+          // Add remote final text immediately and clear their interim
+          const newText = `${payload.userName}: ${payload.text}\n`
+          if (!finalTranscriptRef.current.includes(newText)) {
+            finalTranscriptRef.current += newText
+            setTranscript(finalTranscriptRef.current)
+          }
+          setRemoteInterim(prev => ({ ...prev, [payload.userName]: '' }))
+        }
+      })
+      .subscribe()
+    
+    broadcastChannelRef.current = channel
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [meeting?.id, user?.name])
+
   // Auto-scroll transcript
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [transcript, interimText])
+  }, [transcript, interimText, remoteInterim])
 
   // ── Timer ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -739,12 +769,23 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       recognition.onresult = (event) => {
         let interim = ''
         let newFinal = ''
+        let justFinalized = false
+
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i]
           if (result.isFinal) {
             const text = result[0].transcript.trim()
             if (text) {
-              newFinal += `${user?.name || 'Speaker'}: ${text}\n`
+              const uName = user?.name || 'Speaker'
+              newFinal += `${uName}: ${text}\n`
+              justFinalized = true
+              
+              // Broadcast final text instantly
+              broadcastChannelRef.current?.send({
+                type: 'broadcast',
+                event: 'final-text',
+                payload: { userName: uName, text: text }
+              })
             }
           } else {
             interim += result[0].transcript
@@ -757,6 +798,15 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           setTranscript(finalTranscriptRef.current)
         }
         setInterimText(interim)
+
+        // Broadcast interim text instantly
+        if (!justFinalized || interim) {
+          broadcastChannelRef.current?.send({
+            type: 'broadcast',
+            event: 'interim-text',
+            payload: { userName: user?.name || 'Speaker', text: interim }
+          })
+        }
       }
 
       recognition.onerror = (event) => {
@@ -983,8 +1033,17 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           {transcript.split('\n').filter(l => l.trim()).map((line, i) => (
             <div key={i} className={styles.transcriptLine}>{line}</div>
           ))}
+          
+          {Object.entries(remoteInterim).map(([userName, text], i) => text ? (
+            <div key={`remote-${i}`} className={styles.transcriptLive}>
+              <span style={{opacity: 0.7}}>{userName}:</span> {text}
+            </div>
+          ) : null)}
+          
           {interimText && (
-            <div className={styles.transcriptLive}>{interimText}</div>
+            <div className={styles.transcriptLive}>
+              <span style={{opacity: 0.7}}>{user?.name || 'You'}:</span> {interimText}
+            </div>
           )}
           <div ref={transcriptEndRef} />
         </div>
