@@ -612,12 +612,6 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meeting?.status, meetingState])
 
-  // Auto-join Agora when meeting becomes active
-  useEffect(() => {
-    if (meetingState === 'active' && !agora.isConnected && !agora.isConnecting) {
-      agora.join()
-    }
-  }, [meetingState, agora.isConnected, agora.isConnecting])
 
   // ── Sync meeting state (if host ends) ─────────────────────────
   useEffect(() => {
