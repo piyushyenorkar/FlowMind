@@ -65,6 +65,7 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
   const join = useCallback(async () => {
     if (joinedRef.current || !channelName || !AGORA_APP_ID) return
 
+    joinedRef.current = true // Set immediately to prevent race conditions
     setIsConnecting(true)
     setError(null)
 
@@ -134,6 +135,7 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
       console.error('[useAgora] Join error:', err.message)
       setError(`Voice connection failed: ${err.message}`)
       setIsConnected(false)
+      joinedRef.current = false
     } finally {
       setIsConnecting(false)
     }
