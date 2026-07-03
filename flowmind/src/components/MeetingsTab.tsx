@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw } from 'lucide-react'
+import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw, ShieldCheck } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../services/supabase'
@@ -605,6 +605,18 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const [micStatus, setMicStatus] = useState<'idle'|'requesting'|'listening'|'paused'|'denied'|'unsupported'>('idle')
   const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
   
+  // Track all users who have ever joined this meeting session to show 'Left' status
+  const [historicalAttendees, setHistoricalAttendees] = useState<Set<string>>(new Set(activeAttendees))
+  useEffect(() => {
+    if (activeAttendees.length > 0) {
+      setHistoricalAttendees(prev => {
+        const next = new Set(prev)
+        activeAttendees.forEach(a => next.add(a))
+        return next
+      })
+    }
+  }, [activeAttendees])
+  
   // Sync meetingState from meeting status (realtime updates)
   useEffect(() => {
     if (meeting?.status === 'ongoing' && meetingState === 'idle') {
@@ -901,39 +913,47 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       {meetingState === 'active' && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-          padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
-          background: agora.isConnected ? 'rgba(34,211,160,0.1)' : agora.isConnecting ? 'rgba(251,191,36,0.1)' : agora.error ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.05)',
-          color: agora.isConnected ? 'var(--green)' : agora.isConnecting ? 'var(--yellow)' : agora.error ? 'var(--red)' : 'var(--text3)',
-          border: `1px solid ${agora.isConnected ? 'rgba(34,211,160,0.2)' : agora.isConnecting ? 'rgba(251,191,36,0.2)' : agora.error ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.05)'}`,
-          marginBottom: '8px',
+          padding: '8px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 500,
+          background: 'var(--surface)',
+          color: 'var(--text3)',
+          border: 'none',
+          marginBottom: '16px',
         }}>
-          <div style={{
-            width: '8px', height: '8px', borderRadius: '50%',
-            background: agora.isConnected ? 'var(--green)' : agora.isConnecting ? 'var(--yellow)' : agora.error ? 'var(--red)' : 'var(--text3)',
-            animation: agora.isConnecting ? 'pulse 1s infinite' : 'none',
-          }} />
-          {agora.isConnected
-            ? `🔊 Live Audio Active — ${agora.remoteUsers.length} other${agora.remoteUsers.length !== 1 ? 's' : ''} connected`
-            : agora.isConnecting
-              ? '🔄 Connecting to voice channel...'
-              : agora.error
-                ? `⚠️ ${agora.error}`
-                : '🔇 Voice not connected'}
+          {agora.isConnected ? (
+            <>
+              <ShieldCheck size={14} style={{ color: 'var(--green)' }} />
+              Secure Voice Session Active — {agora.remoteUsers.length + 1} participant{agora.remoteUsers.length !== 0 ? 's' : ''} connected
+            </>
+          ) : agora.isConnecting ? (
+            <>
+              <Loader2 size={14} className="spin" style={{ color: 'var(--yellow)' }} />
+              Establishing secure connection...
+            </>
+          ) : agora.error ? (
+            <>
+              <X size={14} style={{ color: 'var(--red)' }} />
+              Connection Error: {agora.error}
+            </>
+          ) : (
+            <>
+              <MicOff size={14} />
+              Voice module inactive
+            </>
+          )}
         </div>
       )}
 
       <div className={styles.participantGrid}>
         {attendees.map((name, i) => {
           const isMe = name === user?.name;
-          // Use BOTH Supabase activeAttendees AND Agora remoteUsers for real-time status
-          // Agora gives instant feedback, Supabase has slight delay
           const isInActiveAttendees = activeAttendees.includes(name);
-          const isConnectedViaAgora = !isMe && agora.remoteUsers.length > 0; // In a 2-person call, if there's a remote user, the other person is connected
+          const isConnectedViaAgora = !isMe && agora.remoteUsers.length > 0;
           const isJoined = isMe || isInActiveAttendees || isConnectedViaAgora;
           const isSpeaking = isMe && micStatus === 'listening';
-          // Check if remote user has audio via Agora (real-time mic status)
           const hasRemoteAudio = !isMe && isConnectedViaAgora && agora.remoteUsers.some(u => u.hasAudio);
           const isParticipantHost = name === meeting?.leader;
+          const hasLeft = !isJoined && historicalAttendees.has(name);
+          const participantStatusText = isParticipantHost ? 'Host' : (isJoined ? 'Connected' : (hasLeft ? 'Left' : 'Invited'));
           
           return (
           <div key={i} className={`${styles.participantCard} ${(isSpeaking || hasRemoteAudio) ? styles.pCardSpeaking : ''}`} style={{ opacity: isJoined || isMe ? 1 : 0.5 }}>
@@ -1096,6 +1116,10 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                 stoppedByUserRef.current = true;
                 recognitionRef.current?.stop();
                 agora.leave();
+                if (meeting?.id && user?.name) {
+                  const newActive = activeAttendees.filter(name => name !== user.name);
+                  supabase.from('meetings').update({ active_attendees: newActive }).eq('id', meeting.id).then();
+                }
                 onLeave?.();
               }}>
                 Leave Meeting
