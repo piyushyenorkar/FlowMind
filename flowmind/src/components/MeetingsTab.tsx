@@ -794,11 +794,15 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const pauseListening = () => {
     stoppedByUserRef.current = true
     recognitionRef.current?.stop()
+    // Also mute Agora audio so other side sees mic off in real-time
+    if (!agora.isMuted) agora.toggleMute()
     setMicStatus('paused')
   }
 
   const resumeListening = () => {
     stoppedByUserRef.current = false
+    // Unmute Agora audio so other side sees mic on in real-time
+    if (agora.isMuted) agora.toggleMute()
     try {
       recognitionRef.current?.start()
       setMicStatus('listening')
@@ -889,10 +893,14 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       <div className={styles.participantGrid}>
         {attendees.map((name, i) => {
           const isMe = name === user?.name;
-          const isJoined = activeAttendees.includes(name);
+          // Use BOTH Supabase activeAttendees AND Agora remoteUsers for real-time status
+          // Agora gives instant feedback, Supabase has slight delay
+          const isInActiveAttendees = activeAttendees.includes(name);
+          const isConnectedViaAgora = !isMe && agora.remoteUsers.length > 0; // In a 2-person call, if there's a remote user, the other person is connected
+          const isJoined = isMe || isInActiveAttendees || isConnectedViaAgora;
           const isSpeaking = isMe && micStatus === 'listening';
-          // Check if remote user has audio via Agora (for non-self participants)
-          const hasRemoteAudio = !isMe && isJoined && agora.remoteUsers.some(u => u.hasAudio);
+          // Check if remote user has audio via Agora (real-time mic status)
+          const hasRemoteAudio = !isMe && isConnectedViaAgora && agora.remoteUsers.some(u => u.hasAudio);
           const isParticipantHost = name === meeting?.leader;
           
           return (
