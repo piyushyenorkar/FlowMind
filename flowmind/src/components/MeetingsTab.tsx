@@ -1104,15 +1104,17 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
             <button className={styles.muteBtn} onClick={() => { 
               setMeetingState('active'); 
               onStart && onStart();
+              agora.join();
               startListening(); // Direct user gesture
             }} style={{ background: 'var(--green)', color: '#fff' }} title="Start Meeting Timer">
                Start Meeting
             </button>
           )}
           {meetingState === 'idle' && !isLeader && (
-            meeting?.status === 'active' ? (
+            (meeting?.status === 'active' || meeting?.status === 'ongoing') ? (
               <button className={styles.muteBtn} onClick={() => {
                 setMeetingState('active');
+                agora.join();
                 startListening(); // Direct user gesture
               }} style={{ background: 'var(--green)', color: '#fff' }} title="Join Live Meeting">
                  Join Live Audio
