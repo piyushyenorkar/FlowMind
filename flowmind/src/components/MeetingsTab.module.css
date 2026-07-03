@@ -104,7 +104,7 @@
 .liveDot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-.participantGrid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; padding: 24px; flex: 1; align-content: start; overflow-x: auto; scrollbar-width: none; }
+.participantGrid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; padding: 4px 24px 24px; flex: 1; align-content: start; overflow-x: auto; scrollbar-width: none; }
 .participantGrid::-webkit-scrollbar { display: none; }
 .participantCard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 12px; border-radius: 14px; border: 2px solid var(--border); background: rgba(23, 23, 23, 0.4);
   backdrop-filter: blur(12px);
