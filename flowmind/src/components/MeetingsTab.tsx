@@ -602,7 +602,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const attendees = meeting?.attendees || []
   const activeAttendees = meeting?.activeAttendees || []
 
-  const [micStatus, setMicStatus] = useState('idle') // idle | requesting | listening | paused | denied | unsupported
+  const [micStatus, setMicStatus] = useState<'idle'|'requesting'|'listening'|'paused'|'denied'|'unsupported'>('idle')
   const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
   
   // Sync meetingState from meeting status (realtime updates)
@@ -618,7 +618,6 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       stoppedByUserRef.current = true
       clearInterval(timerRef.current)
       recognitionRef.current?.stop()
-      mediaStreamRef.current?.getTracks().forEach(t => t.stop())
       agora.leave()
       onLeave?.()
     }
@@ -632,8 +631,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const recognitionRef = useRef<any>(null)
   const finalTranscriptRef = useRef(transcript || '')
   
-  // ── Speech Recognition State Management ────────────────────────────────────
-  const [micStatus, setMicStatus] = useState<'idle'|'requesting'|'listening'|'paused'|'denied'|'unsupported'>('idle')
+
   const micStatusRef = useRef(micStatus)
   useEffect(() => { micStatusRef.current = micStatus }, [micStatus])
 
@@ -840,7 +838,6 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     stoppedByUserRef.current = true
     clearInterval(timerRef.current)
     recognitionRef.current?.stop()
-    mediaStreamRef.current?.getTracks().forEach(t => t.stop())
     agora.leave()
     // Ensure final transcript is set
     setTranscript(finalTranscriptRef.current)
@@ -1087,7 +1084,6 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
               <button className={styles.endBtn} onClick={() => {
                 stoppedByUserRef.current = true;
                 recognitionRef.current?.stop();
-                mediaStreamRef.current?.getTracks().forEach(t => t.stop());
                 agora.leave();
                 onLeave?.();
               }}>
