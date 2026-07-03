@@ -900,7 +900,8 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
         </div>
       </div>
 
-      {/* Agora Live Audio Status */}
+      {/* Agora Live Audio Status (Commented out for production, uncomment for debugging) */}
+      {/* 
       {meetingState === 'active' && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -933,6 +934,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           )}
         </div>
       )}
+      */}
 
       <div className={styles.participantGrid}>
         {attendees.map((name, i) => {
