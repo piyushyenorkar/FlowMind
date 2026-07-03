@@ -41,10 +41,8 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
   const [error, setError] = useState<string | null>(null)
   const joinedRef = useRef(false)
 
-  // Generate a numeric UID from the user's string ID
-  const numericUid = useRef(
-    Math.abs(userId.split('').reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0)) % 100000 || 1
-  )
+  // Use UID 0 — Agora auto-assigns a unique UID to each user, preventing UID_CONFLICT
+  const numericUid = useRef(0)
 
   // Fetch token from backend
   const fetchToken = useCallback(async (): Promise<string | null> => {
