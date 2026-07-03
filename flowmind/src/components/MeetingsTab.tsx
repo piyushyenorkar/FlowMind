@@ -603,14 +603,17 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const activeAttendees = meeting?.activeAttendees || []
 
   const [micStatus, setMicStatus] = useState('idle') // idle | requesting | listening | paused | denied | unsupported
-  const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
+  // Non-hosts MUST start in 'idle' so they have to click "Join Live Audio" (user gesture required for SpeechRecognition)
+  const [meetingState, setMeetingState] = useState(
+    isLeader && meeting?.status === 'ongoing' ? 'active' : 'idle'
+  ) // idle | active | paused
   
-  // Sync meetingState from meeting status (realtime updates)
+  // Sync meetingState from meeting status (realtime updates) — only for HOST
   useEffect(() => {
-    if (meeting?.status === 'ongoing' && meetingState === 'idle') {
+    if (isLeader && meeting?.status === 'ongoing' && meetingState === 'idle') {
       setMeetingState('active')
     }
-  }, [meeting?.status, meetingState])
+  }, [meeting?.status, meetingState, isLeader])
 
 
   // ── Sync meeting state (if host ends) ─────────────────────────
@@ -1105,7 +1108,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
               setMeetingState('active'); 
               onStart && onStart();
               agora.join();
-              startListening(); // Direct user gesture
+              startListening(); // Direct user gesture — Chrome needs this
             }} style={{ background: 'var(--green)', color: '#fff' }} title="Start Meeting Timer">
                Start Meeting
             </button>
@@ -1115,9 +1118,9 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
               <button className={styles.muteBtn} onClick={() => {
                 setMeetingState('active');
                 agora.join();
-                startListening(); // Direct user gesture
+                startListening(); // Direct user gesture — Chrome needs this
               }} style={{ background: 'var(--green)', color: '#fff' }} title="Join Live Meeting">
-                 Join Live Audio
+                🎙️ Join Live Audio
               </button>
             ) : (
               <div style={{ fontSize: '13px', color: 'var(--text3)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
