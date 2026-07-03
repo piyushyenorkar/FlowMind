@@ -885,7 +885,18 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   return (
     <div className={styles.voiceRoom}>
       <div className={styles.roomHeader}>
-        <div className={styles.roomTitle}>{title}</div>
+        <div className={styles.titleWrap}>
+          <div className={styles.roomTitle}>{title}</div>
+          <div className={styles.agendaIconWrap}>
+            <FileText size={14} />
+            <div className={styles.agendaTooltip}>
+              <div className={styles.agendaTooltipTitle}>Meeting Agenda</div>
+              <div className={styles.agendaTooltipContent}>
+                {meeting?.description || 'No agenda provided for this meeting.'}
+              </div>
+            </div>
+          </div>
+        </div>
         <div className={styles.timerGroup}>
           <div className={styles.timerWrap}>
             {meetingState === 'active' ? (
