@@ -96,7 +96,7 @@
 .attendeeName { font-size: 14px; font-weight: 500; color: var(--text); }
 
 /* Voice room */
-.voiceRoom { display: flex; flex-direction: column; min-height: 50vh; }
+.voiceRoom { display: flex; flex-direction: column; min-height: 50vh; margin-top: -20px; }
 .roomHeader { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; }
 .roomTitle { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text); }
 
