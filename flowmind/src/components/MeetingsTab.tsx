@@ -460,9 +460,12 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
   }
 
   // ── Render Steps ─────────────────────────────────────────────────────
+  const activeM = meetings.find(m => m.id === selectedMeeting?.id) || selectedMeeting;
+  const isMeetingActive = step === 2 && activeM?.status === 'ongoing';
+
   return (
     <div className={styles.wrap}>
-      <StepBar step={step} />
+      {!isMeetingActive && <StepBar step={step} />}
 
       {/* STEP 1: Setup */}
       {step === 1 && (
