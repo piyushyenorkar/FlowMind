@@ -661,12 +661,18 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
 
   // ── Real-time Transcript Broadcast ───────────────────────────────────
   const broadcastChannelRef = useRef<any>(null)
+  const [broadcastStatus, setBroadcastStatus] = useState<string>('connecting')
   
   useEffect(() => {
     if (!meeting?.id) return
-    const channel = supabase.channel(`room-${meeting.id}`)
+    const channel = supabase.channel(`room-${meeting.id}`, {
+      config: {
+        broadcast: { ack: true },
+      },
+    })
     
     channel.on('broadcast', { event: 'speech' }, (payload) => {
+      console.log('[VoiceRoom] Received broadcast:', payload)
       const newLine = payload.payload?.text
       if (newLine) {
         const localLines = finalTranscriptRef.current.split('\n').filter(l => l.trim())
@@ -676,7 +682,11 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           setTranscript(merged)
         }
       }
-    }).subscribe()
+    }).subscribe((status) => {
+      console.log('[VoiceRoom] Broadcast channel status:', status)
+      if (status === 'SUBSCRIBED') setBroadcastStatus('connected')
+      else if (status === 'CHANNEL_ERROR') setBroadcastStatus('error')
+    })
 
     broadcastChannelRef.current = channel
     return () => { supabase.removeChannel(channel) }
@@ -772,16 +782,17 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       }
       
       if (newFinal) {
-        console.log('[VoiceRoom] Final speech detected:', newFinal)
+        console.log('[VoiceRoom] Final speech detected locally:', newFinal)
         finalTranscriptRef.current += newFinal
         setTranscript(finalTranscriptRef.current)
         
-        if (broadcastChannelRef.current) {
+        if (broadcastChannelRef.current && broadcastStatus === 'connected') {
           broadcastChannelRef.current.send({
             type: 'broadcast',
             event: 'speech',
             payload: { text: newFinal.trim() }
-          }).catch((e: any) => console.warn('Broadcast error:', e))
+          }).then(() => console.log('[VoiceRoom] Broadcast sent successfully'))
+          .catch((e: any) => console.warn('[VoiceRoom] Broadcast error:', e))
         }
       }
       setInterimText(interim)
