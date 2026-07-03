@@ -443,6 +443,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
       title,
       date,
       attendees,
+      agenda,
       transcript,
       duration,
       summary: analysis.summary,
@@ -892,7 +893,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
             <div className={styles.agendaTooltip}>
               <div className={styles.agendaTooltipTitle}>Meeting Agenda</div>
               <div className={styles.agendaTooltipContent}>
-                {meeting?.description || 'No agenda provided for this meeting.'}
+                {meeting?.agenda || 'No agenda provided for this meeting.'}
               </div>
             </div>
           </div>

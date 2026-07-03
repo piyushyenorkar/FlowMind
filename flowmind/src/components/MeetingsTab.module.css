@@ -100,7 +100,7 @@
 .roomHeader { display: flex; justify-content: space-between; align-items: center; padding: 9px 20px; }
 .roomTitle { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text); }
 .titleWrap { display: inline-flex; align-items: center; justify-content: center; gap: 12px; background: var(--surface); border-radius: 18px; padding: 0 16px; height: 36px; position: relative; }
-.agendaIconWrap { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.1); cursor: help; transition: all 0.2s; color: var(--text2); }
+.agendaIconWrap { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s; color: var(--text2); }
 .agendaIconWrap:hover { background: rgba(255,255,255,0.2); color: var(--text); }
 .agendaIconWrap:hover .agendaTooltip { opacity: 1; pointer-events: auto; transform: translateY(0); }
 .agendaTooltip { position: absolute; top: 40px; left: 0; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; width: 240px; opacity: 0; pointer-events: none; transform: translateY(-5px); transition: all 0.2s; z-index: 20; box-shadow: 0 10px 20px rgba(0,0,0,0.4); text-align: left; font-family: var(--font-body); }
