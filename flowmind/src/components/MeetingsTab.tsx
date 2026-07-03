@@ -656,29 +656,54 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meetingState])
 
-  // ── Sync transcript TO Supabase (debounced) ──────────────────────────
+  // ── Sync transcript TO Supabase (append-only, debounced) ───────────
+  // Each user only pushes THEIR new lines, not the full transcript
+  const lastPushedTranscriptRef = useRef<string>('')
+  
   useEffect(() => {
     if (!meeting?.id || !transcript) return
+    // Find lines we have locally that we haven't pushed yet
+    const localLines = transcript.split('\n').filter(l => l.trim())
+    const pushedLines = lastPushedTranscriptRef.current.split('\n').filter(l => l.trim())
+    const newLocalLines = localLines.filter(line => !pushedLines.includes(line))
+    
+    if (newLocalLines.length === 0) return
+    
     clearTimeout(transcriptSyncRef.current)
-    transcriptSyncRef.current = setTimeout(() => {
-      supabase.from('meetings').update({ transcript }).eq('id', meeting.id).then(({ error }) => {
-        if (error) console.warn('[VoiceRoom] Transcript sync error:', error.message)
-      })
-    }, 1500) // Debounce 1.5s
+    transcriptSyncRef.current = setTimeout(async () => {
+      try {
+        // Read current DB transcript first, then append our new lines
+        const { data } = await supabase.from('meetings').select('transcript').eq('id', meeting.id).single()
+        const dbTranscript = data?.transcript || ''
+        const dbLines = dbTranscript.split('\n').filter(l => l.trim())
+        
+        // Only append lines that aren't already in DB
+        const toAppend = newLocalLines.filter(line => !dbLines.includes(line))
+        if (toAppend.length > 0) {
+          const merged = dbTranscript + (dbTranscript && !dbTranscript.endsWith('\n') ? '\n' : '') + toAppend.join('\n') + '\n'
+          await supabase.from('meetings').update({ transcript: merged }).eq('id', meeting.id)
+        }
+        lastPushedTranscriptRef.current = transcript
+      } catch (err) {
+        console.warn('[VoiceRoom] Transcript sync error:', err)
+      }
+    }, 1500)
     return () => clearTimeout(transcriptSyncRef.current)
   }, [transcript, meeting?.id])
 
-  // ── Sync transcript FROM Supabase (via realtime meeting object) ──────
-  // Merge incoming lines that we don't have locally instead of overwriting
+  // ── Sync transcript FROM Supabase (polling brings updated meeting) ──
+  // Merge incoming lines from DB that we don't have locally
   useEffect(() => {
-    if (!meeting?.transcript || meeting.transcript === finalTranscriptRef.current) return
+    if (!meeting?.transcript) return
     const incomingLines = meeting.transcript.split('\n').filter(l => l.trim())
     const localLines = finalTranscriptRef.current.split('\n').filter(l => l.trim())
-    // Find lines in incoming that are not in our local transcript
-    const newLines = incomingLines.filter(line => !localLines.includes(line))
-    if (newLines.length > 0) {
-      const merged = finalTranscriptRef.current + newLines.join('\n') + '\n'
+    
+    // Find lines from DB we don't have locally
+    const newFromDB = incomingLines.filter(line => !localLines.includes(line))
+    if (newFromDB.length > 0) {
+      const merged = finalTranscriptRef.current + (finalTranscriptRef.current && !finalTranscriptRef.current.endsWith('\n') ? '\n' : '') + newFromDB.join('\n') + '\n'
       finalTranscriptRef.current = merged
+      lastPushedTranscriptRef.current = merged // Mark these as already synced so we don't re-push
       setTranscript(merged)
     }
   }, [meeting?.transcript])
