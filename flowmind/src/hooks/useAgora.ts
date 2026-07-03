@@ -21,23 +21,13 @@ export interface AgoraUser {
 export interface UseAgoraReturn {
   join: () => Promise<void>
   leave: () => Promise<void>
-  toggleMute: () => void
+  toggleMute: () => Promise<void>
   isMuted: boolean
   isConnected: boolean
   isConnecting: boolean
   connectionState: string
   remoteUsers: AgoraUser[]
   error: string | null
-}
-
-// Generate a truly unique UID per user by hashing the userId string more carefully
-function stableUid(userId: string): number {
-  let hash = 5381
-  for (let i = 0; i < userId.length; i++) {
-    hash = ((hash << 5) + hash + userId.charCodeAt(i)) & 0x7fffffff
-  }
-  // Ensure uniqueness by using a wider range and avoiding 0
-  return (hash % 900000) + 100000 // 6-digit number: 100000-999999
 }
 
 export function useAgora(channelName: string, userId: string): UseAgoraReturn {
@@ -51,8 +41,10 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
   const [error, setError] = useState<string | null>(null)
   const joinedRef = useRef(false)
 
-  // Stable unique UID derived from userId — avoids collision while being deterministic
-  const numericUid = useRef(stableUid(userId))
+  // Generate a numeric UID from the user's string ID
+  const numericUid = useRef(
+    Math.abs(userId.split('').reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0)) % 100000 || 1
+  )
 
   // Fetch token from backend
   const fetchToken = useCallback(async (): Promise<string | null> => {
@@ -78,17 +70,6 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
     setError(null)
 
     try {
-      // Clean up any existing client first
-      if (clientRef.current) {
-        try { await clientRef.current.leave() } catch {}
-        clientRef.current = null
-      }
-      if (localTrackRef.current) {
-        localTrackRef.current.stop()
-        localTrackRef.current.close()
-        localTrackRef.current = null
-      }
-
       // Create client
       const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
       clientRef.current = client
@@ -125,14 +106,6 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
         }
       })
 
-      // Listen for remote users joining (even without audio yet)
-      client.on('user-joined', (user) => {
-        setRemoteUsers(prev => {
-          if (prev.find(u => u.uid === (user.uid as number))) return prev
-          return [...prev, { uid: user.uid as number, hasAudio: false }]
-        })
-      })
-
       // Listen for remote users leaving
       client.on('user-left', (user) => {
         setRemoteUsers(prev => prev.filter(u => u.uid !== (user.uid as number)))
@@ -157,7 +130,7 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
 
       joinedRef.current = true
       setIsConnected(true)
-      console.log('[useAgora] Joined channel:', channelName, 'with UID:', numericUid.current)
+      console.log('[useAgora] Joined channel:', channelName)
     } catch (err: any) {
       console.error('[useAgora] Join error:', err.message)
       setError(`Voice connection failed: ${err.message}`)
@@ -194,11 +167,11 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
     }
   }, [])
 
-  // Toggle mute — use setMuted so Agora fires user-unpublished on remote side
-  const toggleMute = useCallback(() => {
+  // Toggle mute
+  const toggleMute = useCallback(async () => {
     if (localTrackRef.current) {
       const newMuted = !isMuted
-      localTrackRef.current.setMuted(newMuted)
+      await localTrackRef.current.setEnabled(!newMuted)
       setIsMuted(newMuted)
     }
   }, [isMuted])
@@ -209,13 +182,10 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
       if (localTrackRef.current) {
         localTrackRef.current.stop()
         localTrackRef.current.close()
-        localTrackRef.current = null
       }
       if (clientRef.current) {
         clientRef.current.leave().catch(() => {})
-        clientRef.current = null
       }
-      joinedRef.current = false
     }
   }, [])
 
