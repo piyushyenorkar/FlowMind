@@ -656,9 +656,36 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meetingState])
 
-  // ── Sync transcript TO Supabase (debounced) ──────────────────────────
+  // ── Real-time Transcript Broadcast ───────────────────────────────────
+  const broadcastChannelRef = useRef<any>(null)
+  
+  useEffect(() => {
+    if (!meeting?.id) return
+    const channel = supabase.channel(`room-${meeting.id}`)
+    
+    channel.on('broadcast', { event: 'speech' }, (payload) => {
+      const newLine = payload.payload?.text
+      if (newLine) {
+        const localLines = finalTranscriptRef.current.split('\n').filter(l => l.trim())
+        if (!localLines.includes(newLine.trim())) {
+          const merged = finalTranscriptRef.current + newLine + '\n'
+          finalTranscriptRef.current = merged
+          setTranscript(merged)
+        }
+      }
+    }).subscribe()
+
+    broadcastChannelRef.current = channel
+    return () => { supabase.removeChannel(channel) }
+  }, [meeting?.id])
+
+  // ── Sync transcript TO Supabase (Host Only) ──────────────────────────
   useEffect(() => {
     if (!meeting?.id || !transcript) return
+    // ONLY the meeting leader (host) syncs the transcript to the database
+    // This prevents RLS permission errors and concurrent write overwrites
+    if (user?.name !== meeting?.leader) return 
+
     clearTimeout(transcriptSyncRef.current)
     transcriptSyncRef.current = setTimeout(() => {
       supabase.from('meetings').update({ transcript }).eq('id', meeting.id).then(({ error }) => {
@@ -666,16 +693,16 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       })
     }, 1500) // Debounce 1.5s
     return () => clearTimeout(transcriptSyncRef.current)
-  }, [transcript, meeting?.id])
+  }, [transcript, meeting?.id, user?.name, meeting?.leader])
 
-  // ── Sync transcript FROM Supabase (via realtime meeting object) ──────
-  // Merge incoming lines that we don't have locally instead of overwriting
+  // ── Sync transcript FROM Supabase (Initial Load Only) ────────────────
   useEffect(() => {
     if (!meeting?.transcript || meeting.transcript === finalTranscriptRef.current) return
+    // Only merge DB transcript if it has lines we don't have
     const incomingLines = meeting.transcript.split('\n').filter(l => l.trim())
     const localLines = finalTranscriptRef.current.split('\n').filter(l => l.trim())
-    // Find lines in incoming that are not in our local transcript
     const newLines = incomingLines.filter(line => !localLines.includes(line))
+    
     if (newLines.length > 0) {
       const merged = finalTranscriptRef.current + newLines.join('\n') + '\n'
       finalTranscriptRef.current = merged
@@ -755,6 +782,15 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           console.log('[VoiceRoom] Final speech detected:', newFinal)
           finalTranscriptRef.current += newFinal
           setTranscript(finalTranscriptRef.current)
+          
+          // Broadcast to other participants instantly
+          if (broadcastChannelRef.current) {
+            broadcastChannelRef.current.send({
+              type: 'broadcast',
+              event: 'speech',
+              payload: { text: newFinal.trim() }
+            }).catch(e => console.warn('Broadcast error:', e))
+          }
         }
         setInterimText(interim)
       }
