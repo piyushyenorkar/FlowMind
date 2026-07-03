@@ -97,14 +97,15 @@
 
 /* Voice room */
 .voiceRoom { display: flex; flex-direction: column; min-height: 50vh; }
-.roomHeader { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+.roomHeader { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; }
 .roomTitle { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text); }
 
 .liveBadge { display: flex; align-items: center; gap: 6px; background: var(--red-dim); border: 1px solid rgba(255,107,107,0.3); color: var(--red); padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; }
 .liveDot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-.participantGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; padding: 24px; flex: 1; align-content: start; }
+.participantGrid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; padding: 24px; flex: 1; align-content: start; overflow-x: auto; scrollbar-width: none; }
+.participantGrid::-webkit-scrollbar { display: none; }
 .participantCard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 12px; border-radius: 14px; border: 2px solid var(--border); background: rgba(23, 23, 23, 0.4);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px); transition: all 0.2s; }
