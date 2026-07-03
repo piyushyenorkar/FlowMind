@@ -96,7 +96,7 @@
 .attendeeName { font-size: 14px; font-weight: 500; color: var(--text); }
 
 /* Voice room */
-.voiceRoom { display: flex; flex-direction: column; min-height: 50vh; margin-top: -20px; }
+.voiceRoom { display: flex; flex-direction: column; margin-top: -20px; }
 .roomHeader { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; }
 .roomTitle { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text); }
 
@@ -104,7 +104,7 @@
 .liveDot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-.participantGrid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; padding: 5px 24px 14px; flex: 1; align-content: start; overflow-x: auto; scrollbar-width: none; }
+.participantGrid { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; padding: 3px 24px 14px; align-content: start; overflow-x: auto; scrollbar-width: none; }
 .participantGrid::-webkit-scrollbar { display: none; }
 .participantCard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 12px; border-radius: 14px; border: 2px solid var(--border); background: rgba(23, 23, 23, 0.4);
   backdrop-filter: blur(12px);
