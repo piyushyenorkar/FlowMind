@@ -13,7 +13,7 @@ const AGORA_APP_ID = import.meta.env.VITE_AGORA_APP_ID || ''
 AgoraRTC.setLogLevel(3) // 3 = warning only
 
 export interface AgoraUser {
-  uid: number
+  uid: string | number
   audioTrack?: IRemoteAudioTrack
   hasAudio: boolean
 }
@@ -41,15 +41,11 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
   const [error, setError] = useState<string | null>(null)
   const joinedRef = useRef(false)
 
-  // Generate a random numeric UID for this session to prevent UID_CONFLICT
-  // since we don't rely on specific UIDs for our UI mapping.
-  const numericUid = useRef(Math.floor(Math.random() * 1000000) + 1)
-
-  // Fetch token from backend
+  // Fetch token from backend using userId as the uid (account)
   const fetchToken = useCallback(async (): Promise<string | null> => {
     try {
       const res = await fetch(
-        `${BACKEND_URL}/api/agora/token?channelName=${encodeURIComponent(channelName)}&uid=${numericUid.current}`
+        `${BACKEND_URL}/api/agora/token?channelName=${encodeURIComponent(channelName)}&uid=${encodeURIComponent(userId)}`
       )
       if (!res.ok) throw new Error(`Token fetch failed: ${res.status}`)
       const data = await res.json()
@@ -91,8 +87,8 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
           audioTrack?.play() // Play remote user's audio through speakers
 
           setRemoteUsers(prev => {
-            const filtered = prev.filter(u => u.uid !== (user.uid as number))
-            return [...filtered, { uid: user.uid as number, audioTrack, hasAudio: true }]
+            const filtered = prev.filter(u => u.uid !== user.uid)
+            return [...filtered, { uid: user.uid, audioTrack, hasAudio: true }]
           })
         }
       })
@@ -101,14 +97,14 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
       client.on('user-unpublished', (user, mediaType) => {
         if (mediaType === 'audio') {
           setRemoteUsers(prev =>
-            prev.map(u => u.uid === (user.uid as number) ? { ...u, hasAudio: false, audioTrack: undefined } : u)
+            prev.map(u => u.uid === user.uid ? { ...u, hasAudio: false, audioTrack: undefined } : u)
           )
         }
       })
 
       // Listen for remote users leaving
       client.on('user-left', (user) => {
-        setRemoteUsers(prev => prev.filter(u => u.uid !== (user.uid as number)))
+        setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid))
       })
 
       // Fetch secure token from backend
@@ -116,9 +112,9 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
       if (!token) {
         // Fallback: try joining with just App ID (works in testing mode)
         console.warn('[useAgora] No token, attempting App ID only join')
-        await client.join(AGORA_APP_ID, channelName, null, numericUid.current)
+        await client.join(AGORA_APP_ID, channelName, null, userId)
       } else {
-        await client.join(AGORA_APP_ID, channelName, token, numericUid.current)
+        await client.join(AGORA_APP_ID, channelName, token, userId)
       }
 
       // Create and publish local audio track

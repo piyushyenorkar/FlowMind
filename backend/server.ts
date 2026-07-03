@@ -162,11 +162,11 @@ app.get('/api/agora/token', (req: Request, res: Response) => {
   const currentTimestamp = Math.floor(Date.now() / 1000)
   const privilegeExpiredTs = currentTimestamp + expirationInSeconds
 
-  const token = RtcTokenBuilder.buildTokenWithUid(
+  const token = RtcTokenBuilder.buildTokenWithAccount(
     AGORA_APP_ID,
     AGORA_CERT,
     String(channelName),
-    Number(uid),
+    String(uid),
     RtcRole.PUBLISHER,
     privilegeExpiredTs,
     privilegeExpiredTs
@@ -176,7 +176,7 @@ app.get('/api/agora/token', (req: Request, res: Response) => {
     token,
     appId: AGORA_APP_ID,
     channel: channelName,
-    uid: Number(uid),
+    uid: String(uid),
   })
 })
 

@@ -645,7 +645,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const startTimeRef = useRef<number>(Date.now()) // Track when this user's meeting started
 
   // ── Agora Live Audio ─────────────────────────────────────────────────
-  const agora = useAgora(meeting?.id || '', user?.id || user?.name || 'anonymous')
+  const agora = useAgora(meeting?.id || '', user?.name || 'anonymous')
 
   // Auto-join Agora when meeting becomes active
   useEffect(() => {
@@ -957,8 +957,8 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           const isConnectedViaAgora = !isMe && agora.remoteUsers.length > 0; // In a 2-person call, if there's a remote user, the other person is connected
           const isJoined = isMe || isInActiveAttendees || isConnectedViaAgora;
           const isSpeaking = isMe && micStatus === 'listening';
-          // Check if remote user has audio via Agora (real-time mic status)
-          const hasRemoteAudio = !isMe && isConnectedViaAgora && agora.remoteUsers.some(u => u.hasAudio);
+          // Check if specific remote user has audio via Agora (real-time mic status)
+          const hasRemoteAudio = !isMe && isConnectedViaAgora && agora.remoteUsers.some(u => u.uid === name && u.hasAudio);
           const isParticipantHost = name === meeting?.leader;
 
           return (
