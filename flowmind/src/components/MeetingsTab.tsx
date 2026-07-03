@@ -631,8 +631,13 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const timerRef = useRef<any>(null)
   const recognitionRef = useRef<any>(null)
   const finalTranscriptRef = useRef(transcript || '')
+  
+  // ── Speech Recognition State Management ────────────────────────────────────
+  const [micStatus, setMicStatus] = useState<'idle'|'requesting'|'listening'|'paused'|'denied'|'unsupported'>('idle')
+  const micStatusRef = useRef(micStatus)
+  useEffect(() => { micStatusRef.current = micStatus }, [micStatus])
+
   const stoppedByUserRef = useRef(false)
-  const mediaStreamRef = useRef<any>(null)
   const transcriptEndRef = useRef<any>(null)
   const transcriptSyncRef = useRef<any>(null)
   const startTimeRef = useRef<number>(Date.now()) // Track when this user's meeting started
@@ -730,122 +735,105 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   useEffect(() => {
     return () => {
       recognitionRef.current?.stop()
-      mediaStreamRef.current?.getTracks().forEach(t => t.stop())
       agora.leave()
     }
   }, [])
 
-  // ── Start microphone + speech recognition ──────────────────────────
-  const startListening = async () => {
-    // Step 1: Check browser support
+  // ── Robust Declarative Speech Recognition ────────────────────────────
+  useEffect(() => {
+    if (micStatus !== 'listening') {
+      recognitionRef.current?.stop()
+      return
+    }
+
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SR) {
       setMicStatus('unsupported')
       return
     }
 
-    // Step 2: Request microphone permission
-    setMicStatus('requesting')
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaStreamRef.current = stream
-    } catch (err) {
-      console.warn('[VoiceRoom] Mic permission denied:', err.message)
-      setMicStatus('denied')
-      return
+    const recognition = new SR()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+    recognition.maxAlternatives = 1
+
+    recognition.onresult = (event: any) => {
+      let interim = ''
+      let newFinal = ''
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i]
+        if (result.isFinal) {
+          const text = result[0].transcript.trim()
+          if (text) {
+            newFinal += `${user?.name || 'Speaker'}: ${text}\n`
+          }
+        } else {
+          interim += result[0].transcript
+        }
+      }
+      
+      if (newFinal) {
+        console.log('[VoiceRoom] Final speech detected:', newFinal)
+        finalTranscriptRef.current += newFinal
+        setTranscript(finalTranscriptRef.current)
+        
+        if (broadcastChannelRef.current) {
+          broadcastChannelRef.current.send({
+            type: 'broadcast',
+            event: 'speech',
+            payload: { text: newFinal.trim() }
+          }).catch((e: any) => console.warn('Broadcast error:', e))
+        }
+      }
+      setInterimText(interim)
     }
 
-    // Step 3: Start speech recognition
+    recognition.onerror = (event: any) => {
+      console.warn('[VoiceRoom] Speech error:', event.error)
+      if (event.error === 'not-allowed') {
+        setMicStatus('denied')
+      }
+    }
+
+    recognition.onend = () => {
+      console.log('[VoiceRoom] Speech recognition ended automatically')
+      if (micStatusRef.current === 'listening') {
+        setTimeout(() => {
+          if (micStatusRef.current === 'listening') {
+            try { recognition.start() } catch (e) {}
+          }
+        }, 300)
+      }
+    }
+
     try {
-      const recognition = new SR()
-      recognition.continuous = true
-      recognition.interimResults = true
-      recognition.lang = 'en-US'
-      recognition.maxAlternatives = 1
-
-      recognition.onresult = (event) => {
-        let interim = ''
-        let newFinal = ''
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i]
-          if (result.isFinal) {
-            const text = result[0].transcript.trim()
-            if (text) {
-              newFinal += `${user?.name || 'Speaker'}: ${text}\n`
-            }
-          } else {
-            interim += result[0].transcript
-          }
-        }
-        
-        if (newFinal) {
-          console.log('[VoiceRoom] Final speech detected:', newFinal)
-          finalTranscriptRef.current += newFinal
-          setTranscript(finalTranscriptRef.current)
-          
-          // Broadcast to other participants instantly
-          if (broadcastChannelRef.current) {
-            broadcastChannelRef.current.send({
-              type: 'broadcast',
-              event: 'speech',
-              payload: { text: newFinal.trim() }
-            }).catch(e => console.warn('Broadcast error:', e))
-          }
-        }
-        setInterimText(interim)
-      }
-
-      recognition.onerror = (event) => {
-        console.warn('[VoiceRoom] Speech error:', event.error)
-        if (event.error === 'not-allowed') {
-          setMicStatus('denied')
-        }
-      }
-
-      // Auto-restart when browser stops recognition (Chrome stops after ~60s)
-      recognition.onend = () => {
-        console.log('[VoiceRoom] Speech recognition ended automatically')
-        if (!stoppedByUserRef.current && micStatus !== 'denied') {
-          setTimeout(() => {
-            try {
-              console.log('[VoiceRoom] Attempting auto-restart...')
-              recognition.start()
-            } catch (e) {
-              console.warn('[VoiceRoom] Auto-restart failed:', e)
-            }
-          }, 300)
-        }
-      }
-
       recognition.start()
       recognitionRef.current = recognition
-      stoppedByUserRef.current = false
-      setMicStatus('listening')
     } catch (err) {
       console.warn('[VoiceRoom] Recognition start error:', err)
-      setMicStatus('unsupported')
     }
+
+    return () => {
+      recognition.stop()
+    }
+  }, [micStatus, user?.name])
+
+  const startListening = () => {
+    stoppedByUserRef.current = false
+    setMicStatus('listening')
   }
 
   const pauseListening = () => {
     stoppedByUserRef.current = true
-    recognitionRef.current?.stop()
-    // Also mute Agora audio so other side sees mic off in real-time
     if (!agora.isMuted) agora.toggleMute()
     setMicStatus('paused')
   }
 
   const resumeListening = () => {
     stoppedByUserRef.current = false
-    // Unmute Agora audio so other side sees mic on in real-time
     if (agora.isMuted) agora.toggleMute()
-    try {
-      recognitionRef.current?.start()
-      setMicStatus('listening')
-    } catch {
-      // Re-create if needed
-      startListening()
-    }
+    setMicStatus('listening')
   }
 
   const handleEnd = () => {
