@@ -2,7 +2,7 @@
 import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cors from 'cors'
-import { mergeTeam, mergeMember, mergeTask, closeDriver } from './services/neo4j'
+import { mergeTeam, mergeMember, mergeTask, queryTeamGraph, closeDriver } from './services/neo4j'
 import agoraToken from 'agora-token'
 const { RtcTokenBuilder, RtcRole } = agoraToken
 
@@ -82,6 +82,7 @@ app.post('/api/hindsight/recall', async (req: Request, res: Response) => {
 // ── Groq Routes ─────────────────────────────────────────────────────────────────
 
 app.post('/api/groq/chat', async (req: Request, res: Response) => {
+  console.log('[API] /api/groq/chat called')
   const { messages, options } = req.body
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -140,6 +141,19 @@ app.post('/api/neo4j/sync-task', async (req: Request, res: Response) => {
     res.json({ success: true })
   } catch (err: any) {
     console.error('[Neo4j sync-task]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/neo4j/graph-insights', async (req: Request, res: Response) => {
+  console.log('[API] /api/neo4j/graph-insights called with', req.body)
+  const { teamCode } = req.body
+  try {
+    const data = await queryTeamGraph(teamCode)
+    console.log('[API] /api/neo4j/graph-insights SUCCESS')
+    res.json(data)
+  } catch (err: any) {
+    console.error('[Neo4j graph-insights]', err.message)
     res.status(500).json({ error: err.message })
   }
 })
