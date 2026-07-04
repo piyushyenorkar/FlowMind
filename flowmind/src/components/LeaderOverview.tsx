@@ -105,7 +105,7 @@ export default function LeaderOverview({ setActiveTab }) {
               <div className={styles.cardTitle}>Graph Insights</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 'auto', marginBottom: 'auto' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text3)', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text2)', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 Insights by <img src={neo4jLogo} alt="Neo4j" style={{ height: '14px', objectFit: 'contain', filter: 'invert(1) hue-rotate(180deg)' }} />
               </div>
             </div>
