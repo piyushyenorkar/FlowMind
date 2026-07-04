@@ -223,25 +223,27 @@ export default function LeaderOverview({ setActiveTab }) {
       {/* Neo4j Insights Modal */}
       {showInsightsModal && (
         <div className={styles.modalOverlay} onClick={() => setShowInsightsModal(false)}>
-          <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ width: '800px', maxWidth: '90vw', minHeight: '500px' }}>
-            <button className={styles.closeBtn} onClick={() => setShowInsightsModal(false)}>
-              <X size={20} />
-            </button>
-            <button 
-              onClick={handleRegenerateInsights} 
-              disabled={loadingInsights}
-              style={{ position: 'absolute', top: '22px', right: '56px', background: 'transparent', border: 'none', color: 'var(--text3)', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: loadingInsights ? 0.3 : 0.7 }}
-              onMouseOver={e => !loadingInsights && (e.currentTarget.style.opacity = '1')}
-              onMouseOut={e => !loadingInsights && (e.currentTarget.style.opacity = '0.7')}
-            >
-              <RefreshCw size={14} />
-              Regenerate
-            </button>
-            <div className={styles.modalScroll} style={{ display: 'flex', flexDirection: 'column' }}>
-              <div className={styles.sectionHeader} style={{ marginBottom: '24px' }}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ width: '900px', maxWidth: '90vw', minHeight: '500px' }}>
+            <div className={styles.modalScroll} style={{ display: 'flex', flexDirection: 'column', padding: '32px 32px 32px 32px' }}>
+              <div className={styles.sectionHeader} style={{ marginBottom: '24px', alignItems: 'center' }}>
                 <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
                   <img src={neo4jLogo} alt="Neo4j" style={{ height: '24px', objectFit: 'contain', filter: 'invert(1) hue-rotate(180deg)' }} />
                   Graph Insights
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <button 
+                    onClick={handleRegenerateInsights} 
+                    disabled={loadingInsights}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text3)', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: loadingInsights ? 0.3 : 0.7 }}
+                    onMouseOver={e => !loadingInsights && (e.currentTarget.style.opacity = '1')}
+                    onMouseOut={e => !loadingInsights && (e.currentTarget.style.opacity = '0.7')}
+                  >
+                    <RefreshCw size={14} />
+                    Regenerate
+                  </button>
+                  <button onClick={() => setShowInsightsModal(false)} className={styles.headerIconBtn}>
+                    <X size={20} />
+                  </button>
                 </div>
               </div>
               
@@ -259,15 +261,15 @@ export default function LeaderOverview({ setActiveTab }) {
               )}
 
               {insights && !loadingInsights && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', flex: 1, overflow: 'hidden' }}>
                   {/* Bottlenecks (Powered by Graph) */}
-                  <div className={styles.card} style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                      <AlertTriangle size={18} color="var(--red)" />
+                  <div className={styles.card} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0, boxShadow: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '20px 20px 16px 20px', flexShrink: 0 }}>
+                      <Network size={18} color="#7ffe7dff" />
                       <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em', color: '#fff' }}>Graph Bottlenecks</span>
                     </div>
                     {insights.bottlenecks?.length > 0 ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', padding: '0 20px 20px 20px' }}>
                         {insights.bottlenecks.map((b: any, i: number) => (
                           <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -289,33 +291,37 @@ export default function LeaderOverview({ setActiveTab }) {
                   </div>
 
                   {/* General Risks & Recommendations */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <div className={styles.card} style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--yellow)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', overflow: 'hidden' }}>
+                    <div className={styles.card} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0, boxShadow: 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '20px 20px 12px 20px', color: 'var(--yellow)', flexShrink: 0 }}>
                         <Lightbulb size={18} />
-                        <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>AI Recommendation</span>
+                        <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em', color: '#fff' }}>AI Recommendation</span>
                       </div>
-                      <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text2)' }}>
-                        {insights.recommendation || "Maintain current task velocity."}
-                      </p>
+                      <div style={{ overflowY: 'auto', padding: '0 20px 20px 20px' }}>
+                        <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text2)', margin: 0 }}>
+                          {insights.recommendation || "Maintain current task velocity."}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className={styles.card} style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text)' }}>
+                    <div className={styles.card} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0, boxShadow: 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '20px 20px 12px 20px', color: 'var(--text)', flexShrink: 0 }}>
                         <Activity size={18} />
-                        <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>Detected Risks</span>
+                        <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em', color: '#fff' }}>Detected Risks</span>
                       </div>
-                      {insights.risks?.length > 0 ? (
-                        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text2)', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {insights.risks.map((r: any, i: number) => (
-                            <li key={i}>
-                              <strong>{r.member}</strong>: {r.reason}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <div style={{ color: 'var(--text3)', fontSize: '14px' }}>No immediate risks detected.</div>
-                      )}
+                      <div style={{ overflowY: 'auto', padding: '0 20px 20px 20px' }}>
+                        {insights.risks?.length > 0 ? (
+                          <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text2)', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {insights.risks.map((r: any, i: number) => (
+                              <li key={i}>
+                                <strong>{r.member}</strong>: {r.reason}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div style={{ color: 'var(--text3)', fontSize: '14px' }}>No immediate risks detected.</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
