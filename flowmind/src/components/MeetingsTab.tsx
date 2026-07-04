@@ -655,14 +655,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meetingState, agora.isConnected, agora.isConnecting])
 
-  // Auto-start mic for ALL users when meeting becomes active
-  useEffect(() => {
-    if (meetingState === 'active' && micStatus === 'idle') {
-      // Small delay to avoid race with Agora join
-      const t = setTimeout(() => startListening(), 500)
-      return () => clearTimeout(t)
-    }
-  }, [meetingState])
+  // Removed auto-start mic: Users must manually click to speak
 
   // ── Real-time Transcript Broadcast ───────────────────────────────────
   const broadcastChannelRef = useRef<any>(null)
@@ -850,6 +843,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
 
   const startListening = () => {
     stoppedByUserRef.current = false
+    if (agora.isMuted) agora.toggleMute()
     setMicStatus('listening')
   }
 
