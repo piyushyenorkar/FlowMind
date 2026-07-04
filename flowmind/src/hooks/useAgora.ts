@@ -125,9 +125,15 @@ export function useAgora(channelName: string, userId: string, initialMute: boole
       const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
         encoderConfig: 'speech_standard', // Optimized for voice, not music
       })
-      await localAudioTrack.setEnabled(!initialMute) 
       localTrackRef.current = localAudioTrack
       await client.publish([localAudioTrack])
+
+      // Mute AFTER publishing so the track is alive on the remote side.
+      // setMuted() sends silence without destroying the MediaStreamTrack,
+      // unlike setEnabled(false) which kills the hardware track entirely.
+      if (initialMute) {
+        await localAudioTrack.setMuted(true)
+      }
 
       joinedRef.current = true
       setIsConnected(true)
@@ -140,7 +146,7 @@ export function useAgora(channelName: string, userId: string, initialMute: boole
     } finally {
       setIsConnecting(false)
     }
-  }, [channelName, fetchToken])
+  }, [channelName, fetchToken, initialMute])
 
   // Leave the channel
   const leave = useCallback(async () => {
@@ -169,11 +175,11 @@ export function useAgora(channelName: string, userId: string, initialMute: boole
     }
   }, [])
 
-  // Toggle mute
+  // Toggle mute — use setMuted() to keep the track alive
   const toggleMute = useCallback(async () => {
     if (localTrackRef.current) {
       const newMuted = !isMuted
-      await localTrackRef.current.setEnabled(!newMuted)
+      await localTrackRef.current.setMuted(newMuted)
       setIsMuted(newMuted)
     }
   }, [isMuted])

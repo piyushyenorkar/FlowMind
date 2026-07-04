@@ -772,12 +772,12 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meetingState, agora.isConnected, agora.isConnecting])
 
-  // Auto-start mic if requested
+  // Auto-start mic if requested — wait for Agora to connect first
   useEffect(() => {
-    if (initialMicOn && meetingState === 'active') {
+    if (initialMicOn && meetingState === 'active' && agora.isConnected) {
       startListening()
     }
-  }, [meetingState, initialMicOn])
+  }, [meetingState, initialMicOn, agora.isConnected])
 
   // ── Real-time Transcript Broadcast ───────────────────────────────────
   const broadcastChannelRef = useRef<any>(null)
