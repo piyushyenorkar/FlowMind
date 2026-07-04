@@ -176,7 +176,7 @@
 .reviewTitle { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text); }
 .reviewSub { font-size: 12px; color: var(--text3); }
 
-.summaryCard { background: var(--accent-glow); border: 1px solid rgba(62, 207, 142, 0.2); border-radius: 12px; padding: 16px 18px; }
+.summaryCard { background: var(--accent-glow); border: none; border-radius: 24px; padding: 20px 24px; box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.06); }
 .summaryHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .summaryIcon { font-size: 18px; }
 .summaryLabel { font-size: 14px; font-weight: 600; color: var(--accent2); }
@@ -187,41 +187,78 @@
   background: var(--surface);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px); 
-  border: 1px solid var(--border); 
-  border-radius: var(--radius-lg); 
+  border: none; 
+  border-radius: 24px; 
   padding: 16px; 
   margin-bottom: 8px; 
   display: flex; 
   gap: 12px; 
-  box-shadow: var(--shadow);
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+.taskCard:hover {
+  /* removed transform to keep it fixed */
 }
 .taskCheck { flex-shrink: 0; margin-top: 2px; }
-.taskCheck input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
+.customCheckBtn { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--border2); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: transparent; }
+.customCheckBtn:hover { border-color: var(--accent); }
+.customCheckBtn[data-checked="true"] { background: var(--accent); border-color: var(--accent); animation: popCheck 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes popCheck {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
 .taskContent { flex: 1; min-width: 0; }
 .taskTitle { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text); }
 .taskDesc { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.4; }
 .taskMeta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
 .taskAssignRow { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; color: var(--text2); }
 .taskAssignRow select { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 4px 8px; font-size: 12px; }
-.taskReason { font-size: 11px; color: var(--text3); font-style: italic; margin-top: 4px; }
-.taskEstimate { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.greyPill {
+  background: #333333;
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.06);
+}
+
+.taskReason { 
+  font-size: 11px; 
+  color: var(--text2); 
+  font-style: italic; 
+  margin-top: 12px; 
+  background: #333333;
+  padding: 10px 14px;
+  border-radius: 16px;
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.06);
+}
+.taskEstimate { font-size: 11px; color: var(--text3); margin-top: 12px; }
 
 .decisionCard { 
   background: var(--surface);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px); 
-  border: 1px solid var(--border); 
-  border-radius: var(--radius-lg); 
+  border: none; 
+  border-radius: 24px; 
   padding: 16px; 
   margin-bottom: 8px; 
   display: flex; 
   gap: 12px; 
-  box-shadow: var(--shadow);
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+.decisionCard:hover {
+  /* removed transform to keep it fixed */
 }
 .decisionContent { flex: 1; }
 .decisionText { font-size: 14px; font-weight: 600; color: var(--text); }
-.decisionReason { font-size: 12px; color: var(--text2); margin-top: 4px; }
-.decisionPeople { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.decisionReason { 
+  font-size: 12px; 
+  color: var(--text2); 
+  margin-top: 12px; 
+  background: #333333;
+  padding: 10px 14px;
+  border-radius: 16px;
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.06);
+}
+.decisionPeople { font-size: 12px; color: var(--text2); margin-top: 12px; }
 
 .followUpList { display: flex; flex-direction: column; gap: 6px; }
 .followUpItem { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--surface); border: none; border-radius: 16px; font-size: 13px; color: var(--text2); }

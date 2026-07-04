@@ -203,22 +203,22 @@ select.input option {
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border);
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: 100px;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: var(--surface2);
-  color: var(--text2);
-  border: none;
+  letter-spacing: 0.5px;
 }
-
-.tag-purple { background: var(--accent-glow); color: var(--accent); border: none; }
-.tag-green { background: var(--green-dim); color: var(--green); border: none; }
-.tag-red { background: var(--red-dim); color: var(--red); border: none; }
-.tag-yellow { background: var(--yellow-dim); color: var(--yellow); border: none; }
+.tag-grey { background: var(--surface2); color: var(--text2); border-color: var(--border); }
+.tag-red { background: var(--red-dim); color: var(--red); border-color: rgba(244, 63, 94, 0.3); }
+.tag-yellow { background: var(--yellow-dim); color: var(--yellow); border-color: rgba(245, 158, 11, 0.3); }
+.tag-green { background: var(--green-dim); color: var(--green); border-color: rgba(16, 185, 129, 0.3); }
+.tag-purple { background: rgba(167, 139, 250, 0.12); color: #a78bfa; border-color: rgba(167, 139, 250, 0.3); }
 
 .label {
   display: block;

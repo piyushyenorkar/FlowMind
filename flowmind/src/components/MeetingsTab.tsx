@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw, ShieldCheck, LogOut } from 'lucide-react'
+import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw, ShieldCheck, LogOut, ArrowUp, ArrowRight, ArrowDown, Target, Zap } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../services/supabase'
@@ -8,6 +8,8 @@ import { analyzeMeeting } from '../utils/meetingAnalyzer'
 import { storeMeeting, storeTask } from '../utils/hindsightClient'
 import { useAgora } from '../hooks/useAgora'
 import styles from './MeetingsTab.module.css'
+
+import favicon from '../assets/favicon.png'
 
 const AVATAR_COLORS = ['#7c6aff', '#22d3a0', '#ff6b6b', '#fbbf24', '#a78bfa', '#34bfff']
 
@@ -388,7 +390,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
                         onClick={(e) => {
                           e.stopPropagation();
                           if (isJoined || isHost || isInvited) {
-                            requestJoinRoom(m);
+                            requestJoinRoom(m, isHost ? 'create' : 'voiceRoom');
                           }
                         }}
                       >
@@ -455,7 +457,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
   const isReschedule = selectedMeeting?._reschedule === true
   const [step, setStep] = useState(() => {
     if (isReschedule) return 1 // Go back to setup to change date
-    return selectedMeeting?.status === 'scheduled' ? 2 : 1
+    return (selectedMeeting?.status === 'scheduled' || selectedMeeting?.status === 'ongoing') ? 2 : 1
   })
   const [title, setTitle] = useState(selectedMeeting?.title || '')
   const [date, setDate] = useState(isReschedule ? '' : (selectedMeeting?.date || ''))
@@ -1317,6 +1319,7 @@ function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting
 
 // ═══════════ REVIEW SECTION ═══════════════════════════════════════════════
 function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, checkedDecisions, setCheckedDecisions, taskAssignees, setTaskAssignees, onBack, onConfirm }) {
+  const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
   const checkedCount = Object.values(checkedTasks).filter(Boolean).length
 
   return (
@@ -1324,14 +1327,20 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
       {/* Summary */}
       <div className={styles.reviewSection}>
         <div className={styles.summaryCard}>
-          <div className={styles.summaryHeader}>
-            <div className={styles.summaryIcon}><Bot size={20} /></div>
-            <div className={styles.summaryLabel}>AI Summary</div>
-            <span className="tag tag-green">Memory-backed</span>
+          <div className={styles.summaryHeader} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className={styles.summaryIcon} style={{ display: 'flex' }}>
+                <img src={favicon} alt="AI" style={{ width: '26px', height: '26px', borderRadius: '4px' }} />
+              </div>
+              <div className={styles.summaryLabel}>AI Summary</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="tag" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text2)', border: 'none', padding: '4px 10px', textTransform: 'uppercase' }}>MEMORY-BACKED</span>
+            </div>
           </div>
           <div className={styles.summaryText}>{analysis.summary}</div>
           <div className={styles.topicTags}>
-            {analysis.keyTopics?.map((t, i) => <span key={i} className="tag tag-purple">{t}</span>)}
+            {analysis.keyTopics?.map((t, i) => <span key={i} className="tag" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text2)', border: 'none', padding: '4px 10px', textTransform: 'uppercase' }}>{t}</span>)}
           </div>
         </div>
       </div>
@@ -1343,24 +1352,65 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
           <div className={styles.reviewSub}>Review and edit before creating</div>
         </div>
         {analysis.tasks?.map((t, i) => (
-          <div key={i} className={styles.taskCard}>
+          <div key={i} className={styles.taskCard} style={{ zIndex: openDropdownIndex === i ? 50 : 1, position: 'relative' }}>
             <div className={styles.taskCheck}>
-              <input type="checkbox" checked={!!checkedTasks[i]} onChange={() => setCheckedTasks(p => ({ ...p, [i]: !p[i] }))} />
+              <button 
+                className={styles.customCheckBtn} 
+                data-checked={!!checkedTasks[i]} 
+                onClick={() => setCheckedTasks(p => ({ ...p, [i]: !p[i] }))}
+              >
+                {!!checkedTasks[i] && <Check size={12} color="#fff" strokeWidth={3} />}
+              </button>
             </div>
             <div className={styles.taskContent}>
               <div className={styles.taskTitle}>{t.title}</div>
               <div className={styles.taskDesc}>{t.description}</div>
               <div className={styles.taskMeta}>
-                <span className={`tag ${t.priority === 'high' ? 'tag-red' : t.priority === 'medium' ? 'tag-yellow' : 'tag-green'}`}>
+                <span className={`tag ${styles.greyPill}`} style={{ border: 'none', padding: '4px 10px', color: t.priority === 'high' ? 'rgba(244, 63, 94, 0.8)' : t.priority === 'medium' ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.8)' }}>
+                  {t.priority === 'high' ? <ArrowUp size={12} /> : t.priority === 'medium' ? <ArrowRight size={12} /> : <ArrowDown size={12} />}
                   {t.priority}
                 </span>
-                <span className="tag tag-purple">{t.taskType}</span>
+                <span className={`tag ${styles.greyPill}`} style={{ border: 'none', padding: '4px 10px', color: 'rgba(45, 212, 191, 0.8)' }}>
+                  <Target size={12} />
+                  {t.taskType}
+                </span>
               </div>
-              <div className={styles.taskAssignRow}>
+              <div className={styles.taskAssignRow} style={{ position: 'relative' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><User size={14} /> Assigned to:</span>
-                <select value={taskAssignees[i] || t.assignedTo} onChange={e => setTaskAssignees(p => ({ ...p, [i]: e.target.value }))}>
-                  {attendees.map(a => <option key={a} value={a}>{a}</option>)}
-                </select>
+                
+                <div 
+                  className={styles.greyPill}
+                  style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 10px', borderRadius: '16px', border: 'none' }} 
+                  onClick={() => setOpenDropdownIndex(openDropdownIndex === i ? null : i)}
+                >
+                  <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text)' }}>
+                    <Avatar name={taskAssignees[i] || t.assignedTo} size={16} />
+                    {taskAssignees[i] || t.assignedTo}
+                  </span>
+                  <div style={{ fontSize: '10px', opacity: 0.5, marginLeft: '8px' }}>▼</div>
+                </div>
+
+                {openDropdownIndex === i && (
+                  <>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setOpenDropdownIndex(null)} />
+                    <div style={{ position: 'absolute', top: '100%', left: '100px', marginTop: '8px', background: '#1a1a1a', border: '1px solid var(--border)', borderRadius: '12px', padding: '8px', zIndex: 100, width: '220px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text2)', padding: '4px 8px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assign To</div>
+                      <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {attendees.map((a: string) => (
+                          <div 
+                            key={a} 
+                            onClick={() => { setTaskAssignees(p => ({ ...p, [i]: a })); setOpenDropdownIndex(null); }} 
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '8px', cursor: 'pointer', background: (taskAssignees[i] || t.assignedTo) === a ? 'rgba(255,255,255,0.08)' : 'transparent' }}
+                          >
+                            <Avatar name={a} size={24} />
+                            <div style={{ flex: 1, fontSize: '13px', color: 'var(--text)' }}>{a}</div>
+                            {(taskAssignees[i] || t.assignedTo) === a && <Check size={14} color="var(--accent)" />}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               <div className={styles.taskReason} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Brain size={14} /> {t.assignmentReason}</div>
               <div className={styles.taskEstimate} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1381,13 +1431,30 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
         {analysis.decisions?.map((d, i) => (
           <div key={i} className={styles.decisionCard}>
             <div className={styles.taskCheck}>
-              <input type="checkbox" checked={!!checkedDecisions[i]} onChange={() => setCheckedDecisions(p => ({ ...p, [i]: !p[i] }))} />
+              <button 
+                className={styles.customCheckBtn} 
+                data-checked={!!checkedDecisions[i]} 
+                onClick={() => setCheckedDecisions(p => ({ ...p, [i]: !p[i] }))}
+              >
+                {!!checkedDecisions[i] && <Check size={12} color="#fff" strokeWidth={3} />}
+              </button>
             </div>
             <div className={styles.decisionContent}>
               <div className={styles.decisionText}>{d.decision}</div>
               <div className={styles.decisionReason}>{d.reason}</div>
-              <span className={`tag ${d.impact === 'high' ? 'tag-red' : d.impact === 'medium' ? 'tag-yellow' : 'tag-green'}`}>{d.impact}</span>
-              <div className={styles.decisionPeople} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={14} /> {d.involvedPeople}</div>
+              <span className={`tag ${styles.greyPill}`} style={{ border: 'none', padding: '4px 10px', marginTop: '10px', display: 'inline-flex', color: d.impact === 'high' ? 'rgba(244, 63, 94, 0.8)' : d.impact === 'medium' ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.8)' }}>
+                {d.impact === 'high' ? <ArrowUp size={12} /> : d.impact === 'medium' ? <ArrowRight size={12} /> : <ArrowDown size={12} />}
+                {d.impact} impact
+              </span>
+              <div className={styles.decisionPeople} style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '4px' }}><Users size={14} /> Involved:</span>
+                {(Array.isArray(d.involvedPeople) ? d.involvedPeople : d.involvedPeople?.split(',').map((s: string) => s.trim()) || []).map((person: string, idx: number) => (
+                  <div key={idx} className={styles.greyPill} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '16px', color: 'var(--text2)' }}>
+                    <Avatar name={person} size={16} />
+                    <span>{person}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ))}
@@ -1396,7 +1463,9 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
       {/* Follow-ups */}
       {analysis.followUpItems?.length > 0 && (
         <div className={styles.reviewSection}>
-          <div className={styles.reviewTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Bookmark size={18} /> Follow-up Items</div>
+          <div className={styles.reviewHeader}>
+            <div className={styles.reviewTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Bookmark size={18} /> Follow-up Items</div>
+          </div>
           <div className={styles.followUpList}>
             {analysis.followUpItems.map((f, i) => (
               <div key={i} className={styles.followUpItem} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Bookmark size={14} /> {f}</div>
