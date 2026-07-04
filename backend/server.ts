@@ -12,8 +12,10 @@ app.use(express.json())
 
 const HINDSIGHT_BASE = process.env.HINDSIGHT_BASE_URL!
 const HINDSIGHT_KEY  = process.env.HINDSIGHT_API_KEY!
-const GROQ_KEY       = process.env.GROQ_API_KEY!
+const GROQ_KEYS      = (process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean)
 const AGORA_APP_ID   = process.env.AGORA_APP_ID!
+
+let currentGroqKeyIndex = 0
 const AGORA_CERT     = process.env.AGORA_APP_CERTIFICATE!
 
 // ── Health check ────────────────────────────────────────────────────────────────
@@ -85,25 +87,46 @@ app.post('/api/groq/chat', async (req: Request, res: Response) => {
   console.log('[API] /api/groq/chat called')
   const { messages, options } = req.body
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages,
-        temperature: options?.temperature ?? 0.7,
-        max_completion_tokens: options?.maxTokens || 1500,
-      }),
-    })
-    if (!response.ok) {
+    if (GROQ_KEYS.length === 0) throw new Error('No Groq API keys configured')
+
+    let lastError = null
+
+    for (let i = 0; i < GROQ_KEYS.length; i++) {
+      const keyIndex = (currentGroqKeyIndex + i) % GROQ_KEYS.length
+      const apiKey = GROQ_KEYS[keyIndex]
+      
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages,
+          temperature: options?.temperature ?? 0.7,
+          max_completion_tokens: options?.maxTokens || 1500,
+        }),
+      })
+
+      if (response.ok) {
+        currentGroqKeyIndex = keyIndex // Lock in the successful key for next requests
+        const data = await response.json()
+        return res.json(data)
+      }
+
       const errText = await response.text().catch(() => '')
-      throw new Error(`Groq API Error ${response.status}: ${errText}`)
+      lastError = `Groq API Error ${response.status}: ${errText}`
+
+      if (response.status === 429) {
+        console.warn(`[Groq Chat] Key ${keyIndex + 1}/${GROQ_KEYS.length} rate limited. Retrying with next key...`)
+        continue // Try the next key
+      } else {
+        throw new Error(lastError) // Non-rate limit error, fail immediately
+      }
     }
-    const data = await response.json()
-    res.json(data)
+
+    throw new Error(lastError || 'All configured Groq API keys have hit their rate limit.')
   } catch (err: any) {
     console.error('[Groq Chat]', err.message)
     res.status(500).json({ error: err.message })
