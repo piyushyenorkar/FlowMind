@@ -974,8 +974,8 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           const isJoined = isMe || isInActiveAttendees || isConnectedViaAgora;
           const isSpeaking = isMe && micStatus === 'listening';
           // Check if specific remote user has audio via Supabase real-time broadcast (perfect accuracy)
-          // Fallback to Agora matching if available
-          const hasRemoteAudio = !isMe && (remoteMics[name] === true || (isConnectedViaAgora && agora.remoteUsers.some(u => u.uid === name && u.hasAudio)));
+          // Fallback to Agora general audio detection for 2-person calls if Supabase misses a beat
+          const hasRemoteAudio = !isMe && (remoteMics[name] === true || (isConnectedViaAgora && attendees.length <= 2 && agora.remoteUsers.some(u => u.hasAudio)));
           const isParticipantHost = name === meeting?.leader;
 
           return (
