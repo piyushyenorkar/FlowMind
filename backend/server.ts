@@ -183,12 +183,18 @@ app.get('/api/agora/token', (req: Request, res: Response) => {
 // ── Start ───────────────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 5000
-app.listen(PORT, () => {
-  console.log(`✓ FlowMind Backend running on port ${PORT}`)
-})
+
+// If not running on Vercel, start the local server
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`✓ FlowMind Backend running on port ${PORT}`)
+  })
+}
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   await closeDriver()
   process.exit(0)
 })
+
+export default app;
