@@ -45,6 +45,12 @@ export default function MeetingsTab() {
   const [view, setViewInternal] = useState('list')
   const [selectedMeeting, setSelectedMeeting] = useState(null)
   const historyDepth = useRef(0)
+  const [toastMessage, setToastMessage] = useState<{message: string} | null>(null)
+
+  const showToast = useCallback((msg: string) => {
+    setToastMessage({ message: msg })
+    setTimeout(() => setToastMessage(null), 2000)
+  }, [])
 
   useEffect(() => {
     const handlePopState = (e) => {
@@ -78,11 +84,24 @@ export default function MeetingsTab() {
     }
   }, [])
 
-  if (view === 'list') return <ListView meetings={meetings} members={members} setView={setView} setSelected={setSelectedMeeting} currentUser={currentUser} joinLiveMeeting={joinLiveMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} />
-  if (view === 'create') return <CreateFlow members={members} tasks={tasks} decisions={decisions} memberProfiles={memberProfiles} addTask={addTask} addDecision={addDecision} addMeeting={addMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} addMemory={addMemory} team={team} setView={setView} setSelected={setSelectedMeeting} selectedMeeting={selectedMeeting} currentUser={currentUser} meetings={meetings} />
-  if (view === 'detail') return <DetailView meeting={selectedMeeting} tasks={tasks} setView={setView} />
-  if (view === 'voiceRoom' && selectedMeeting) return <ActiveVoiceRoom meeting={selectedMeeting} members={members} memberProfiles={memberProfiles} setView={setView} addMeeting={addMeeting} tasks={tasks} decisions={decisions} currentUser={currentUser} startLiveMeeting={startLiveMeeting} meetings={meetings} />
-  return null
+  const renderView = () => {
+    if (view === 'list') return <ListView meetings={meetings} members={members} setView={setView} setSelected={setSelectedMeeting} currentUser={currentUser} joinLiveMeeting={joinLiveMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} />
+    if (view === 'create') return <CreateFlow members={members} tasks={tasks} decisions={decisions} memberProfiles={memberProfiles} addTask={addTask} addDecision={addDecision} addMeeting={addMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} addMemory={addMemory} team={team} setView={setView} setSelected={setSelectedMeeting} selectedMeeting={selectedMeeting} currentUser={currentUser} meetings={meetings} showToast={showToast} />
+    if (view === 'detail') return <DetailView meeting={selectedMeeting} tasks={tasks} setView={setView} />
+    if (view === 'voiceRoom' && selectedMeeting) return <ActiveVoiceRoom meeting={selectedMeeting} members={members} memberProfiles={memberProfiles} setView={setView} addMeeting={addMeeting} tasks={tasks} decisions={decisions} currentUser={currentUser} startLiveMeeting={startLiveMeeting} meetings={meetings} showToast={showToast} />
+    return null
+  }
+
+  return (
+    <>
+      {renderView()}
+      {toastMessage && (
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: 'var(--surface2)', padding: '12px 20px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', zIndex: 1000, color: 'var(--text)', border: '1px solid var(--border)', animation: 'fadeIn 0.2s', fontWeight: 500 }}>
+          {toastMessage.message}
+        </div>
+      )}
+    </>
+  )
 }
 
 // ═══════════ LIST VIEW ═══════════════════════════════════════════════════════
@@ -337,7 +356,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
 }
 
 // ═══════════ CREATE FLOW ═══════════════════════════════════════════════════
-function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDecision, addMeeting, scheduleMeeting, startLiveMeeting, addMemory, team, setView, setSelected, selectedMeeting, currentUser, meetings }) {
+function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDecision, addMeeting, scheduleMeeting, startLiveMeeting, addMemory, team, setView, setSelected, selectedMeeting, currentUser, meetings, showToast }) {
   const isReschedule = selectedMeeting?._reschedule === true
   const [step, setStep] = useState(() => {
     if (isReschedule) return 1 // Go back to setup to change date
@@ -552,6 +571,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
           onEnd={handleEndMeeting}
           onLeave={() => setView('list')}
           memberProfiles={memberProfiles}
+          showToast={showToast}
           onStart={() => {
             const mId = selectedMeeting?.id || (meetings.find(m => m.id === selectedMeeting?.id)?.id)
             if (mId) startLiveMeeting(mId);
@@ -600,7 +620,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
 }
 
 // ═══════════ VOICE ROOM ══════════════════════════════════════════════════
-function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, setDuration, onEnd, onLeave, memberProfiles, onStart }) {
+function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, setDuration, onEnd, onLeave, memberProfiles, onStart, showToast }) {
   const { user } = useAuth()
   const title = meeting?.title || 'Live Meeting'
   const attendees = meeting?.attendees || []
@@ -609,6 +629,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const [micStatus, setMicStatus] = useState<'idle' | 'requesting' | 'listening' | 'paused' | 'denied' | 'unsupported'>('idle')
   const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
   const [remoteMics, setRemoteMics] = useState<Record<string, boolean>>({})
+  const [disconnectedUsers, setDisconnectedUsers] = useState<Record<string, boolean>>({})
 
   // Sync meetingState from meeting status (realtime updates)
   useEffect(() => {
@@ -684,6 +705,14 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       const { name, isListening } = payload.payload
       if (name) {
         setRemoteMics(prev => ({ ...prev, [name]: isListening }))
+        setDisconnectedUsers(prev => ({ ...prev, [name]: false }))
+      }
+    }).on('broadcast', { event: 'user-left' }, (payload) => {
+      const { name } = payload.payload
+      if (name) {
+        showToast(`${name} left`)
+        setDisconnectedUsers(prev => ({ ...prev, [name]: true }))
+        setRemoteMics(prev => ({ ...prev, [name]: false }))
       }
     }).subscribe((status) => {
       console.log('[VoiceRoom] Broadcast channel status:', status)
@@ -1012,7 +1041,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                 </div>
               ) : (
                 <div className={styles.pSub}>
-                  {isParticipantHost ? 'Host' : isJoined ? 'Connected' : 'Invited'}
+                  {isParticipantHost ? 'Host' : disconnectedUsers[name] ? 'Disconnected' : isJoined ? 'Connected' : 'Invited'}
                 </div>
               )}
             </div>
@@ -1130,10 +1159,18 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
               </button>
             ) : (
               <button className={styles.endBtn} onClick={() => {
+                if (broadcastChannelRef.current && user?.name) {
+                  broadcastChannelRef.current.send({
+                    type: 'broadcast',
+                    event: 'user-left',
+                    payload: { name: user.name }
+                  }).catch(() => {})
+                }
                 stoppedByUserRef.current = true;
                 recognitionRef.current?.stop();
                 agora.leave();
                 onLeave?.();
+                showToast('You left');
               }}>
                 Leave Meeting
               </button>
@@ -1147,7 +1184,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
 
 // ═══════════ ACTIVE VOICE ROOM ════════════════════════════════════════════
 // Standalone wrapper — any user joining a live/scheduled meeting from ListView
-function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting, tasks, decisions, currentUser, startLiveMeeting, meetings }) {
+function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting, tasks, decisions, currentUser, startLiveMeeting, meetings, showToast }) {
   const [transcript, setTranscript] = useState('')
   const [duration, setDuration] = useState(0)
 
@@ -1171,6 +1208,7 @@ function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting
         if (isHost && liveMeeting?.id) startLiveMeeting(liveMeeting.id);
       }}
       memberProfiles={memberProfiles}
+      showToast={showToast}
     />
   )
 }
