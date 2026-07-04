@@ -608,6 +608,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
 
   const [micStatus, setMicStatus] = useState<'idle' | 'requesting' | 'listening' | 'paused' | 'denied' | 'unsupported'>('idle')
   const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
+  const [remoteMics, setRemoteMics] = useState<Record<string, boolean>>({})
 
   // Sync meetingState from meeting status (realtime updates)
   useEffect(() => {
@@ -686,6 +687,11 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           setTranscript(merged)
         }
       }
+    }).on('broadcast', { event: 'mic-status' }, (payload) => {
+      const { name, isListening } = payload.payload
+      if (name) {
+        setRemoteMics(prev => ({ ...prev, [name]: isListening }))
+      }
     }).subscribe((status) => {
       console.log('[VoiceRoom] Broadcast channel status:', status)
       if (status === 'SUBSCRIBED') setBroadcastStatus('connected')
@@ -695,6 +701,16 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     broadcastChannelRef.current = channel
     return () => { supabase.removeChannel(channel) }
   }, [meeting?.id])
+
+  useEffect(() => {
+    if (broadcastChannelRef.current && user?.name) {
+      broadcastChannelRef.current.send({
+        type: 'broadcast',
+        event: 'mic-status',
+        payload: { name: user.name, isListening: micStatus === 'listening' }
+      })
+    }
+  }, [micStatus, user?.name])
 
   // ── Sync transcript TO Supabase (Host Only) ──────────────────────────
   useEffect(() => {
@@ -957,8 +973,9 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
           const isConnectedViaAgora = !isMe && agora.remoteUsers.length > 0; // In a 2-person call, if there's a remote user, the other person is connected
           const isJoined = isMe || isInActiveAttendees || isConnectedViaAgora;
           const isSpeaking = isMe && micStatus === 'listening';
-          // Check if specific remote user has audio via Agora (real-time mic status)
-          const hasRemoteAudio = !isMe && isConnectedViaAgora && agora.remoteUsers.some(u => u.uid === name && u.hasAudio);
+          // Check if specific remote user has audio via Supabase real-time broadcast (perfect accuracy)
+          // Fallback to Agora matching if available
+          const hasRemoteAudio = !isMe && (remoteMics[name] === true || (isConnectedViaAgora && agora.remoteUsers.some(u => u.uid === name && u.hasAudio)));
           const isParticipantHost = name === meeting?.leader;
 
           return (
