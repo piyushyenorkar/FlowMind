@@ -30,10 +30,10 @@ export interface UseAgoraReturn {
   error: string | null
 }
 
-export function useAgora(channelName: string, userId: string): UseAgoraReturn {
+export function useAgora(channelName: string, userId: string, initialMute: boolean = true): UseAgoraReturn {
   const clientRef = useRef<IAgoraRTCClient | null>(null)
   const localTrackRef = useRef<IMicrophoneAudioTrack | null>(null)
-  const [isMuted, setIsMuted] = useState(true)
+  const [isMuted, setIsMuted] = useState(initialMute)
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionState, setConnectionState] = useState('DISCONNECTED')
@@ -125,7 +125,7 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
       const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack({
         encoderConfig: 'speech_standard', // Optimized for voice, not music
       })
-      await localAudioTrack.setEnabled(false) // Mute by default
+      await localAudioTrack.setEnabled(!initialMute) 
       localTrackRef.current = localAudioTrack
       await client.publish([localAudioTrack])
 
@@ -186,7 +186,7 @@ export function useAgora(channelName: string, userId: string): UseAgoraReturn {
         localTrackRef.current.close()
       }
       if (clientRef.current) {
-        clientRef.current.leave().catch(() => {})
+        clientRef.current.leave().catch(() => { })
       }
     }
   }, [])

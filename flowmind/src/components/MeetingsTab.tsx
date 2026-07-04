@@ -45,11 +45,17 @@ export default function MeetingsTab() {
   const [view, setViewInternal] = useState('list')
   const [selectedMeeting, setSelectedMeeting] = useState(null)
   const historyDepth = useRef(0)
-  const [toastMessage, setToastMessage] = useState<{name: string, action: string} | null>(null)
+  const [toastMessage, setToastMessage] = useState<{ name: string, action: string } | null>(null)
+  const [preJoinMeeting, setPreJoinMeeting] = useState<any>(null)
+  const [initialMicOn, setInitialMicOn] = useState(false)
 
   const showToast = useCallback((name: string, action: string) => {
     setToastMessage({ name, action })
     setTimeout(() => setToastMessage(null), 2000)
+  }, [])
+
+  const requestJoinRoom = useCallback((meeting: any) => {
+    setPreJoinMeeting(meeting)
   }, [])
 
   useEffect(() => {
@@ -85,10 +91,10 @@ export default function MeetingsTab() {
   }, [])
 
   const renderView = () => {
-    if (view === 'list') return <ListView meetings={meetings} members={members} setView={setView} setSelected={setSelectedMeeting} currentUser={currentUser} joinLiveMeeting={joinLiveMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} />
-    if (view === 'create') return <CreateFlow members={members} tasks={tasks} decisions={decisions} memberProfiles={memberProfiles} addTask={addTask} addDecision={addDecision} addMeeting={addMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} addMemory={addMemory} team={team} setView={setView} setSelected={setSelectedMeeting} selectedMeeting={selectedMeeting} currentUser={currentUser} meetings={meetings} showToast={showToast} />
+    if (view === 'list') return <ListView meetings={meetings} members={members} setView={setView} setSelected={setSelectedMeeting} currentUser={currentUser} joinLiveMeeting={joinLiveMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} requestJoinRoom={requestJoinRoom} />
+    if (view === 'create') return <CreateFlow members={members} tasks={tasks} decisions={decisions} memberProfiles={memberProfiles} addTask={addTask} addDecision={addDecision} addMeeting={addMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} addMemory={addMemory} team={team} setView={setView} setSelected={setSelectedMeeting} selectedMeeting={selectedMeeting} currentUser={currentUser} meetings={meetings} showToast={showToast} requestJoinRoom={requestJoinRoom} />
     if (view === 'detail') return <DetailView meeting={selectedMeeting} tasks={tasks} setView={setView} />
-    if (view === 'voiceRoom' && selectedMeeting) return <ActiveVoiceRoom meeting={selectedMeeting} members={members} memberProfiles={memberProfiles} setView={setView} addMeeting={addMeeting} tasks={tasks} decisions={decisions} currentUser={currentUser} startLiveMeeting={startLiveMeeting} meetings={meetings} showToast={showToast} />
+    if (view === 'voiceRoom' && selectedMeeting) return <ActiveVoiceRoom meeting={selectedMeeting} members={members} memberProfiles={memberProfiles} setView={setView} addMeeting={addMeeting} tasks={tasks} decisions={decisions} currentUser={currentUser} startLiveMeeting={startLiveMeeting} meetings={meetings} showToast={showToast} initialMicOn={initialMicOn} />
     return null
   }
 
@@ -118,12 +124,65 @@ export default function MeetingsTab() {
           })()}
         </div>
       )}
+
+      {preJoinMeeting && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(30px)', padding: '32px 24px', borderRadius: '16px', width: '320px', border: '1px solid var(--border)', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <button 
+              onClick={() => setPreJoinMeeting(null)} 
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text2)', cursor: 'pointer' }}
+            >
+              <X size={20} />
+            </button>
+            
+            <h3 style={{ marginBottom: '8px', fontSize: '20px', color: 'var(--text)', textAlign: 'center' }}>Join Meeting</h3>
+            <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>{preJoinMeeting.title}</p>
+            
+            <div style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              <button 
+                onClick={() => setInitialMicOn(!initialMicOn)}
+                style={{
+                  width: '64px', height: '64px', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: initialMicOn ? 'rgba(34, 211, 160, 0.15)' : 'var(--surface2)',
+                  color: initialMicOn ? 'var(--green)' : 'var(--text2)',
+                  border: `2px solid ${initialMicOn ? 'var(--green)' : 'var(--border)'}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {initialMicOn ? <Mic size={28} /> : <MicOff size={28} />}
+              </button>
+              <span style={{ fontSize: '13px', color: 'var(--text2)' }}>
+                {initialMicOn ? 'Microphone On' : 'Microphone Off'}
+              </span>
+            </div>
+            
+            <button 
+              className="btn-primary" 
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', fontSize: '15px' }}
+              onClick={() => {
+                const isJoined = preJoinMeeting.activeAttendees?.includes(currentUser?.name);
+                const isHost = isHostOfMeeting(preJoinMeeting, currentUser?.name);
+                if (!isJoined && !isHost && preJoinMeeting.status === 'ongoing') {
+                   joinLiveMeeting(preJoinMeeting.id);
+                }
+                setSelectedMeeting(preJoinMeeting);
+                setViewInternal('voiceRoom');
+                setPreJoinMeeting(null);
+              }}
+            >
+              Join
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
 
 // ═══════════ LIST VIEW ═══════════════════════════════════════════════════════
-function ListView({ meetings, members, setView, setSelected, currentUser, joinLiveMeeting, scheduleMeeting, startLiveMeeting }) {
+function ListView({ meetings, members, setView, setSelected, currentUser, joinLiveMeeting, scheduleMeeting, startLiveMeeting, requestJoinRoom }) {
   const pastMeetings = meetings.filter(m => m.status === 'completed')
   const liveMeetings = meetings.filter(m => m.status === 'ongoing')
   const allScheduled = meetings.filter(m => m.status === 'scheduled')
@@ -300,7 +359,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
       {/* ── Live Meetings ─────────────────────────────── */}
       {liveMeetings.length > 0 && (
         <div style={{ marginTop: '24px' }}>
-          <h3 style={{ fontSize: '14px', marginBottom: '12px', color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '6px' }}><div className={styles.liveDotGreen} /> Live Meetings</h3>
+          <h3 style={{ fontSize: '14px', margin: '4px 0 12px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}><Mic size={16} /> Live Meetings</h3>
           <div className={styles.grid}>
             {liveMeetings.map(m => {
               const isJoined = m.activeAttendees?.includes(currentUser?.name);
@@ -308,17 +367,33 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
               const isHost = isHostOfMeeting(m, currentUser?.name);
 
               return (
-                <div key={m.id} className={styles.meetingCard} style={{ border: '1px solid var(--green)' }} onClick={() => {
-                  if (isJoined || isHost) {
-                    setSelected(m); setView('voiceRoom');
-                  } else if (isInvited) {
-                    joinLiveMeeting(m.id);
-                    setSelected(m);
-                    setView('voiceRoom');
+                <div key={m.id} className={styles.meetingCard} onClick={() => {
+                  if (isJoined || isHost || isInvited) {
+                    requestJoinRoom(m);
                   }
                 }}>
-                  <div className={styles.cardTitle}>{m.title}</div>
-                  <div className={styles.cardDate}>Live Now</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div className={styles.cardTitle}>{m.title}</div>
+                      <div className={styles.cardDate} style={{ color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className={styles.liveDotGreen} /> Live Now
+                      </div>
+                    </div>
+                    {(isJoined || isHost || isInvited) && (
+                      <button
+                        className="btn-primary"
+                        style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--green)', color: '#fff' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isJoined || isHost || isInvited) {
+                            requestJoinRoom(m);
+                          }
+                        }}
+                      >
+                        <Play size={12} /> {isJoined || isHost ? 'Re-Join' : 'Join'}
+                      </button>
+                    )}
+                  </div>
                   <div className={styles.cardAvatars}>
                     {m.activeAttendees?.slice(0, 4).map((a, i) => (
                       <div key={i} className={styles.avatarWrapper}>
@@ -328,7 +403,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
                     {(m.activeAttendees?.length || 0) > 4 && <div className={styles.cardAvatar} style={{ background: 'var(--surface2)' }}>+{m.activeAttendees.length - 4}</div>}
                   </div>
                   <div className={styles.cardSummary}>
-                    {isJoined || isHost ? 'Click to re-enter room' : isInvited ? 'Click to Join' : 'You are not invited'}
+                    {isJoined || isHost ? 'Meeting is currently in progress' : isInvited ? 'Meeting has started' : 'You are not invited'}
                   </div>
                 </div>
               )
@@ -374,7 +449,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
 }
 
 // ═══════════ CREATE FLOW ═══════════════════════════════════════════════════
-function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDecision, addMeeting, scheduleMeeting, startLiveMeeting, addMemory, team, setView, setSelected, selectedMeeting, currentUser, meetings, showToast }) {
+function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDecision, addMeeting, scheduleMeeting, startLiveMeeting, addMemory, team, setView, setSelected, selectedMeeting, currentUser, meetings, showToast, requestJoinRoom }) {
   const isReschedule = selectedMeeting?._reschedule === true
   const [step, setStep] = useState(() => {
     if (isReschedule) return 1 // Go back to setup to change date
@@ -543,7 +618,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
                   }
                   scheduleMeeting(meetingObj);
                   setSelected(meetingObj);
-                  setStep(2);
+                  requestJoinRoom(meetingObj);
                 }} style={{ alignSelf: 'flex-start', marginTop: '16px' }}>
                   Create Meeting
                 </button>
@@ -582,6 +657,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
         <VoiceRoom
           meeting={meetings.find(m => m.id === selectedMeeting?.id) || selectedMeeting}
           isLeader={true}
+          initialMicOn={true}
           transcript={transcript}
           setTranscript={setTranscript}
           duration={duration}
@@ -638,13 +714,13 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
 }
 
 // ═══════════ VOICE ROOM ══════════════════════════════════════════════════
-function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, setDuration, onEnd, onLeave, memberProfiles, onStart, showToast }) {
+function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, setDuration, onEnd, onLeave, memberProfiles, onStart, showToast, initialMicOn }) {
   const { user } = useAuth()
   const title = meeting?.title || 'Live Meeting'
   const attendees = meeting?.attendees || []
   const activeAttendees = meeting?.activeAttendees || []
 
-  const [micStatus, setMicStatus] = useState<'idle' | 'requesting' | 'listening' | 'paused' | 'denied' | 'unsupported'>('idle')
+  const [micStatus, setMicStatus] = useState<'idle' | 'requesting' | 'listening' | 'paused' | 'denied' | 'unsupported'>(initialMicOn ? 'listening' : 'idle')
   const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
   const [remoteMics, setRemoteMics] = useState<Record<string, boolean>>({})
   const [disconnectedUsers, setDisconnectedUsers] = useState<Record<string, boolean>>({})
@@ -685,7 +761,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const startTimeRef = useRef<number>(Date.now()) // Track when this user's meeting started
 
   // ── Agora Live Audio ─────────────────────────────────────────────────
-  const agora = useAgora(meeting?.id || '', user?.name || 'anonymous')
+  const agora = useAgora(meeting?.id || '', user?.name || 'anonymous', initialMicOn)
 
   // Auto-join Agora when meeting becomes active
   useEffect(() => {
@@ -694,7 +770,12 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }
   }, [meetingState, agora.isConnected, agora.isConnecting])
 
-  // Removed auto-start mic: Users must manually click to speak
+  // Auto-start mic if requested
+  useEffect(() => {
+    if (initialMicOn && meetingState === 'active') {
+      startListening()
+    }
+  }, [meetingState, initialMicOn])
 
   // ── Real-time Transcript Broadcast ───────────────────────────────────
   const broadcastChannelRef = useRef<any>(null)
@@ -1182,7 +1263,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                     type: 'broadcast',
                     event: 'user-left',
                     payload: { name: user.name }
-                  }).catch(() => {})
+                  }).catch(() => { })
                 }
                 stoppedByUserRef.current = true;
                 recognitionRef.current?.stop();
@@ -1202,7 +1283,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
 
 // ═══════════ ACTIVE VOICE ROOM ════════════════════════════════════════════
 // Standalone wrapper — any user joining a live/scheduled meeting from ListView
-function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting, tasks, decisions, currentUser, startLiveMeeting, meetings, showToast }) {
+function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting, tasks, decisions, currentUser, startLiveMeeting, meetings, showToast, initialMicOn }) {
   const [transcript, setTranscript] = useState('')
   const [duration, setDuration] = useState(0)
 
@@ -1227,6 +1308,7 @@ function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting
       }}
       memberProfiles={memberProfiles}
       showToast={showToast}
+      initialMicOn={initialMicOn}
     />
   )
 }
