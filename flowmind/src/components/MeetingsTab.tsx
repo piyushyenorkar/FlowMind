@@ -47,6 +47,7 @@ export default function MeetingsTab() {
   const historyDepth = useRef(0)
   const [toastMessage, setToastMessage] = useState<{ name: string, action: string } | null>(null)
   const [preJoinMeeting, setPreJoinMeeting] = useState<any>(null)
+  const [preJoinTargetView, setPreJoinTargetView] = useState<'voiceRoom'|'create'>('voiceRoom')
   const [initialMicOn, setInitialMicOn] = useState(false)
 
   const showToast = useCallback((name: string, action: string) => {
@@ -54,8 +55,9 @@ export default function MeetingsTab() {
     setTimeout(() => setToastMessage(null), 2000)
   }, [])
 
-  const requestJoinRoom = useCallback((meeting: any) => {
+  const requestJoinRoom = useCallback((meeting: any, targetView: 'voiceRoom'|'create' = 'voiceRoom') => {
     setPreJoinMeeting(meeting)
+    setPreJoinTargetView(targetView)
   }, [])
 
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function MeetingsTab() {
 
   const renderView = () => {
     if (view === 'list') return <ListView meetings={meetings} members={members} setView={setView} setSelected={setSelectedMeeting} currentUser={currentUser} joinLiveMeeting={joinLiveMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} requestJoinRoom={requestJoinRoom} />
-    if (view === 'create') return <CreateFlow members={members} tasks={tasks} decisions={decisions} memberProfiles={memberProfiles} addTask={addTask} addDecision={addDecision} addMeeting={addMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} addMemory={addMemory} team={team} setView={setView} setSelected={setSelectedMeeting} selectedMeeting={selectedMeeting} currentUser={currentUser} meetings={meetings} showToast={showToast} requestJoinRoom={requestJoinRoom} />
+    if (view === 'create') return <CreateFlow members={members} tasks={tasks} decisions={decisions} memberProfiles={memberProfiles} addTask={addTask} addDecision={addDecision} addMeeting={addMeeting} scheduleMeeting={scheduleMeeting} startLiveMeeting={startLiveMeeting} addMemory={addMemory} team={team} setView={setView} setSelected={setSelectedMeeting} selectedMeeting={selectedMeeting} currentUser={currentUser} meetings={meetings} showToast={showToast} requestJoinRoom={requestJoinRoom} initialMicOn={initialMicOn} />
     if (view === 'detail') return <DetailView meeting={selectedMeeting} tasks={tasks} setView={setView} />
     if (view === 'voiceRoom' && selectedMeeting) return <ActiveVoiceRoom meeting={selectedMeeting} members={members} memberProfiles={memberProfiles} setView={setView} addMeeting={addMeeting} tasks={tasks} decisions={decisions} currentUser={currentUser} startLiveMeeting={startLiveMeeting} meetings={meetings} showToast={showToast} initialMicOn={initialMicOn} />
     return null
@@ -168,7 +170,7 @@ export default function MeetingsTab() {
                    joinLiveMeeting(preJoinMeeting.id);
                 }
                 setSelectedMeeting(preJoinMeeting);
-                setViewInternal('voiceRoom');
+                setViewInternal(preJoinTargetView);
                 setPreJoinMeeting(null);
               }}
             >
@@ -245,7 +247,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
               return (
                 <div key={m.id} className={styles.meetingCard} style={{ cursor: isHost ? 'pointer' : 'default' }} onClick={() => {
                   if (isHost) {
-                    setSelected(m); setView('create');
+                    requestJoinRoom(m, 'create');
                   }
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -259,7 +261,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
                         style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px' }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelected(m); setView('create');
+                          requestJoinRoom(m, 'create');
                         }}
                       >
                         <Play size={12} /> Start
@@ -449,7 +451,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
 }
 
 // ═══════════ CREATE FLOW ═══════════════════════════════════════════════════
-function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDecision, addMeeting, scheduleMeeting, startLiveMeeting, addMemory, team, setView, setSelected, selectedMeeting, currentUser, meetings, showToast, requestJoinRoom }) {
+function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDecision, addMeeting, scheduleMeeting, startLiveMeeting, addMemory, team, setView, setSelected, selectedMeeting, currentUser, meetings, showToast, requestJoinRoom, initialMicOn }) {
   const isReschedule = selectedMeeting?._reschedule === true
   const [step, setStep] = useState(() => {
     if (isReschedule) return 1 // Go back to setup to change date
@@ -657,7 +659,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
         <VoiceRoom
           meeting={meetings.find(m => m.id === selectedMeeting?.id) || selectedMeeting}
           isLeader={true}
-          initialMicOn={true}
+          initialMicOn={initialMicOn}
           transcript={transcript}
           setTranscript={setTranscript}
           duration={duration}
