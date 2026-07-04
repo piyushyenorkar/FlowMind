@@ -216,7 +216,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
           <div className={styles.headerTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mic size={20} /> AI Meetings</div>
           <div className={styles.headerSub}>Voice meetings analyzed and converted to tasks</div>
         </div>
-        <button className="btn-primary" onClick={() => setView('create')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mic size={16} /> New Meeting</button>
+        <button className="btn-primary" onClick={() => { setSelected(null); setView('create'); }} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mic size={16} /> New Meeting</button>
       </div>
 
       <div className={styles.statsRow}>
@@ -419,7 +419,7 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
           <div className={styles.emptyIcon}><Mic size={40} /></div>
           <div className={styles.emptyTitle}>No meetings yet</div>
           <div className={styles.emptySub}>Start a voice meeting and let AI auto-assign tasks</div>
-          <button className="btn-primary" onClick={() => setView('create')}>Start New Meeting</button>
+          <button className="btn-primary" onClick={() => { setSelected(null); setView('create'); }}>Start New Meeting</button>
         </div>
       ) : (
         <div className={styles.grid}>
