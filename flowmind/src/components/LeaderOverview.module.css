@@ -191,7 +191,7 @@
 }
 .deadlineDate {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 12px;

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import styles from './LeaderOverview.module.css'
-import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, MessageSquare, Plus, ChevronRight, X, AlertTriangle, Lightbulb } from 'lucide-react'
+import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, MessageSquare, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network } from 'lucide-react'
 import TeamMembers from './TeamMembers'
 import Avatar from './Avatar'
+import flowmindLogo from '../assets/flowmind.png'
+import neo4jLogo from '../assets/neo4j.png'
 import { generateInsights } from '../services/api'
 
 export default function LeaderOverview({ setActiveTab }) {
   const { team, tasks, decisions, members, memoryFeed, memberProfiles, role } = useApp()
   const [showMembersModal, setShowMembersModal] = useState(false)
+  const [showInsightsModal, setShowInsightsModal] = useState(false)
   const [insights, setInsights] = useState<any>(null)
   const [loadingInsights, setLoadingInsights] = useState(false)
 
@@ -87,23 +90,48 @@ export default function LeaderOverview({ setActiveTab }) {
           </div>
         </div>
 
-        {/* Deadline */}
-        <div className={`${styles.card} ${styles.deadlineCard}`}>
-          <div className={styles.cardHeader}>
-            <div className={styles.cardIconWrapper} style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text)' }}>
-              <Clock size={18} />
-            </div>
-            <div className={styles.cardTitle}>Deadline</div>
-          </div>
-          <div className={styles.deadlineContent}>
-            <div className={styles.deadlineDate}>
-              {team?.deadline ? new Date(team.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not set'}
-            </div>
-            {team?.deadline && (
-              <div className={styles.deadlineDays}>
-                {Math.max(0, Math.ceil((new Date(team.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} days left
+        {/* Insights & Deadline Split */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0 }}>
+          {/* Neo4j Insights Button */}
+          <div 
+            className={styles.card} 
+            style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', cursor: 'pointer', minHeight: 0 }}
+            onClick={() => setShowInsightsModal(true)}
+          >
+            <div className={styles.cardHeader} style={{ marginBottom: '4px' }}>
+              <div className={styles.cardIconWrapper} style={{ background: 'transparent', color: 'var(--text)' }}>
+                <Network size={18} />
               </div>
-            )}
+              <div className={styles.cardTitle}>Graph Insights</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 'auto', marginBottom: 'auto' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text3)', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                Insights by <img src={neo4jLogo} alt="Neo4j" style={{ height: '14px', objectFit: 'contain', filter: 'invert(1) hue-rotate(180deg)' }} />
+              </div>
+            </div>
+            <div style={{ position: 'absolute', bottom: '12px', right: '12px', color: 'var(--text3)', opacity: 0.7 }}>
+              <ChevronRight size={16} />
+            </div>
+          </div>
+
+          {/* Deadline */}
+          <div className={`${styles.card} ${styles.deadlineCard}`} style={{ flex: 1, padding: '16px', margin: 0, minHeight: 0 }}>
+            <div className={styles.cardHeader} style={{ marginBottom: '12px' }}>
+              <div className={styles.cardIconWrapper} style={{ background: 'transparent', color: 'var(--text)' }}>
+                <Clock size={18} />
+              </div>
+              <div className={styles.cardTitle}>Deadline</div>
+              {team?.deadline && (
+                <div className={styles.deadlineDays} style={{ marginLeft: 'auto', fontSize: '10px', background: 'rgba(255, 255, 255, 0.05)', padding: '2px 6px', borderRadius: '10px' }}>
+                  {Math.max(0, Math.ceil((new Date(team.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} days left
+                </div>
+              )}
+            </div>
+            <div className={styles.deadlineContent} style={{ marginTop: 'auto', marginBottom: '10px', textAlign: 'center' }}>
+              <div className={styles.deadlineDate} style={{ marginBottom: '4px' }}>
+                {team?.deadline ? new Date(team.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not set'}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -142,81 +170,7 @@ export default function LeaderOverview({ setActiveTab }) {
         })}
       </div>
 
-      {/* AI Graph Insights (Neo4j + Groq) */}
-      {(insights || loadingInsights) && (
-        <div className={styles.section} style={{ marginTop: '32px' }}>
-          <div className={styles.sectionHeader} style={{ marginBottom: '16px' }}>
-            <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
-              <Sparkles size={20} />
-              Neo4j Graph Insights
-            </div>
-            {loadingInsights && <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderColor: 'var(--accent) transparent var(--accent) transparent' }} />}
-          </div>
-          
-          {insights && !loadingInsights && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              {/* Bottlenecks (Powered by Graph) */}
-              <div className={styles.card} style={{ background: 'linear-gradient(145deg, rgba(239, 68, 68, 0.05), rgba(20, 20, 20, 0.5))', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--red)' }}>
-                  <AlertTriangle size={18} />
-                  <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>Graph Bottlenecks</span>
-                </div>
-                {insights.bottlenecks?.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {insights.bottlenecks.map((b: any, i: number) => (
-                      <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <strong style={{ fontSize: '14px' }}>{b.person}</strong>
-                          <span style={{ fontSize: '12px', color: 'var(--red)', background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '100px' }}>{b.waiting} days</span>
-                        </div>
-                        <div style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '8px' }}>Blocking: {b.task}</div>
-                        {b.graph_insight && (
-                          <div style={{ fontSize: '12px', color: 'var(--text3)', borderLeft: '2px solid var(--red)', paddingLeft: '8px' }}>
-                            {b.graph_insight}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ color: 'var(--text3)', fontSize: '14px' }}>No graph bottlenecks detected.</div>
-                )}
-              </div>
-
-              {/* General Risks & Recommendations */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div className={styles.card} style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--yellow)' }}>
-                    <Lightbulb size={18} />
-                    <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>AI Recommendation</span>
-                  </div>
-                  <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text2)' }}>
-                    {insights.recommendation || "Maintain current task velocity."}
-                  </p>
-                </div>
-
-                <div className={styles.card} style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text)' }}>
-                    <Activity size={18} />
-                    <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>Detected Risks</span>
-                  </div>
-                  {insights.risks?.length > 0 ? (
-                    <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text2)', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {insights.risks.map((r: any, i: number) => (
-                        <li key={i}>
-                          <strong>{r.member}</strong>: {r.reason}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div style={{ color: 'var(--text3)', fontSize: '14px' }}>No immediate risks detected.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Insights are now in a modal */}
       {/* Recent tasks */}
       {tasks.length > 0 && (
         <div className={styles.section}>
@@ -252,6 +206,94 @@ export default function LeaderOverview({ setActiveTab }) {
             </button>
             <div className={styles.modalScroll}>
               <TeamMembers />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Neo4j Insights Modal */}
+      {showInsightsModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowInsightsModal(false)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ width: '800px', maxWidth: '90vw' }}>
+            <button className={styles.closeBtn} onClick={() => setShowInsightsModal(false)}>
+              <X size={20} />
+            </button>
+            <div className={styles.modalScroll}>
+              <div className={styles.sectionHeader} style={{ marginBottom: '24px' }}>
+                <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
+                  <Sparkles size={24} />
+                  Neo4j Graph Insights
+                </div>
+                {loadingInsights && <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderColor: 'var(--accent) transparent var(--accent) transparent' }} />}
+              </div>
+              
+              {!insights && !loadingInsights && (
+                <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px' }}>
+                  Insights are not available right now.
+                </div>
+              )}
+
+              {insights && !loadingInsights && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  {/* Bottlenecks (Powered by Graph) */}
+                  <div className={styles.card} style={{ background: 'linear-gradient(145deg, rgba(239, 68, 68, 0.05), rgba(20, 20, 20, 0.5))', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--red)' }}>
+                      <AlertTriangle size={18} />
+                      <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>Graph Bottlenecks</span>
+                    </div>
+                    {insights.bottlenecks?.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {insights.bottlenecks.map((b: any, i: number) => (
+                          <div key={i} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                              <strong style={{ fontSize: '14px' }}>{b.person}</strong>
+                              <span style={{ fontSize: '12px', color: 'var(--red)', background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '100px' }}>{b.waiting} days</span>
+                            </div>
+                            <div style={{ fontSize: '13px', color: 'var(--text2)', marginBottom: '8px' }}>Blocking: {b.task}</div>
+                            {b.graph_insight && (
+                              <div style={{ fontSize: '12px', color: 'var(--text3)', borderLeft: '2px solid var(--red)', paddingLeft: '8px' }}>
+                                {b.graph_insight}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: 'var(--text3)', fontSize: '14px' }}>No graph bottlenecks detected.</div>
+                    )}
+                  </div>
+
+                  {/* General Risks & Recommendations */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className={styles.card} style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--yellow)' }}>
+                        <Lightbulb size={18} />
+                        <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>AI Recommendation</span>
+                      </div>
+                      <p style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text2)' }}>
+                        {insights.recommendation || "Maintain current task velocity."}
+                      </p>
+                    </div>
+
+                    <div className={styles.card} style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text)' }}>
+                        <Activity size={18} />
+                        <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>Detected Risks</span>
+                      </div>
+                      {insights.risks?.length > 0 ? (
+                        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text2)', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {insights.risks.map((r: any, i: number) => (
+                            <li key={i}>
+                              <strong>{r.member}</strong>: {r.reason}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div style={{ color: 'var(--text3)', fontSize: '14px' }}>No immediate risks detected.</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
