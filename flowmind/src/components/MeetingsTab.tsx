@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw, ShieldCheck } from 'lucide-react'
+import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw, ShieldCheck, LogOut } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../services/supabase'
@@ -45,10 +45,10 @@ export default function MeetingsTab() {
   const [view, setViewInternal] = useState('list')
   const [selectedMeeting, setSelectedMeeting] = useState(null)
   const historyDepth = useRef(0)
-  const [toastMessage, setToastMessage] = useState<{message: string} | null>(null)
+  const [toastMessage, setToastMessage] = useState<{name: string, action: string} | null>(null)
 
-  const showToast = useCallback((msg: string) => {
-    setToastMessage({ message: msg })
+  const showToast = useCallback((name: string, action: string) => {
+    setToastMessage({ name, action })
     setTimeout(() => setToastMessage(null), 2000)
   }, [])
 
@@ -96,8 +96,26 @@ export default function MeetingsTab() {
     <>
       {renderView()}
       {toastMessage && (
-        <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: 'var(--surface2)', padding: '12px 20px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', zIndex: 1000, color: 'var(--text)', border: '1px solid var(--border)', animation: 'fadeIn 0.2s', fontWeight: 500 }}>
-          {toastMessage.message}
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', background: 'var(--surface2)', padding: '10px 20px', borderRadius: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', zIndex: 1000, color: 'var(--text)', border: '1px solid var(--border)', animation: 'fadeIn 0.2s', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {(() => {
+            const tName = toastMessage.name === 'You' ? (currentUser?.name || 'You') : toastMessage.name;
+            const tPhoto = memberProfiles?.[tName]?.photoUrl;
+            return (
+              <>
+                <div style={{ width: '26px', height: '26px', borderRadius: '50%', overflow: 'hidden', background: 'var(--primary)', flexShrink: 0 }}>
+                  {tPhoto ? (
+                    <img src={tPhoto} alt={tName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#fff', background: '#7c6aff' }}>
+                      {tName[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <span>{toastMessage.name} {toastMessage.action}</span>
+                {toastMessage.action === 'left' && <LogOut size={16} style={{ color: 'var(--red)', marginLeft: '4px' }} />}
+              </>
+            );
+          })()}
         </div>
       )}
     </>
@@ -710,7 +728,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     }).on('broadcast', { event: 'user-left' }, (payload) => {
       const { name } = payload.payload
       if (name) {
-        showToast(`${name} left`)
+        showToast(name, 'left')
         setDisconnectedUsers(prev => ({ ...prev, [name]: true }))
         setRemoteMics(prev => ({ ...prev, [name]: false }))
       }
@@ -1170,7 +1188,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
                 recognitionRef.current?.stop();
                 agora.leave();
                 onLeave?.();
-                showToast('You left');
+                showToast('You', 'left');
               }}>
                 Leave Meeting
               </button>
