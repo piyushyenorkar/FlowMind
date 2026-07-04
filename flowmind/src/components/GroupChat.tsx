@@ -14,24 +14,33 @@ function getMemberColor(name: string) {
   return `hsl(${hue}, 80%, 70%)`;
 }
 
+const cachedGroupMessages: Record<string, any[]> = {}
+const cachedGroupReads: Record<string, Record<string, string>> = {}
+
 export default function GroupChat() {
   const { team, currentUser, members, memberProfiles } = useApp()
-  const [messages, setMessages] = useState<any[]>([])
-  const [memberReads, setMemberReads] = useState<Record<string, string>>({})
+  const teamCode = team?.code || ''
+  
+  const [messages, setMessages] = useState<any[]>(() => cachedGroupMessages[teamCode] || [])
+  const [memberReads, setMemberReads] = useState<Record<string, string>>(() => cachedGroupReads[teamCode] || {})
+  const [isLoading, setIsLoading] = useState(() => !cachedGroupMessages[teamCode])
   const [text, setText] = useState('')
   const [summarizing, setSummarizing] = useState(false)
   const [showSummarize, setShowSummarize] = useState(false)
   const [summary, setSummary] = useState<string | null>(null)
   const bottomRef = useRef<any>(null)
-  const teamCode = team?.code || ''
 
   // Load messages & read receipts
   useEffect(() => {
     const loadData = async () => {
       if (!teamCode) return
+      if (!cachedGroupMessages[teamCode]) {
+        setIsLoading(true)
+      }
       const { data, error } = await supabase.from('group_chats').select('*').eq('team_code', teamCode).order('timestamp', { ascending: true })
       if (!error && data) {
         setMessages(data)
+        cachedGroupMessages[teamCode] = data
       }
       
       const { data: readData } = await supabase.from('team_chat_reads').select('*').eq('team_code', teamCode)
@@ -39,7 +48,9 @@ export default function GroupChat() {
         const reads: Record<string, string> = {}
         readData.forEach((r: any) => reads[r.user_name] = r.last_read_timestamp)
         setMemberReads(reads)
+        cachedGroupReads[teamCode] = reads
       }
+      setIsLoading(false)
     }
     loadData()
   }, [teamCode])
@@ -51,6 +62,7 @@ export default function GroupChat() {
       const { data, error } = await supabase.from('group_chats').select('*').eq('team_code', teamCode).order('timestamp', { ascending: true })
       if (!error && data) {
         setMessages(data)
+        cachedGroupMessages[teamCode] = data
       }
 
       const { data: readData } = await supabase.from('team_chat_reads').select('*').eq('team_code', teamCode)
@@ -58,6 +70,7 @@ export default function GroupChat() {
         const reads: Record<string, string> = {}
         readData.forEach((r: any) => reads[r.user_name] = r.last_read_timestamp)
         setMemberReads(reads)
+        cachedGroupReads[teamCode] = reads
       }
     }, 2000)
     return () => clearInterval(interval)
@@ -97,7 +110,11 @@ export default function GroupChat() {
     // Save to Supabase
     await supabase.from('group_chats').insert([msg])
 
-    setMessages(prev => [...prev, msg])
+    setMessages(prev => {
+      const newMsgs = [...prev, msg]
+      cachedGroupMessages[teamCode] = newMsgs
+      return newMsgs
+    })
 
     // Store in FlowMind Memory
     retainMemory(
@@ -189,7 +206,12 @@ Be concise but comprehensive. Use bullet points.`
   return (
     <div className={styles.groupWrap}>
       {/* Messages */}
-      {messages.length === 0 ? (
+      {isLoading ? (
+        <div className={styles.empty} style={{ flexDirection: 'column', gap: '16px' }}>
+          <span className="spinner" style={{ width: '32px', height: '32px', borderWidth: '3px', borderColor: 'var(--accent) transparent var(--accent) transparent' }} />
+          <div className={styles.emptyText}>Loading messages...</div>
+        </div>
+      ) : messages.length === 0 ? (
         <div className={styles.empty}>
           <div className={styles.emptyIcon}><MessageSquare size={40} /></div>
           <div className={styles.emptyText}>Team Group Chat</div>

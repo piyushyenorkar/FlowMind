@@ -10,22 +10,30 @@ function getChatKey(teamCode: string, name1: string, name2: string) {
   return `${teamCode}_${sorted[0]}_${sorted[1]}`
 }
 
+const cachedDirectMessages: Record<string, any[]> = {}
+
 export default function DirectChat({ targetMember, onClose }: any) {
   const { team, currentUser, memberProfiles } = useApp()
-  const [messages, setMessages] = useState<any[]>([])
+  const chatKey = getChatKey(team?.code || '', currentUser?.name || '', targetMember?.name || '')
+  
+  const [messages, setMessages] = useState<any[]>(() => cachedDirectMessages[chatKey] || [])
+  const [isLoading, setIsLoading] = useState(() => !cachedDirectMessages[chatKey])
   const [text, setText] = useState('')
   const bottomRef = useRef<any>(null)
-
-  const chatKey = getChatKey(team?.code || '', currentUser?.name || '', targetMember?.name || '')
 
   // Load messages
   useEffect(() => {
     const loadMessages = async () => {
       if (!chatKey) return
+      if (!cachedDirectMessages[chatKey]) {
+        setIsLoading(true)
+      }
       const { data, error } = await supabase.from('direct_chats').select('*').eq('chat_key', chatKey).order('timestamp', { ascending: true })
       if (!error && data) {
         setMessages(data)
+        cachedDirectMessages[chatKey] = data
       }
+      setIsLoading(false)
     }
     loadMessages()
   }, [chatKey])
@@ -37,6 +45,7 @@ export default function DirectChat({ targetMember, onClose }: any) {
       const { data, error } = await supabase.from('direct_chats').select('*').eq('chat_key', chatKey).order('timestamp', { ascending: true })
       if (!error && data) {
         setMessages(data)
+        cachedDirectMessages[chatKey] = data
       }
     }, 2000)
     return () => clearInterval(interval)
@@ -61,7 +70,11 @@ export default function DirectChat({ targetMember, onClose }: any) {
     // Save to Supabase
     await supabase.from('direct_chats').insert([msg])
     
-    setMessages(prev => [...prev, msg])
+    setMessages(prev => {
+      const newMsgs = [...prev, msg]
+      cachedDirectMessages[chatKey] = newMsgs
+      return newMsgs
+    })
 
     // Store in FlowMind Memory
     retainMemory(
@@ -102,7 +115,12 @@ export default function DirectChat({ targetMember, onClose }: any) {
         </div>
 
         {/* Messages */}
-        {messages.length === 0 ? (
+        {isLoading ? (
+          <div className={styles.empty} style={{ flexDirection: 'column', gap: '16px' }}>
+            <span className="spinner" style={{ width: '32px', height: '32px', borderWidth: '3px', borderColor: 'var(--accent) transparent var(--accent) transparent' }} />
+            <div className={styles.emptyText}>Loading messages...</div>
+          </div>
+        ) : messages.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptyIcon}><MessageSquare size={40} /></div>
             <div className={styles.emptyText}>{isSelf ? 'Message Yourself' : 'Start a conversation'}</div>
