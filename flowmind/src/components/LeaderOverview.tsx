@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import styles from './LeaderOverview.module.css'
-import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, MessageSquare, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network } from 'lucide-react'
+import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, MessageSquare, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network, RefreshCw } from 'lucide-react'
 import TeamMembers from './TeamMembers'
 import Avatar from './Avatar'
 import flowmindLogo from '../assets/flowmind.png'
@@ -15,15 +15,25 @@ export default function LeaderOverview({ setActiveTab }) {
   const [insights, setInsights] = useState<any>(null)
   const [loadingInsights, setLoadingInsights] = useState(false)
 
+  const handleRegenerateInsights = () => {
+    if (!team?.code) return
+    setLoadingInsights(true)
+    setInsights(null)
+    generateInsights(team.code, tasks, decisions, members).then(res => {
+      setInsights(res)
+      setLoadingInsights(false)
+    })
+  }
+
   useEffect(() => {
-    if (team?.code && tasks.length > 0) {
+    if (showInsightsModal && team?.code && tasks.length > 0 && !insights && !loadingInsights) {
       setLoadingInsights(true)
       generateInsights(team.code, tasks, decisions, members).then(res => {
         setInsights(res)
         setLoadingInsights(false)
       })
     }
-  }, [team?.code, tasks.length, decisions.length])
+  }, [showInsightsModal, team?.code])
   const done = tasks.filter(t => t.status === 'done').length
   const inProgress = tasks.filter(t => t.status === 'in-progress').length
   const todo = tasks.filter(t => t.status === 'todo').length
@@ -213,32 +223,48 @@ export default function LeaderOverview({ setActiveTab }) {
       {/* Neo4j Insights Modal */}
       {showInsightsModal && (
         <div className={styles.modalOverlay} onClick={() => setShowInsightsModal(false)}>
-          <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ width: '800px', maxWidth: '90vw' }}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()} style={{ width: '800px', maxWidth: '90vw', minHeight: '500px' }}>
             <button className={styles.closeBtn} onClick={() => setShowInsightsModal(false)}>
               <X size={20} />
             </button>
-            <div className={styles.modalScroll}>
+            <button 
+              onClick={handleRegenerateInsights} 
+              disabled={loadingInsights}
+              style={{ position: 'absolute', top: '22px', right: '56px', background: 'transparent', border: 'none', color: 'var(--text3)', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: loadingInsights ? 0.3 : 0.7 }}
+              onMouseOver={e => !loadingInsights && (e.currentTarget.style.opacity = '1')}
+              onMouseOut={e => !loadingInsights && (e.currentTarget.style.opacity = '0.7')}
+            >
+              <RefreshCw size={14} />
+              Regenerate
+            </button>
+            <div className={styles.modalScroll} style={{ display: 'flex', flexDirection: 'column' }}>
               <div className={styles.sectionHeader} style={{ marginBottom: '24px' }}>
                 <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
-                  <Sparkles size={24} />
-                  Neo4j Graph Insights
+                  <img src={neo4jLogo} alt="Neo4j" style={{ height: '24px', objectFit: 'contain', filter: 'invert(1) hue-rotate(180deg)' }} />
+                  Graph Insights
                 </div>
-                {loadingInsights && <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderColor: 'var(--accent) transparent var(--accent) transparent' }} />}
               </div>
               
               {!insights && !loadingInsights && (
-                <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px' }}>
+                <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   Insights are not available right now.
+                </div>
+              )}
+
+              {loadingInsights && (
+                <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                  <span className="spinner" style={{ width: '32px', height: '32px', borderWidth: '3px', borderColor: 'var(--accent) transparent var(--accent) transparent' }} />
+                  Analyzing team data and FlowMind memory...
                 </div>
               )}
 
               {insights && !loadingInsights && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   {/* Bottlenecks (Powered by Graph) */}
-                  <div className={styles.card} style={{ background: 'linear-gradient(145deg, rgba(239, 68, 68, 0.05), rgba(20, 20, 20, 0.5))', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--red)' }}>
-                      <AlertTriangle size={18} />
-                      <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em' }}>Graph Bottlenecks</span>
+                  <div className={styles.card} style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                      <AlertTriangle size={18} color="var(--red)" />
+                      <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '13px', letterSpacing: '0.05em', color: '#fff' }}>Graph Bottlenecks</span>
                     </div>
                     {insights.bottlenecks?.length > 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
