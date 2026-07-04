@@ -806,7 +806,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
         finalTranscriptRef.current += newFinal
         setTranscript(finalTranscriptRef.current)
 
-        if (broadcastChannelRef.current && broadcastStatus === 'connected') {
+        if (broadcastChannelRef.current) {
           broadcastChannelRef.current.send({
             type: 'broadcast',
             event: 'speech',
