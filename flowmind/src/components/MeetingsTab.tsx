@@ -763,7 +763,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   const startTimeRef = useRef<number>(Date.now()) // Track when this user's meeting started
 
   // ── Agora Live Audio ─────────────────────────────────────────────────
-  const agora = useAgora(meeting?.id || '', user?.name || 'anonymous', initialMicOn)
+  const agora = useAgora(meeting?.id || '', user?.name || 'anonymous', !initialMicOn)
 
   // Auto-join Agora when meeting becomes active
   useEffect(() => {
