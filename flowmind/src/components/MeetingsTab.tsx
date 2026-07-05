@@ -49,7 +49,8 @@ export default function MeetingsTab() {
   const historyDepth = useRef(0)
   const [toastMessage, setToastMessage] = useState<{ name: string, action: string } | null>(null)
   const [preJoinMeeting, setPreJoinMeeting] = useState<any>(null)
-  const [preJoinTargetView, setPreJoinTargetView] = useState<'voiceRoom'|'create'>('voiceRoom')
+  const [preJoinTargetView, setPreJoinTargetView] = useState<'voiceRoom' | 'create'>('voiceRoom')
+  const [preJoinCallback, setPreJoinCallback] = useState<(() => void) | null>(null)
   const [initialMicOn, setInitialMicOn] = useState(false)
 
   const showToast = useCallback((name: string, action: string) => {
@@ -57,9 +58,10 @@ export default function MeetingsTab() {
     setTimeout(() => setToastMessage(null), 2000)
   }, [])
 
-  const requestJoinRoom = useCallback((meeting: any, targetView: 'voiceRoom'|'create' = 'voiceRoom') => {
+  const requestJoinRoom = useCallback((meeting: any, targetView: 'voiceRoom' | 'create' = 'voiceRoom', onJoin?: () => void) => {
     setPreJoinMeeting(meeting)
     setPreJoinTargetView(targetView)
+    if (onJoin) setPreJoinCallback(() => onJoin)
   }, [])
 
   useEffect(() => {
@@ -132,18 +134,18 @@ export default function MeetingsTab() {
       {preJoinMeeting && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(30px)', padding: '32px 24px', borderRadius: '16px', width: '320px', border: '1px solid var(--border)', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <button 
-              onClick={() => setPreJoinMeeting(null)} 
+            <button
+              onClick={() => { setPreJoinMeeting(null); setPreJoinCallback(null); }}
               style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text2)', cursor: 'pointer' }}
             >
               <X size={20} />
             </button>
-            
+
             <h3 style={{ marginBottom: '8px', fontSize: '20px', color: 'var(--text)', textAlign: 'center' }}>Join Meeting</h3>
             <p style={{ color: 'var(--text2)', fontSize: '14px', marginBottom: '24px', textAlign: 'center' }}>{preJoinMeeting.title}</p>
-            
+
             <div style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-              <button 
+              <button
                 onClick={() => setInitialMicOn(!initialMicOn)}
                 style={{
                   width: '64px', height: '64px', borderRadius: '50%',
@@ -161,18 +163,23 @@ export default function MeetingsTab() {
                 {initialMicOn ? 'Microphone On' : 'Microphone Off'}
               </span>
             </div>
-            
-            <button 
-              className="btn-primary" 
+
+            <button
+              className="btn-primary"
               style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', fontSize: '15px' }}
               onClick={() => {
                 const isJoined = preJoinMeeting.activeAttendees?.includes(currentUser?.name);
                 const isHost = isHostOfMeeting(preJoinMeeting, currentUser?.name);
                 if (!isJoined && !isHost && preJoinMeeting.status === 'ongoing') {
-                   joinLiveMeeting(preJoinMeeting.id);
+                  joinLiveMeeting(preJoinMeeting.id);
                 }
                 setSelectedMeeting(preJoinMeeting);
-                setViewInternal(preJoinTargetView);
+                if (preJoinCallback) {
+                  preJoinCallback();
+                  setPreJoinCallback(null);
+                } else {
+                  setViewInternal(preJoinTargetView);
+                }
                 setPreJoinMeeting(null);
               }}
             >
@@ -623,7 +630,9 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
                   }
                   scheduleMeeting(meetingObj);
                   setSelected(meetingObj);
-                  requestJoinRoom(meetingObj);
+                  requestJoinRoom(meetingObj, 'create', () => {
+                    setStep(2);
+                  });
                 }} style={{ alignSelf: 'flex-start', marginTop: '16px' }}>
                   Create Meeting
                 </button>
@@ -1355,9 +1364,9 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
         {analysis.tasks?.map((t, i) => (
           <div key={i} className={styles.taskCard} style={{ zIndex: openDropdownIndex === i ? 50 : 1, position: 'relative' }}>
             <div className={styles.taskCheck}>
-              <button 
-                className={styles.customCheckBtn} 
-                data-checked={!!checkedTasks[i]} 
+              <button
+                className={styles.customCheckBtn}
+                data-checked={!!checkedTasks[i]}
                 onClick={() => setCheckedTasks(p => ({ ...p, [i]: !p[i] }))}
               >
                 {!!checkedTasks[i] && <Check size={12} color="#fff" strokeWidth={3} />}
@@ -1378,10 +1387,10 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
               </div>
               <div className={styles.taskAssignRow} style={{ position: 'relative' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><User size={14} /> Assigned to:</span>
-                
-                <div 
+
+                <div
                   className={styles.greyPill}
-                  style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 10px', borderRadius: '16px', border: 'none' }} 
+                  style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 10px', borderRadius: '16px', border: 'none' }}
                   onClick={() => setOpenDropdownIndex(openDropdownIndex === i ? null : i)}
                 >
                   <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text)' }}>
@@ -1398,9 +1407,9 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
                       <div style={{ fontSize: '11px', color: 'var(--text2)', padding: '4px 8px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Assign To</div>
                       <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {attendees.map((a: string) => (
-                          <div 
-                            key={a} 
-                            onClick={() => { setTaskAssignees(p => ({ ...p, [i]: a })); setOpenDropdownIndex(null); }} 
+                          <div
+                            key={a}
+                            onClick={() => { setTaskAssignees(p => ({ ...p, [i]: a })); setOpenDropdownIndex(null); }}
                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '8px', cursor: 'pointer', background: (taskAssignees[i] || t.assignedTo) === a ? 'rgba(255,255,255,0.08)' : 'transparent' }}
                           >
                             <Avatar name={a} size={24} />
@@ -1432,9 +1441,9 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
         {analysis.decisions?.map((d, i) => (
           <div key={i} className={styles.decisionCard}>
             <div className={styles.taskCheck}>
-              <button 
-                className={styles.customCheckBtn} 
-                data-checked={!!checkedDecisions[i]} 
+              <button
+                className={styles.customCheckBtn}
+                data-checked={!!checkedDecisions[i]}
                 onClick={() => setCheckedDecisions(p => ({ ...p, [i]: !p[i] }))}
               >
                 {!!checkedDecisions[i] && <Check size={12} color="#fff" strokeWidth={3} />}
@@ -1532,7 +1541,7 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
 
       {/* Summary */}
       <div className={styles.detailSection}>
-        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '15px', marginTop:'10px' }}><img src={favicon} alt="AI" style={{ height: '25px', width: '25px', objectFit: 'contain' }} /> AI Summary</div>
+        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '15px', marginTop: '10px' }}><img src={favicon} alt="AI" style={{ height: '25px', width: '25px', objectFit: 'contain' }} /> AI Summary</div>
         <div className={styles.summaryCard}>
           <div className={styles.summaryText}>{meeting.summary}</div>
           <div className={styles.topicTags}>

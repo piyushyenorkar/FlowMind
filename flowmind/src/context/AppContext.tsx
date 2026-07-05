@@ -104,7 +104,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Fetch tasks
     const { data: tasksData } = await supabase.from('tasks').select('*, task_updates(*)').eq('team_code', teamCode)
     const tasks = tasksData?.map(t => ({
-      id: t.id, title: t.title, description: t.description, assignedTo: t.assigned_to, status: t.status, estimatedHours: t.estimated_hours, actualHours: t.actual_hours, deadline: t.deadline, createdAt: t.created_at, meetingSource: t.meeting_source,
+      id: t.id, title: t.title, description: t.description, assignedTo: t.assigned_to, status: t.status, estimatedHours: t.estimated_hours, actualHours: t.actual_hours, deadline: t.deadline, priority: t.priority, taskType: t.task_type, assignmentReason: t.assignment_reason, createdAt: t.created_at, meetingSource: t.meeting_source,
       updates: t.task_updates?.map((u: any) => ({ text: u.text, author: u.author, timestamp: u.timestamp })) || []
     })) || []
 
@@ -460,6 +460,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           status: task.status,
           estimated_hours: task.estimatedHours,
           deadline: task.deadline,
+          priority: task.priority,
+          task_type: task.taskType,
+          assignment_reason: task.assignmentReason,
           created_at: task.createdAt,
           meeting_source: task.meetingSource
         }]).then()
