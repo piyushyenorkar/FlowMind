@@ -1,121 +1,192 @@
 <div align="center">
-  <img src="flowmind/src/assets/flowmind.png" alt="Flowmind Logo" height="1200"/>
+  <img src="flowmind/src/assets/flowmind.png" alt="Flowmind Logo" height="100"/>
   
   <h1>🧠 FlowMind — The PM That Never Forgets</h1>
   
-  <p><strong>AI-POWERED PROJECT INTELLIGENCE ENGINE USING HINDSIGHT MEMORY & GROQ</strong></p>
+  <p><strong>The AI project manager that learns your team and predicts failures before they happen.</strong></p>
   
   <p>
-    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
-    <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" />
-    <img src="https://img.shields.io/badge/Groq%20%2F%20Llama%203.3-F55036?style=for-the-badge&logo=openai&logoColor=white" alt="Groq AI" />
-    <img src="https://img.shields.io/badge/Hindsight_API-00599C?style=for-the-badge&logo=vectorworks&logoColor=white" alt="Vectorize Hindsight" />
-    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+    <a href="https://react.dev"><img src="https://img.shields.io/badge/React-18.2-61DAFB?logo=react&logoColor=white" alt="React"></a>
+    <a href="https://typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript"></a>
+    <a href="https://supabase.com"><img src="https://img.shields.io/badge/Supabase-2.108-3ECF8E?logo=supabase&logoColor=white" alt="Supabase"></a>
+    <a href="https://neo4j.com"><img src="https://img.shields.io/badge/Neo4j-6.2-008CC1?logo=neo4j&logoColor=white" alt="Neo4j"></a>
+    <a href="https://groq.com"><img src="https://img.shields.io/badge/Groq-llama--3.3--70b-F55036" alt="Groq"></a>
+    <a href="https://agora.io"><img src="https://img.shields.io/badge/Agora-4.24-099DFD" alt="Agora"></a>
+    <a href="https://flowwithmind.vercel.app"><img src="https://img.shields.io/badge/Deployed-Vercel-000000?logo=vercel&logoColor=white" alt="Deployed on Vercel"></a>
+  </p>
+
+  <p>
+    🔗 <b>Live Demo:</b> <a href="https://flowwithmind.vercel.app">flowwithmind.vercel.app</a>
   </p>
 </div>
 
 <hr/>
 
-<h2 align="center"><em><strong>📖 Overview</strong></em></h2>
+## 📖 What is FlowMind?
 
-**FlowMind** is a smart project management web application designed to act as an AI-powered project manager that truly remembers everything. 
+**FlowMind** is an AI-powered project management platform that listens to your meetings, auto-assigns tasks based on member skills, and uses a **Neo4j knowledge graph** to detect bottlenecks before they derail your project.
 
-Instead of just listing tasks, FlowMind tracks decisions, bottlenecks, and team discussions while automatically saving context to **Hindsight Vector Memory**. Powered by the lightning-fast **Groq API (Llama 3.3)**, it actively analyzes your team's historical data to generate intelligent, data-driven insights and answer complex project questions by recalling semantic memories.
-
----
-
-<h2 align="center"><em><strong>🚀 Key Features</strong></em></h2>
-
-- 🧠 **Hindsight Semantic Memory:** Automatically stores team activities, discussions, and decisions in Vectorize Hindsight, enabling deep, context-aware semantic recall.
-- ⚡ **Groq-Powered Insights:** Leverages Llama 3.3 via the Groq API to instantly analyze task completion patterns, calculate risk scores, and generate specific actionable recommendations.
-- 💬 **Context-Aware Chat:** Ask the embedded AI questions about past project decisions, blockers, or task history. It answers accurately by semantically retrieving past team memories.
-- 👥 **Role-Based Workspaces:** Distinct flows for Team Leaders (to orchestrate members, tasks, and view AI insights) and Members (to update tasks and log progress).
-- 🔐 **Secure & Real-Time DB:** Powered by Supabase to handle authentication, manage team data, and ensure seamless state synchronization.
+Every team has experienced it: a productive meeting ends, everyone feels aligned, and then nothing happens. FlowMind solves this by becoming your team's persistent, intelligent project manager. It records meetings using live voice rooms, transcribes them in real-time, extracts actionable items, and monitors workload via a knowledge graph.
 
 ---
 
-<h2 align="center"><em><strong>🧠 Core Architecture</strong></em></h2>
+## ✨ Features
 
-Unlike standard task trackers, FlowMind shifts heavy context retention to specialized AI memory layers:
-
-1. **Memory Layer (Hindsight):** Integrates directly with the `api.hindsight.vectorize.io` service to `retain` and `recall` text-based memory embeddings effortlessly.
-2. **AI Layer (Groq):** Uses a highly constrained system prompt with `llama-3.3-70b-versatile` to interpret JSON project data alongside semantic memory context, outputting structured JSON insights.
-3. **Database Layer (Supabase):** Manages user authentication, team relationships, and structured project data reliably in real-time.
-4. **Frontend Application:** Built with React and Vite for a blazing-fast, modern UI experience, utilizing React Context for state management and Lucide for iconography.
-
----
-
-<h2 align="center"><em><strong>⚙️ The Pipeline Flow</strong></em></h2>
-
-### 1️⃣ Information Capture
-- **Actions:** When a user creates a task, logs a decision, or updates a status, the event is saved.
-- **Memory Retention:** Background processes call the Hindsight API to store these events as semantic memories linked to the specific team.
-
-### 2️⃣ Insight Generation
-- **Semantic Recall:** When the Leader requests insights, FlowMind queries Hindsight for memories related to bottlenecks, risks, and performance.
-- **Data Structuring:** React formats the recalled memories, current tasks, and member lists into a structured prompt.
-- **AI Processing:** The Groq API analyzes the payload and returns targeted risks, patterns, and recommendations in strict JSON format.
-
-### 3️⃣ Interactive Output
-- **Dashboard UI:** The React frontend parses the AI's JSON and renders actionable insight cards and risk warnings on the Leader Dashboard.
+- 🎤 **Live Voice Meetings** — Agora SDK WebRTC voice rooms for real-time team collaboration
+- 📝 **Real-time Transcription** — Web Speech API with auto-reconnect capability
+- 🤖 **AI Meeting Analysis** — Groq LLM automatically extracts tasks & decisions from transcripts
+- 🧠 **Smart Task Assignment** — AI matches tasks to members based on individual skill profiles
+- 🕸️ **Neo4j Knowledge Graph** — Maps team relationships, tracks workloads, and detects bottlenecks
+- 📊 **AI Insights Dashboard** — Graph-powered bottleneck & risk detection
+- ⚡ **Real-time Sync** — Supabase Realtime for instant updates across all members
+- 💬 **AI Chat Assistant** — Context-aware team chatbot with memory
+- 👥 **Team Management** — Skill profiles, DMs, group chat, applications
 
 ---
 
-<h2 align="center"><em><strong>💻 Setup & Usage</strong></em></h2>
+## 🏗️ Architecture
 
-Integrating and running FlowMind locally is incredibly straightforward.
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│                        FLOWMIND FRONTEND                            │
+│                     React + TypeScript + Vite                        │
+│                                                                      │
+│  ┌─────────┐  ┌───────────┐  ┌──────────┐  ┌────────┐  ┌────────┐  │
+│  │ Leader  │  │ Meetings  │  │  Tasks   │  │Decisn. │  │  Chat  │  │
+│  │Overview │  │   Tab     │  │   Tab    │  │  Tab   │  │  Tab   │  │
+│  └────┬────┘  └─────┬─────┘  └────┬─────┘  └───┬────┘  └───┬────┘  │
+│       │             │              │             │           │       │
+│       └─────────────┴──────────────┴─────────────┴───────────┘       │
+│                              │                                       │
+│                    ┌─────────┴─────────┐                             │
+│                    │   AppContext.tsx   │    ← Central State Manager  │
+│                    │   AuthContext.tsx  │    ← Auth Manager           │
+│                    └─────────┬─────────┘                             │
+│                              │                                       │
+│              ┌───────────────┼──────────────┐                        │
+│              │               │              │                        │
+│       ┌──────┴──────┐ ┌─────┴─────┐ ┌──────┴──────┐                 │
+│       │ supabase.ts │ │  api.ts   │ │ useAgora.ts │                  │
+│       └──────┬──────┘ └─────┬─────┘ └──────┬──────┘                  │
+└──────────────┼──────────────┼──────────────┼─────────────────────────┘
+               │              │              │
+               ▼              ▼              ▼
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐
+│    SUPABASE      │  │ EXPRESS BACKEND  │  │  AGORA.IO    │
+│  (PostgreSQL +   │  │   server.ts      │  │  (WebRTC)    │
+│   Realtime)      │  │                  │  │              │
+│                  │  │  /api/groq/*     │  │  Voice       │
+│  13 Tables       │  │  /api/neo4j/*    │  │  Channels    │
+│  WebSocket Subs  │  │  /api/hindsight/*│  │  Token Gen   │
+│  Broadcast Chans │  │  /api/agora/*    │  │              │
+└──────────────────┘  └───────┬──────────┘  └──────────────┘
+                              │
+                     ┌────────┴────────┐
+                     │                 │
+              ┌──────┴──────┐  ┌───────┴───────┐
+              │  GROQ API   │  │   NEO4J AURA  │
+              │ llama-3.3   │  │  Graph DB     │
+              │ 70b-versat. │  │               │
+              │             │  │ Team─Member   │
+              │ Meeting     │  │ Member─Task   │
+              │ Analysis    │  │ Task─Team     │
+              │ AI Insights │  │               │
+              │ AI Chat     │  │ Cypher Queries│
+              └─────────────┘  │ for Insights  │
+                               └───────────────┘
+```
 
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18 + TypeScript + Vite |
+| Styling | CSS Modules + Poppins font |
+| Database | Supabase (PostgreSQL + Realtime) |
+| Graph DB | Neo4j Aura (neo4j-driver ^6.2.0) |
+| AI | Groq API (llama-3.3-70b-versatile) |
+| Voice | Agora SDK (agora-rtc-sdk-ng ^4.24.5) |
+| Speech | Web Speech API (browser native) |
+| Backend | Express ^5.2.1 |
+| Deploy | Vercel (frontend) |
+
+---
+
+## 🚀 Setup & Installation
+
+### Prerequisites
+- Node.js 18+
+- Supabase project
+- Neo4j Aura instance
+- Groq API key
+- Agora.io account
+
+### 1. Clone & Install
 ```bash
-# 1. Clone the repository
 git clone https://github.com/piyushyenorkar/FlowMind.git
-cd FlowMind/flowmind
+cd FlowMind
 
-# 2. Install dependencies
+# Frontend
+cd flowmind
 npm install
 
-# 3. Add your API Keys
-# Create a .env file in the flowmind directory:
-echo "VITE_HINDSIGHT_API_KEY=your_hindsight_key_here" > .env
-echo "VITE_HINDSIGHT_BASE_URL=https://api.hindsight.vectorize.io" >> .env
-echo "VITE_GROQ_API_KEY=gsk_your_groq_key_here" >> .env
-echo "VITE_SUPABASE_URL=your_supabase_url_here" >> .env
-echo "VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here" >> .env
+# Backend
+cd ../backend
+npm install
+```
 
-# 4. Start the Dev Server!
+### 2. Environment Variables
+
+**Frontend** (`flowmind/.env`):
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_BACKEND_URL=http://localhost:5000
+VITE_AGORA_APP_ID=your-agora-app-id
+```
+
+**Backend** (`backend/.env`):
+```env
+GROQ_API_KEYS=key1,key2
+HINDSIGHT_BASE_URL=https://your-hindsight-url
+HINDSIGHT_API_KEY=your-hindsight-key
+NEO4J_URI=neo4j+s://xxxxx.databases.neo4j.io
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your-password
+AGORA_APP_ID=your-agora-app-id
+AGORA_APP_CERTIFICATE=your-agora-cert
+PORT=5000
+```
+
+### 3. Supabase Setup
+Run `SQL Schema/flowmind.sql` in the Supabase SQL Editor.
+
+### 4. Neo4j Setup
+Create a free Neo4j Aura instance at [neo4j.com/aura](https://neo4j.com/cloud/aura). Copy the connection URI, username, and password into your backend environment variables.
+
+### 5. Run Locally
+```bash
+# Terminal 1: Backend
+cd backend
+npm run dev
+
+# Terminal 2: Frontend
+cd flowmind
 npm run dev
 ```
 
-### 💡 Example AI Interactions
-- *"Why did we decide to change the database schema last week?"*
-- *"Who is currently blocking the deployment task?"*
-- *"Based on our task history, are we at risk of missing the beta launch deadline?"*
+---
+
+## 👥 Team
+
+Built for **HackHazards '26** by **Team Starcy**:
+- Piyush (Leader)
+- Debashree
 
 ---
 
-<h2 align="center"><em><strong>📂 File Structure</strong></em></h2>
+## 📄 License
 
-```text
-FlowMind/
-│
-├── README.md
-└── flowmind/
-    ├── package.json            ← 📦 Project dependencies
-    ├── vite.config.ts          ← ⚡ Vite configuration
-    ├── tsconfig.json           ← ⚙️ TypeScript configuration
-    ├── index.html              ← 📄 Application entry point
-    │
-    └── src/
-        ├── App.tsx             ← 🔀 Application Router & Setup
-        ├── context/            ← 🌍 Global state (App, Auth)
-        ├── pages/              ← 🖥️ UI pages (Leader/Member Dashboards, Setup)
-        ├── components/         ← 🧩 Reusable React UI components
-        ├── utils/              ← 🛠️ Utility functions and helpers
-        └── services/
-            └── api.ts          ← 🧠 Core Hindsight & Groq API integrations
-```
-
----
-
-<div align="center">
-  <i>🏆 Built for the <b>Axion Hackathon</b> and awarded <b>First Prize!</b></i>
-</div>
+MIT
