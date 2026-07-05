@@ -104,14 +104,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Fetch tasks
     const { data: tasksData } = await supabase.from('tasks').select('*, task_updates(*)').eq('team_code', teamCode)
     const tasks = tasksData?.map(t => ({
-      id: t.id, title: t.title, description: t.description, assignedTo: t.assigned_to, status: t.status, estimatedHours: t.estimated_hours, actualHours: t.actual_hours, deadline: t.deadline, createdAt: t.created_at,
+      id: t.id, title: t.title, description: t.description, assignedTo: t.assigned_to, status: t.status, estimatedHours: t.estimated_hours, actualHours: t.actual_hours, deadline: t.deadline, createdAt: t.created_at, meetingSource: t.meeting_source,
       updates: t.task_updates?.map((u: any) => ({ text: u.text, author: u.author, timestamp: u.timestamp })) || []
     })) || []
 
     // Fetch decisions
     const { data: decData } = await supabase.from('decisions').select('*').eq('team_code', teamCode)
     const decisions = decData?.map(d => ({
-      id: d.id, decision: d.decision, reason: d.reason, impact: d.impact, people: d.involved_people, createdAt: d.created_at
+      id: d.id, decision: d.decision, reason: d.reason, impact: d.impact, involvedPeople: d.involved_people, createdAt: d.created_at, meetingSource: d.meeting_source
     })) || []
 
     // Fetch memory feed (no limit so it persists forever)
@@ -125,7 +125,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Fetch meetings
     const { data: meetData } = await supabase.from('meetings').select('*').eq('team_code', teamCode)
     const meetings = meetData?.map(m => ({
-      id: m.id, title: m.title, date: m.date, attendees: m.attendees, duration: m.duration, summary: m.summary, keyTopics: m.key_topics, transcript: m.transcript, followUpItems: m.follow_up_items, tasksCreated: [], decisionsLogged: [],
+      id: m.id, title: m.title, date: m.date, attendees: m.attendees, duration: m.duration, summary: m.summary, keyTopics: m.key_topics, transcript: m.transcript, followUpItems: m.follow_up_items, 
+      tasksCreated: tasks.filter(t => t.meetingSource === m.id), decisionsLogged: decisions.filter(d => d.meetingSource === m.id),
       status: m.status || 'completed', activeAttendees: m.active_attendees || [],
       leader: m.leader || null, agenda: m.agenda || '',
       startedAt: m.started_at || null,
@@ -169,7 +170,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setState((prev: any) => {
             const m = payload.new
             const updatedMeeting = {
-              id: m.id, title: m.title, date: m.date, attendees: m.attendees, duration: m.duration, summary: m.summary, keyTopics: m.key_topics, transcript: m.transcript, followUpItems: m.follow_up_items, tasksCreated: [], decisionsLogged: [],
+              id: m.id, title: m.title, date: m.date, attendees: m.attendees, duration: m.duration, summary: m.summary, keyTopics: m.key_topics, transcript: m.transcript, followUpItems: m.follow_up_items, 
+              tasksCreated: prev.tasks.filter((t: any) => t.meetingSource === m.id), decisionsLogged: prev.decisions.filter((d: any) => d.meetingSource === m.id),
               status: m.status || 'completed', activeAttendees: m.active_attendees || [],
               leader: m.leader || null, agenda: m.agenda || '',
               startedAt: m.started_at || null,
@@ -458,7 +460,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           status: task.status,
           estimated_hours: task.estimatedHours,
           deadline: task.deadline,
-          created_at: task.createdAt
+          created_at: task.createdAt,
+          meeting_source: task.meetingSource
         }]).then()
 
         // Neo4j sync
@@ -570,7 +573,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           reason: decision.reason,
           impact: decision.impact,
           involved_people: decision.involvedPeople || decision.people,
-          created_at: decision.createdAt
+          created_at: decision.createdAt,
+          meeting_source: decision.meetingSource
         }]).then()
 
         retainMemory(prev.team.code, `Decision made: "${decision.decision}". Reason: ${decision.reason || 'N/A'}. Impact level: ${decision.impact || 'N/A'}. People involved: ${(decision.involvedPeople || decision.people) || 'N/A'}.`, {

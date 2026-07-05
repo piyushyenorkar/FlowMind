@@ -159,7 +159,7 @@ export default function DecisionsTab() {
       )}
 
       <div className={styles.timeline}>
-        {decisions.map((d, i) => (
+        {[...decisions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((d, i) => (
           <div key={d.id} className={`${styles.decisionCard} animate-in`} style={{ animationDelay: `${i * 0.07}s` }}>
             <div className={styles.timelineLine} />
             <div className={styles.timelineDot} />
@@ -183,11 +183,25 @@ export default function DecisionsTab() {
                 <div className={styles.decisionPeople} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
                   <div style={{ fontSize: '12px', color: 'var(--text2)', fontWeight: 500 }}>Involved:</div>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {(Array.isArray(d.involvedPeople) ? d.involvedPeople : d.involvedPeople.split(',').map((s: string) => s.trim()).filter(Boolean)).map((name: string, idx: number) => (
-                      <div key={idx} title={name} style={{ marginLeft: idx === 0 ? 0 : '-8px', borderRadius: '50%', position: 'relative', zIndex: 10 - idx, background: 'var(--surface2)' }}>
-                        <Avatar name={name} size={28} />
-                      </div>
-                    ))}
+                    {(() => {
+                      let peopleList: string[] = [];
+                      if (Array.isArray(d.involvedPeople)) {
+                        peopleList = d.involvedPeople;
+                      } else if (typeof d.involvedPeople === 'string') {
+                        try {
+                          const parsed = JSON.parse(d.involvedPeople);
+                          if (Array.isArray(parsed)) peopleList = parsed;
+                          else peopleList = [d.involvedPeople];
+                        } catch {
+                          peopleList = d.involvedPeople.split(',').map((s: string) => s.trim()).filter(Boolean);
+                        }
+                      }
+                      return peopleList.map((name: string, idx: number) => (
+                        <div key={idx} title={name} style={{ marginLeft: idx === 0 ? 0 : '-8px', borderRadius: '50%', position: 'relative', zIndex: 10 - idx, background: 'var(--surface2)' }}>
+                          <Avatar name={name} size={28} />
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
               )}

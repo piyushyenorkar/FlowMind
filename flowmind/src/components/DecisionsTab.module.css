@@ -101,7 +101,7 @@
 }
 
 .decisionContent {
-  background: rgba(23, 23, 23, 0.4);
+  background: rgba(15, 15, 15, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: none;
@@ -110,10 +110,8 @@
   padding: 16px;
   flex: 1;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  height: 155px;
 }
 .decisionContent:hover { 
-  background: rgba(15, 15, 15, 0.7);
   transform: translateY(-2px);
 }
 

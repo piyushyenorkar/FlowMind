@@ -187,8 +187,8 @@ export default function MeetingsTab() {
 
 // ═══════════ LIST VIEW ═══════════════════════════════════════════════════════
 function ListView({ meetings, members, setView, setSelected, currentUser, joinLiveMeeting, scheduleMeeting, startLiveMeeting, requestJoinRoom }) {
-  const pastMeetings = meetings.filter(m => m.status === 'completed')
-  const liveMeetings = meetings.filter(m => m.status === 'ongoing')
+  const pastMeetings = [...meetings].filter(m => m.status === 'completed').sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+  const liveMeetings = [...meetings].filter(m => m.status === 'ongoing').sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
   const allScheduled = meetings.filter(m => m.status === 'scheduled')
 
   // Split scheduled into truly upcoming vs overdue (date has passed)
@@ -197,11 +197,12 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
   const upcomingMeetings = allScheduled.filter(m => {
     if (!m.date) return true // No date = treat as upcoming
     return new Date(m.date) >= today
-  })
+  }).sort((a, b) => new Date(a.date || Number.MAX_SAFE_INTEGER).getTime() - new Date(b.date || Number.MAX_SAFE_INTEGER).getTime())
+
   const overdueMeetings = allScheduled.filter(m => {
     if (!m.date) return false
     return new Date(m.date) < today
-  })
+  }).sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
 
   const totalTasks = pastMeetings.reduce((s, m) => s + (m.tasksCreated?.length || 0), 0)
   const totalDecisions = pastMeetings.reduce((s, m) => s + (m.decisionsLogged?.length || 0), 0)
@@ -236,6 +237,62 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
           </div>
         ))}
       </div>
+
+      {/* ── Live Meetings ─────────────────────────────── */}
+      {liveMeetings.length > 0 && (
+        <div style={{ marginTop: '24px' }}>
+          <h3 style={{ fontSize: '14px', margin: '4px 0 12px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}><Mic size={16} /> Live Meetings</h3>
+          <div className={styles.grid}>
+            {liveMeetings.map(m => {
+              const isJoined = m.activeAttendees?.includes(currentUser?.name);
+              const isInvited = m.attendees?.includes(currentUser?.name);
+              const isHost = isHostOfMeeting(m, currentUser?.name);
+
+              return (
+                <div key={m.id} className={styles.meetingCard} onClick={() => {
+                  if (isJoined || isHost || isInvited) {
+                    requestJoinRoom(m);
+                  }
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div className={styles.cardTitle}>{m.title}</div>
+                      <div className={styles.cardDate} style={{ color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div className={styles.liveDotGreen} /> Live Now
+                      </div>
+                    </div>
+                    {(isJoined || isHost || isInvited) && (
+                      <button
+                        className="btn-primary"
+                        style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--green)', color: '#fff' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isJoined || isHost || isInvited) {
+                            requestJoinRoom(m, isHost ? 'create' : 'voiceRoom');
+                          }
+                        }}
+                      >
+                        <Play size={12} /> {isJoined || isHost ? 'Re-Join' : 'Join'}
+                      </button>
+                    )}
+                  </div>
+                  <div className={styles.cardAvatars}>
+                    {m.activeAttendees?.slice(0, 4).map((a, i) => (
+                      <div key={i} className={styles.avatarWrapper}>
+                        <Avatar name={a} size={28} />
+                      </div>
+                    ))}
+                    {(m.activeAttendees?.length || 0) > 4 && <div className={styles.cardAvatar} style={{ background: 'var(--surface2)' }}>+{m.activeAttendees.length - 4}</div>}
+                  </div>
+                  <div className={styles.cardSummary}>
+                    {isJoined || isHost ? 'Meeting is currently in progress' : isInvited ? 'Meeting has started' : 'You are not invited'}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Upcoming Meetings ─────────────────────────────── */}
       {upcomingMeetings.length > 0 && (
@@ -352,62 +409,6 @@ function ListView({ meetings, members, setView, setSelected, currentUser, joinLi
                         ? `Hosted by ${m.leader || 'team member'} — meeting was not started`
                         : `Hosted by ${m.leader || 'team member'} — missed`
                     }
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Live Meetings ─────────────────────────────── */}
-      {liveMeetings.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <h3 style={{ fontSize: '14px', margin: '4px 0 12px', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}><Mic size={16} /> Live Meetings</h3>
-          <div className={styles.grid}>
-            {liveMeetings.map(m => {
-              const isJoined = m.activeAttendees?.includes(currentUser?.name);
-              const isInvited = m.attendees?.includes(currentUser?.name);
-              const isHost = isHostOfMeeting(m, currentUser?.name);
-
-              return (
-                <div key={m.id} className={styles.meetingCard} onClick={() => {
-                  if (isJoined || isHost || isInvited) {
-                    requestJoinRoom(m);
-                  }
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div className={styles.cardTitle}>{m.title}</div>
-                      <div className={styles.cardDate} style={{ color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <div className={styles.liveDotGreen} /> Live Now
-                      </div>
-                    </div>
-                    {(isJoined || isHost || isInvited) && (
-                      <button
-                        className="btn-primary"
-                        style={{ fontSize: '12px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--green)', color: '#fff' }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isJoined || isHost || isInvited) {
-                            requestJoinRoom(m, isHost ? 'create' : 'voiceRoom');
-                          }
-                        }}
-                      >
-                        <Play size={12} /> {isJoined || isHost ? 'Re-Join' : 'Join'}
-                      </button>
-                    )}
-                  </div>
-                  <div className={styles.cardAvatars}>
-                    {m.activeAttendees?.slice(0, 4).map((a, i) => (
-                      <div key={i} className={styles.avatarWrapper}>
-                        <Avatar name={a} size={28} />
-                      </div>
-                    ))}
-                    {(m.activeAttendees?.length || 0) > 4 && <div className={styles.cardAvatar} style={{ background: 'var(--surface2)' }}>+{m.activeAttendees.length - 4}</div>}
-                  </div>
-                  <div className={styles.cardSummary}>
-                    {isJoined || isHost ? 'Meeting is currently in progress' : isInvited ? 'Meeting has started' : 'You are not invited'}
                   </div>
                 </div>
               )
@@ -1448,12 +1449,26 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
               </span>
               <div className={styles.decisionPeople} style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '4px' }}><Users size={14} /> Involved:</span>
-                {(Array.isArray(d.involvedPeople) ? d.involvedPeople : d.involvedPeople?.split(',').map((s: string) => s.trim()) || []).map((person: string, idx: number) => (
-                  <div key={idx} className={styles.greyPill} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '16px', color: 'var(--text2)' }}>
-                    <Avatar name={person} size={16} />
-                    <span>{person}</span>
-                  </div>
-                ))}
+                {(() => {
+                  let peopleList: string[] = [];
+                  if (Array.isArray(d.involvedPeople)) {
+                    peopleList = d.involvedPeople;
+                  } else if (typeof d.involvedPeople === 'string') {
+                    try {
+                      const parsed = JSON.parse(d.involvedPeople);
+                      if (Array.isArray(parsed)) peopleList = parsed;
+                      else peopleList = [d.involvedPeople];
+                    } catch {
+                      peopleList = d.involvedPeople.split(',').map((s: string) => s.trim()).filter(Boolean);
+                    }
+                  }
+                  return peopleList.map((person: string, idx: number) => (
+                    <div key={idx} className={styles.greyPill} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '16px', color: 'var(--text2)' }}>
+                      <Avatar name={person} size={16} />
+                      <span>{person}</span>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           </div>
@@ -1496,7 +1511,7 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
         </div>
         <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--surface)', color: 'var(--text2)', padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 500, border: 'none' }}>
           Analyzed by
-          <img src={new URL('../assets/flowmind.png', import.meta.url).href} alt="FM" style={{ height: '16px', width: 'auto' }} />
+          <img src={favicon} alt="FM" style={{ height: '25px', width: '25' }} />
         </span>
       </div>
 
@@ -1517,11 +1532,11 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
 
       {/* Summary */}
       <div className={styles.detailSection}>
-        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Bot size={18} /> AI Summary</div>
+        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '15px', marginTop:'10px' }}><img src={favicon} alt="AI" style={{ height: '25px', width: '25px', objectFit: 'contain' }} /> AI Summary</div>
         <div className={styles.summaryCard}>
           <div className={styles.summaryText}>{meeting.summary}</div>
           <div className={styles.topicTags}>
-            {meeting.keyTopics?.map((t, i) => <span key={i} className="tag tag-purple">{t}</span>)}
+            {meeting.keyTopics?.map((t, i) => <span key={i} className="tag" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text2)', border: 'none', padding: '4px 10px', textTransform: 'uppercase' }}>{t}</span>)}
           </div>
         </div>
       </div>
@@ -1539,13 +1554,16 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
             <div key={i} className={styles.taskCard} style={{ cursor: 'default' }}>
               <div className={styles.taskContent}>
                 <div className={styles.taskTitle}>{t.title}</div>
-                <div className={styles.taskAssignRow}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><User size={14} /> {t.assignedTo}</span>
-                  <span className={`tag ${liveTask.status === 'done' ? 'tag-green' : liveTask.status === 'in-progress' ? 'tag-yellow' : 'tag-purple'}`}>
-                    {liveTask.status === 'done' ? 'Done' : liveTask.status === 'in-progress' ? 'In Progress' : 'Todo'}
+                <div className={styles.taskAssignRow} style={{ alignItems: 'center' }}>
+                  <div className={styles.greyPill} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '16px', color: 'var(--text)', border: 'none' }}>
+                    <Avatar name={t.assignedTo} size={16} />
+                    <span>{t.assignedTo}</span>
+                  </div>
+                  <span className={`tag ${liveTask.status === 'done' ? 'tag-green' : liveTask.status === 'in-progress' ? 'tag-yellow' : styles.greyPill}`} style={{ border: 'none', color: liveTask.status === 'done' ? 'var(--green)' : liveTask.status === 'in-progress' ? 'var(--yellow)' : 'rgba(45, 212, 191, 0.8)' }}>
+                    {liveTask.status === 'done' ? 'DONE' : liveTask.status === 'in-progress' ? 'IN PROGRESS' : 'TODO'}
                   </span>
                 </div>
-                <div className={styles.taskReason} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Brain size={14} /> {t.assignmentReason}</div>
+                <div className={`${styles.taskReason} ${styles.greyPill}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Brain size={14} /> {t.assignmentReason}</div>
               </div>
             </div>
           )
