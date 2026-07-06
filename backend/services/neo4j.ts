@@ -114,8 +114,10 @@ export async function queryTeamGraph(teamCode: string): Promise<GraphInsightData
       `MATCH (m:Member)-[:BELONGS_TO]->(:Team {code: $teamCode})
        OPTIONAL MATCH (m)-[:ASSIGNED_TO]->(task:Task)-[:BELONGS_TO]->(:Team {code: $teamCode})
        WITH m,
-            collect(task) AS tasks,
-            count(task) AS totalTasks
+            [t IN collect(task) WHERE t IS NOT NULL] AS tasks
+       WITH m,
+            tasks,
+            size(tasks) AS totalTasks
        RETURN m.name AS name,
               m.role AS role,
               totalTasks,
