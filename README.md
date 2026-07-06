@@ -226,7 +226,7 @@ npm run dev
 
 <div align="center">
 
-## Team
+## <img src="https://img.icons8.com/fluency/48/group.png" width="32" height="32" /> Team
 
 <img src="flowmind/src/assets/favicon.png" align="right" width="80" height="80" />
 
