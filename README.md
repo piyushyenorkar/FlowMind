@@ -238,6 +238,6 @@ Built for **HackHazards '26** by **Team Starcy**:
 - Debashree
 
 <br/>
-<img src="flowmind/src/assets/favicon.png" height="50" width="70" alt="Flowmind Favicon" />
+<img src="flowmind/src/assets/favicon.png" height="70" width="70" align="center" alt="Flowmind Favicon" />
 
 </div>
