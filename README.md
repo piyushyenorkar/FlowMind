@@ -26,7 +26,7 @@
 
 <div align="center">
 
-## <img src="https://img.icons8.com/fluency/48/open-book.png" width="32" height="32" /> What is FlowMind?
+## <img src="https://img.icons8.com/fluency/48/open-book.png" width="32" height="32" align="center" /> What is FlowMind?
 
 **FlowMind** is an AI-powered project management platform that listens to your meetings, auto-assigns tasks based on member skills, and uses a **Neo4j knowledge graph** to detect bottlenecks before they derail your project.
 
@@ -34,7 +34,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 <br/>
 
-## <img src="https://img.icons8.com/fluency/48/rocket.png" width="32" height="32" /> Features
+## <img src="https://img.icons8.com/fluency/48/rocket.png" width="32" height="32" align="center" /> Features
 
 <table align="center">
   <tr>
@@ -68,7 +68,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 <br/>
 
-## <img src="https://img.icons8.com/fluency/48/flow-chart.png" width="32" height="32" /> Architecture
+## <img src="https://img.icons8.com/fluency/48/flow-chart.png" width="32" height="32" align="center" /> Architecture
 
 ```mermaid
 flowchart TD
@@ -115,7 +115,7 @@ flowchart TD
 
 <br/>
 
-## <img src="https://img.icons8.com/fluency/48/layers.png" width="32" height="32" /> Tech Stack
+## <img src="https://img.icons8.com/fluency/48/layers.png" width="32" height="32" align="center" /> Tech Stack
 
 <br/>
 
@@ -160,7 +160,7 @@ flowchart TD
 
 <br/>
 
-## <img src="https://img.icons8.com/fluency/48/console.png" width="32" height="32" /> Setup & Installation
+## <img src="https://img.icons8.com/fluency/48/console.png" width="32" height="32" align="center" /> Setup & Installation
 
 </div>
 
@@ -226,13 +226,13 @@ npm run dev
 
 <div align="center">
 
-## <img src="https://img.icons8.com/fluency/48/group.png" width="32" height="32" /> Team
+## <img src="https://img.icons8.com/fluency/48/group.png" width="32" height="32" align="center" /> Team
 
 Built for **HackHazards '26** by **Team Starcy**:
 - Piyush (Leader)
 - Debashree
 
 <br/>
-<img src="flowmind/src/assets/favicon.png" height="50" alt="Flowmind Favicon" />
+<img src="flowmind/src/assets/favicon.png" height="50" width="70" alt="Flowmind Favicon" />
 
 </div>
