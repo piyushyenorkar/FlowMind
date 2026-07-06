@@ -1,0 +1,121 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none; /* So user can interact with dashboard underneath immediately if they want, but usually it's fast */
+}
+
+.overlay.fadeOutBackground {
+  background-color: transparent;
+}
+
+.overlay.fadeOutAll {
+  opacity: 0;
+}
+
+.logoContainer {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.logoContainer.flyToCorner {
+  /* Move to top-left where the actual logo is */
+  /* UserDashboard topNav has padding: 18px 32px, so the logo top-left is exactly at 18px, 32px */
+  top: 18px;
+  left: 32px;
+  transform: translate(0, 0); 
+}
+
+.logo {
+  height: 100px; /* Matches the approximate height of the landing page logo */
+  width: auto;
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  
+  /* Use the exact same wave mask animation from Landing for a cool effect */
+  -webkit-mask-image: linear-gradient(to right, black 40%, transparent 60%);
+  mask-image: linear-gradient(to right, black 40%, transparent 60%);
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  -webkit-mask-position: 100% 0;
+  mask-position: 100% 0;
+  animation: revealLeftToRight 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.logoContainer.flyToCorner .logo {
+  height: 35px; /* Match the real logo height in Sidebar/UserDashboard */
+}
+
+@keyframes revealLeftToRight {
+  0% { 
+    -webkit-mask-position: 100% 0; 
+    mask-position: 100% 0; 
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  100% { 
+    -webkit-mask-position: 0% 0; 
+    mask-position: 0% 0; 
+    opacity: 1; 
+    transform: scale(1) translateY(0);
+  }
+}
+
+.waveSvg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 140px;
+  transform: translate(-50%, -50%);
+  filter: blur(6px) drop-shadow(0 0 12px rgba(20, 184, 166, 0.7));
+  opacity: 0.9;
+  mix-blend-mode: screen;
+  
+  /* The mask sweeps from left to right, fading out from behind */
+  -webkit-mask-image: linear-gradient(to right, transparent 33%, black 45%, black 55%, transparent 66%);
+  mask-image: linear-gradient(to right, transparent 33%, black 45%, black 55%, transparent 66%);
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  -webkit-mask-position: 100% 0;
+  mask-position: 100% 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  
+  animation: dreamySweep 1.5s linear forwards;
+  z-index: -1;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.waveSvg.fadeOutWave {
+  opacity: 0;
+}
+
+.wavePath1 { animation: drift 2s linear infinite; }
+.wavePath2 { animation: drift 3s linear infinite reverse; }
+.wavePath3 { animation: drift 2.5s linear infinite; }
+
+@keyframes drift {
+  0% { transform: translateX(0px); }
+  100% { transform: translateX(100px); }
+}
+
+@keyframes dreamySweep {
+  0% { 
+    -webkit-mask-position: 100% 0; 
+    mask-position: 100% 0; 
+  }
+  100% { 
+    -webkit-mask-position: 0% 0; 
+    mask-position: 0% 0; 
+  }
+}
