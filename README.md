@@ -81,7 +81,7 @@ flowchart TD
     A_cli ==> Exp
     U_cli ==> Agora
 
-    Groq{"GROQ API\nLlama-3.3-70b\n(Meeting Analysis)"}:::box
+    Groq["🧠 GROQ API\nLlama-3.3-70b\n(Meeting Analysis)"]:::box
     Neo4j[("🕸️ NEO4J AURA\nGraph DB\n(Team-Member-Task)")]:::db
 
     Exp ==> Groq
