@@ -9,13 +9,13 @@ export default function SplashIntro({ onFinish, flyToCorner = true }: { onFinish
     // 1. Wait in the center
     const t1 = setTimeout(() => {
       setPhase('moving');
-    }, 1200); 
+    }, 750); 
 
     // 2. Finish animation and unmount (add 50ms buffer to ensure transition is 100% complete)
     const t2 = setTimeout(() => {
       setPhase('done');
       onFinish();
-    }, 2050); 
+    }, 1570); 
 
     return () => {
       clearTimeout(t1);
