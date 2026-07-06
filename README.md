@@ -232,4 +232,7 @@ Built for **HackHazards '26** by **Team Starcy**:
 - Piyush (Leader)
 - Debashree
 
+<br/>
+<img src="flowmind/src/assets/favicon.png" height="50" alt="Flowmind Favicon" />
+
 </div>
