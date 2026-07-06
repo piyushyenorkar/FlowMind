@@ -37,31 +37,17 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 <table align="center">
   <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/microphone.png" width="20" align="absmiddle"/> <b>Live Voice Meetings</b> — Agora SDK WebRTC voice rooms for real-time team collaboration</td>
-  </tr>
-  <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/audio-wave.png" width="20" align="absmiddle"/> <b>Real-time Transcription</b> — Web Speech API with auto-reconnect capability</td>
-  </tr>
-  <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" width="20" align="absmiddle"/> <b>AI Meeting Analysis</b> — Groq LLM automatically extracts tasks & decisions from transcripts</td>
-  </tr>
-  <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/task.png" width="20" align="absmiddle"/> <b>Smart Task Assignment</b> — AI matches tasks to members based on individual skill profiles</td>
-  </tr>
-  <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/network.png" width="20" align="absmiddle"/> <b>Neo4j Knowledge Graph</b> — Maps team relationships, tracks workloads, and detects bottlenecks</td>
-  </tr>
-  <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/combo-chart.png" width="20" align="absmiddle"/> <b>AI Insights Dashboard</b> — Graph-powered bottleneck & risk detection</td>
-  </tr>
-  <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/synchronize.png" width="20" align="absmiddle"/> <b>Real-time Sync</b> — Supabase Realtime for instant updates across all members</td>
-  </tr>
-  <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/chatbot.png" width="20" align="absmiddle"/> <b>AI Chat Assistant</b> — Context-aware team chatbot with memory</td>
-  </tr>
-  <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/group.png" width="20" align="absmiddle"/> <b>Team Management</b> — Skill profiles, DMs, group chat, applications</td>
+    <td align="left">
+      <img src="https://img.icons8.com/fluency/48/microphone.png" width="20" align="absmiddle"/> <b>Live Voice Meetings</b> — Agora SDK WebRTC voice rooms for real-time team collaboration<br/><br/>
+      <img src="https://img.icons8.com/fluency/48/audio-wave.png" width="20" align="absmiddle"/> <b>Real-time Transcription</b> — Web Speech API with auto-reconnect capability<br/><br/>
+      <img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" width="20" align="absmiddle"/> <b>AI Meeting Analysis</b> — Groq LLM automatically extracts tasks & decisions from transcripts<br/><br/>
+      <img src="https://img.icons8.com/fluency/48/task.png" width="20" align="absmiddle"/> <b>Smart Task Assignment</b> — AI matches tasks to members based on individual skill profiles<br/><br/>
+      <img src="https://img.icons8.com/fluency/48/network.png" width="20" align="absmiddle"/> <b>Neo4j Knowledge Graph</b> — Maps team relationships, tracks workloads, and detects bottlenecks<br/><br/>
+      <img src="https://img.icons8.com/fluency/48/combo-chart.png" width="20" align="absmiddle"/> <b>AI Insights Dashboard</b> — Graph-powered bottleneck & risk detection<br/><br/>
+      <img src="https://img.icons8.com/fluency/48/synchronize.png" width="20" align="absmiddle"/> <b>Real-time Sync</b> — Supabase Realtime for instant updates across all members<br/><br/>
+      <img src="https://img.icons8.com/fluency/48/chatbot.png" width="20" align="absmiddle"/> <b>AI Chat Assistant</b> — Context-aware team chatbot with memory<br/><br/>
+      <img src="https://img.icons8.com/fluency/48/group.png" width="20" align="absmiddle"/> <b>Team Management</b> — Skill profiles, DMs, group chat, applications
+    </td>
   </tr>
 </table>
 
