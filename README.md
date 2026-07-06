@@ -115,7 +115,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
       <b>Database</b><br/>Supabase (Realtime)
     </td>
     <td align="center" width="25%">
-      <img src="flowmind/src/assets/neo4j.png" height="40" /><br/>
+      <img src="flowmind/src/assets/neo4j1.png" height="40" /><br/>
       <b>Graph Database</b><br/>Neo4j Aura
     </td>
     <td align="center" width="25%">
