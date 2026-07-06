@@ -1,7 +1,7 @@
 <div align="center">
   <img src="flowmind/src/assets/flowmind.png" alt="Flowmind Logo" height="100"/>
   
-  <h1>🧠 FlowMind — The PM That Never Forgets</h1>
+  <h1>FlowMind — The PM That Never Forgets</h1>
   
   <p><strong>The AI project manager that learns your team and predicts failures before they happen.</strong></p>
   
@@ -13,38 +13,41 @@
     <a href="https://groq.com"><img src="https://img.shields.io/badge/Groq-llama--3.3--70b-F55036" alt="Groq"></a>
     <a href="https://agora.io"><img src="https://img.shields.io/badge/Agora-4.24-099DFD" alt="Agora"></a>
     <a href="https://flowwithmind.vercel.app"><img src="https://img.shields.io/badge/Deployed-Vercel-000000?logo=vercel&logoColor=white" alt="Deployed on Vercel"></a>
+    <a href="https://render.com"><img src="https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white" alt="Render Backend"></a>
   </p>
 
   <p>
-    🔗 <b>Live Demo:</b> <a href="https://flowwithmind.vercel.app">flowwithmind.vercel.app</a>
+    <b>Live Demo:</b> <a href="https://flowwithmind.vercel.app">flowwithmind.vercel.app</a>
   </p>
 </div>
 
 <hr/>
 
-## 📖 What is FlowMind?
+<div align="center">
+
+## <img src="https://unpkg.com/lucide-static@0.419.0/icons/book-open.svg" width="24" height="24" /> What is FlowMind?
 
 **FlowMind** is an AI-powered project management platform that listens to your meetings, auto-assigns tasks based on member skills, and uses a **Neo4j knowledge graph** to detect bottlenecks before they derail your project.
 
 Every team has experienced it: a productive meeting ends, everyone feels aligned, and then nothing happens. FlowMind solves this by becoming your team's persistent, intelligent project manager. It records meetings using live voice rooms, transcribes them in real-time, extracts actionable items, and monitors workload via a knowledge graph.
 
----
+<br/>
 
-## ✨ Features
+## <img src="https://unpkg.com/lucide-static@0.419.0/icons/sparkles.svg" width="24" height="24" /> Features
 
-- 🎤 **Live Voice Meetings** — Agora SDK WebRTC voice rooms for real-time team collaboration
-- 📝 **Real-time Transcription** — Web Speech API with auto-reconnect capability
-- 🤖 **AI Meeting Analysis** — Groq LLM automatically extracts tasks & decisions from transcripts
-- 🧠 **Smart Task Assignment** — AI matches tasks to members based on individual skill profiles
-- 🕸️ **Neo4j Knowledge Graph** — Maps team relationships, tracks workloads, and detects bottlenecks
-- 📊 **AI Insights Dashboard** — Graph-powered bottleneck & risk detection
-- ⚡ **Real-time Sync** — Supabase Realtime for instant updates across all members
-- 💬 **AI Chat Assistant** — Context-aware team chatbot with memory
-- 👥 **Team Management** — Skill profiles, DMs, group chat, applications
+**Live Voice Meetings** — Agora SDK WebRTC voice rooms for real-time team collaboration<br/>
+**Real-time Transcription** — Web Speech API with auto-reconnect capability<br/>
+**AI Meeting Analysis** — Groq LLM automatically extracts tasks & decisions from transcripts<br/>
+**Smart Task Assignment** — AI matches tasks to members based on individual skill profiles<br/>
+**Neo4j Knowledge Graph** — Maps team relationships, tracks workloads, and detects bottlenecks<br/>
+**AI Insights Dashboard** — Graph-powered bottleneck & risk detection<br/>
+**Real-time Sync** — Supabase Realtime for instant updates across all members<br/>
+**AI Chat Assistant** — Context-aware team chatbot with memory<br/>
+**Team Management** — Skill profiles, DMs, group chat, applications
 
----
+<br/>
 
-## 🏗️ Architecture
+## <img src="https://unpkg.com/lucide-static@0.419.0/icons/network.svg" width="24" height="24" /> Architecture
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -88,33 +91,63 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
               │ llama-3.3   │  │  Graph DB     │
               │ 70b-versat. │  │               │
               │             │  │ Team─Member   │
-              │ Meeting     │  │ Member─Task   │
-              │ Analysis    │  │ Task─Team     │
+              │ Member─Task │  │ Task─Team     │
               │ AI Insights │  │               │
               │ AI Chat     │  │ Cypher Queries│
               └─────────────┘  │ for Insights  │
                                └───────────────┘
 ```
 
----
+<br/>
 
-## 🛠️ Tech Stack
+## <img src="https://unpkg.com/lucide-static@0.419.0/icons/layers.svg" width="24" height="24" /> Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18 + TypeScript + Vite |
-| Styling | CSS Modules + Poppins font |
-| Database | Supabase (PostgreSQL + Realtime) |
-| Graph DB | Neo4j Aura (neo4j-driver ^6.2.0) |
-| AI | Groq API (llama-3.3-70b-versatile) |
-| Voice | Agora SDK (agora-rtc-sdk-ng ^4.24.5) |
-| Speech | Web Speech API (browser native) |
-| Backend | Express ^5.2.1 |
-| Deploy | Vercel (frontend) |
+<br/>
 
----
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://skillicons.dev/icons?i=react,ts,vite" /><br/>
+      <b>Frontend</b><br/>React 18 + TS + Vite
+    </td>
+    <td align="center" width="25%">
+      <img src="https://skillicons.dev/icons?i=supabase,postgres" /><br/>
+      <b>Database</b><br/>Supabase (Realtime)
+    </td>
+    <td align="center" width="25%">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Neo4j-logo.png" width="90" /><br/>
+      <b>Graph Database</b><br/>Neo4j Aura
+    </td>
+    <td align="center" width="25%">
+      <img src="https://skillicons.dev/icons?i=express,nodejs" /><br/>
+      <b>Backend</b><br/>Express.js + Node.js
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://img.shields.io/badge/Groq-Llama_3.3_70B-F55036?style=for-the-badge" /><br/>
+      <b>Artificial Intelligence</b><br/>Groq Fast Inference
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.shields.io/badge/Agora-WebRTC-099DFD?style=for-the-badge" /><br/>
+      <b>Voice & WebRTC</b><br/>Agora.io SDK
+    </td>
+    <td align="center" width="25%">
+      <img src="https://skillicons.dev/icons?i=vercel" /><br/>
+      <b>Frontend Hosting</b><br/>Vercel
+    </td>
+    <td align="center" width="25%">
+      <img src="https://img.shields.io/badge/Render-Backend-46E3B7?style=for-the-badge&logo=render&logoColor=white" /><br/>
+      <b>Backend Hosting</b><br/>Render
+    </td>
+  </tr>
+</table>
 
-## 🚀 Setup & Installation
+<br/>
+
+## <img src="https://unpkg.com/lucide-static@0.419.0/icons/terminal.svg" width="24" height="24" /> Setup & Installation
+
+</div>
 
 ### Prerequisites
 - Node.js 18+
@@ -160,13 +193,10 @@ AGORA_APP_CERTIFICATE=your-agora-cert
 PORT=5000
 ```
 
-### 3. Supabase Setup
-Run `SQL Schema/flowmind.sql` in the Supabase SQL Editor.
-
-### 4. Neo4j Setup
+### 3. Neo4j Setup
 Create a free Neo4j Aura instance at [neo4j.com/aura](https://neo4j.com/cloud/aura). Copy the connection URI, username, and password into your backend environment variables.
 
-### 5. Run Locally
+### 4. Run Locally
 ```bash
 # Terminal 1: Backend
 cd backend
@@ -179,14 +209,18 @@ npm run dev
 
 ---
 
-## 👥 Team
+<div align="center">
+
+## <img src="https://unpkg.com/lucide-static@0.419.0/icons/users.svg" width="24" height="24" /> Team
 
 Built for **HackHazards '26** by **Team Starcy**:
 - Piyush (Leader)
 - Debashree
 
----
+<br/>
 
-## 📄 License
+## <img src="https://unpkg.com/lucide-static@0.419.0/icons/file-text.svg" width="24" height="24" /> License
 
 MIT
+
+</div>
