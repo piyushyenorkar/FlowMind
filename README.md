@@ -1,3 +1,5 @@
+<img src="https://capsule-render.vercel.app/api?type=waving&color=00BFFF&height=120&section=header" width="100%"/>
+
 <div align="center">
   <img src="flowmind/src/assets/flowmind.png" alt="Flowmind Logo" height="100"/>
   
@@ -241,3 +243,5 @@ Built for **HackHazards '26** by **Team Starcy**:
 <img src="flowmind/src/assets/favicon.png" height="70" width="70" align="center" alt="Flowmind Favicon" />
 
 </div>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=00BFFF&height=120&section=footer" width="100%"/>
