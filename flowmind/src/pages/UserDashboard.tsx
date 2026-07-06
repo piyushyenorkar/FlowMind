@@ -108,8 +108,7 @@ export default function UserDashboard() {
     <div className={styles.page}>
       <nav className={styles.topNav}>
         <div className={styles.logo}>
-          <img src={new URL('../assets/flowmind.png', import.meta.url).href} alt="FlowMind" style={{ height: '35px', width: 'auto' }} />
-
+          <img id="main-nav-logo" src={new URL('../assets/flowmind.png', import.meta.url).href} alt="FlowMind" style={{ height: '35px', width: 'auto' }} />
         </div>
 
         <div ref={menuRef} style={{ position: 'relative' }}>
