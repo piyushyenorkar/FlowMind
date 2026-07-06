@@ -51,41 +51,38 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 ```mermaid
 flowchart TD
+    %% Dark Theme Colors
+    classDef box fill:#222,stroke:#444,stroke-width:2px,color:#fff;
+    classDef accent fill:#3178C6,stroke:#222,stroke-width:2px,color:#fff;
+    classDef db fill:#008CC1,stroke:#222,stroke-width:2px,color:#fff;
+    
     subgraph Frontend ["💻 FLOWMIND FRONTEND (React + TS + Vite)"]
-        direction TB
+        L["Leader Overview"]:::box
+        M["Meetings Tab"]:::box
+        T["Tasks Tab"]:::box
+        D["Decisions Tab"]:::box
+        C["Chat Tab"]:::box
         
-        subgraph UI ["User Interface Tabs"]
-            direction LR
-            L["Leader\nOverview"]
-            M["Meetings\nTab"]
-            T["Tasks\nTab"]
-            D["Decisions\nTab"]
-            C["Chat\nTab"]
-        end
+        State["Central State Manager\n(AppContext, AuthContext)"]:::accent
         
-        State["Central State Manager\n(AppContext.tsx, AuthContext.tsx)"]
-        
-        subgraph Clients ["API Clients"]
-            direction LR
-            S_cli["supabase.ts"]
-            A_cli["api.ts"]
-            U_cli["useAgora.ts"]
-        end
+        S_cli["supabase.ts"]:::box
+        A_cli["api.ts"]:::box
+        U_cli["useAgora.ts"]:::box
         
         L & M & T & D & C --> State
         State --> S_cli & A_cli & U_cli
     end
 
-    Supa[("☁️ SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]
-    Exp["☁️ EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]
-    Agora(("📞 AGORA.IO\nWebRTC\n(Voice Channels, Token Gen)"))
+    Supa[("☁️ SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]:::db
+    Exp["☁️ EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]:::box
+    Agora(("📞 AGORA.IO\nWebRTC\n(Voice Channels, Token)")]:::box
 
     S_cli ==> Supa
     A_cli ==> Exp
     U_cli ==> Agora
 
-    Groq{"🧠 GROQ API\nLlama-3.3-70b\n(Meeting Analysis, AI Chat)"}
-    Neo4j[("🕸️ NEO4J AURA\nGraph DB\n(Team-Member-Task)")]
+    Groq{"🧠 GROQ API\nLlama-3.3-70b\n(Meeting Analysis)"}:::box
+    Neo4j[("🕸️ NEO4J AURA\nGraph DB\n(Team-Member-Task)")]:::db
 
     Exp ==> Groq
     Exp ==> Neo4j
