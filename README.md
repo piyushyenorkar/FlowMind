@@ -164,12 +164,17 @@ flowchart TD
 
 </div>
 
+<div align="center">
+
 ### Prerequisites
-- Node.js 18+
-- Supabase project
-- Neo4j Aura instance
-- Groq API key
-- Agora.io account
+
+<img src="https://skillicons.dev/icons?i=nodejs" height="30" align="center" /> <b>Node.js 18+</b> &nbsp;&nbsp;|&nbsp;&nbsp;
+<img src="https://skillicons.dev/icons?i=supabase" height="30" align="center" /> <b>Supabase</b> &nbsp;&nbsp;|&nbsp;&nbsp;
+<img src="flowmind/src/assets/readmelogo/neo4j_badge.png" height="30" align="center" /> <b>Neo4j Aura</b> &nbsp;&nbsp;|&nbsp;&nbsp;
+<img src="flowmind/src/assets/readmelogo/groq_badge.png" height="30" align="center" /> <b>Groq API</b> &nbsp;&nbsp;|&nbsp;&nbsp;
+<img src="flowmind/src/assets/readmelogo/agora_badge.png" height="30" align="center" /> <b>Agora.io</b>
+
+</div>
 
 ### 1. Clone & Install
 ```bash
