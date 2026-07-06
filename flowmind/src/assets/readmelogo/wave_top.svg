@@ -1,10 +1,10 @@
 <svg
   width="854"
-  height="120"
+  height="100"
   xmlns="http://www.w3.org/2000/svg"
   xmlns:xlink="http://www.w3.org/1999/xlink"
   style="z-index:1;position:relative"
-  viewBox="0 0 854 120"
+  viewBox="0 0 854 100"
 >
   <style>
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

@@ -1,5 +1,4 @@
 <img src="flowmind/src/assets/readmelogo/wave_top.svg" width="100%"/>
-
 <div align="center">
   <img src="flowmind/src/assets/flowmind.png" alt="Flowmind Logo" height="100"/>
   
