@@ -56,7 +56,9 @@ flowchart TD
     classDef accent fill:#3178C6,stroke:#222,stroke-width:2px,color:#fff;
     classDef db fill:#008CC1,stroke:#222,stroke-width:2px,color:#fff;
     
-    subgraph Frontend ["FLOWMIND FRONTEND (React + TS + Vite)"]
+    Title["FLOWMIND FRONTEND (React + TS + Vite)"]:::accent
+
+    subgraph Frontend [" "]
         L["Leader Overview"]:::box
         M["Meetings Tab"]:::box
         T["Tasks Tab"]:::box
@@ -72,6 +74,8 @@ flowchart TD
         L & M & T & D & C --> State
         State --> S_cli & A_cli & U_cli
     end
+    
+    Title ~~~ T
 
     Supa[("☁️ SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]:::db
     Exp["☁️ EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]:::box
