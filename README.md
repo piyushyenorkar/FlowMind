@@ -152,7 +152,7 @@ flowchart TD
       <b>Frontend Hosting</b><br/>Vercel
     </td>
     <td align="center" width="25%">
-      <img src="flowmind/src/assets/render_badge.png" height="40" /><br/>
+      <img src="flowmind/src/assets/render_badge.svg" height="40" /><br/>
       <b>Backend Hosting</b><br/>Render
     </td>
   </tr>
