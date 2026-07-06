@@ -49,52 +49,53 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 ## <img src="https://img.icons8.com/fluency/48/flow-chart.png" width="32" height="32" /> Architecture
 
-```mermaid
-flowchart TB
-    subgraph Frontend["💻 FLOWMIND FRONTEND (React + TypeScript + Vite)"]
-        direction TB
-        
-        subgraph Tabs["UI Components"]
-            direction LR
-            L["Leader Overview"]
-            M["Meetings Tab"]
-            T["Tasks Tab"]
-            D["Decisions Tab"]
-            C["Chat Tab"]
-        end
-        
-        State["Central State Manager\n(AppContext.tsx, AuthContext.tsx)"]
-        
-        subgraph Clients["API Clients"]
-            direction LR
-            S_cli["supabase.ts"]
-            A_cli["api.ts"]
-            U_cli["useAgora.ts"]
-        end
-        
-        Tabs --> State
-        State --> Clients
-    end
-
-    subgraph BackendServices["☁️ BACKEND & REALTIME SERVICES"]
-        direction LR
-        Supa[("SUPABASE\n(PostgreSQL + Realtime)\n13 Tables & WebSockets")]
-        Express["EXPRESS BACKEND\n(server.ts)\n/api/groq, /api/neo4j, /api/agora"]
-        Agora(("AGORA.IO\n(WebRTC)\nVoice Channels & Token Gen"))
-    end
-
-    subgraph AIData["🧠 AI & GRAPH DB"]
-        direction LR
-        Groq{"GROQ API\n(llama-3.3-70b)\nMeeting Analysis\nAI Insights & Chat"}
-        Neo4j[("NEO4J AURA\n(Graph DB)\nTeam-Member-Task\nCypher Queries")]
-    end
-
-    S_cli ==>|Realtime Sync| Supa
-    A_cli ==>|REST API| Express
-    U_cli ==>|Voice SDK| Agora
-
-    Express -->|Generative AI| Groq
-    Express -->|Graph Queries| Neo4j
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│                        FLOWMIND FRONTEND                            │
+│                     React + TypeScript + Vite                        │
+│                                                                      │
+│  ┌─────────┐  ┌───────────┐  ┌──────────┐  ┌────────┐  ┌────────┐  │
+│  │ Leader  │  │ Meetings  │  │  Tasks   │  │Decisn. │  │  Chat  │  │
+│  │Overview │  │   Tab     │  │   Tab    │  │  Tab   │  │  Tab   │  │
+│  └────┬────┘  └─────┬─────┘  └────┬─────┘  └───┬────┘  └───┬────┘  │
+│       │             │              │             │           │       │
+│       └─────────────┴──────────────┴─────────────┴───────────┘       │
+│                              │                                       │
+│                    ┌─────────┴─────────┐                             │
+│                    │   AppContext.tsx   │    ← Central State Manager  │
+│                    │   AuthContext.tsx  │    ← Auth Manager           │
+│                    └─────────┬─────────┘                             │
+│                              │                                       │
+│              ┌───────────────┼──────────────┐                        │
+│              │               │              │                        │
+│       ┌──────┴──────┐ ┌─────┴─────┐ ┌──────┴──────┐                 │
+│       │ supabase.ts │ │  api.ts   │ │ useAgora.ts │                  │
+│       └──────┬──────┘ └─────┬─────┘ └──────┬──────┘                  │
+└──────────────┼──────────────┼──────────────┼─────────────────────────┘
+               │              │              │
+               ▼              ▼              ▼
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐
+│    SUPABASE      │  │ EXPRESS BACKEND  │  │  AGORA.IO    │
+│  (PostgreSQL +   │  │   server.ts      │  │  (WebRTC)    │
+│   Realtime)      │  │                  │  │              │
+│                  │  │  /api/groq/*     │  │  Voice       │
+│  13 Tables       │  │  /api/neo4j/*    │  │  Channels    │
+│  WebSocket Subs  │  │  /api/hindsight/*│  │  Token Gen   │
+│  Broadcast Chans │  │  /api/agora/*    │  │              │
+└──────────────────┘  └───────┬──────────┘  └──────────────┘
+                              │
+                     ┌────────┴────────┐
+                     │                 │
+              ┌──────┴──────┐  ┌───────┴───────┐
+              │  GROQ API   │  │   NEO4J AURA  │
+              │ llama-3.3   │  │  Graph DB     │
+              │ 70b-versat. │  │               │
+              │             │  │ Team─Member   │
+              │ Member─Task │  │ Task─Team     │
+              │ AI Insights │  │               │
+              │ AI Chat     │  │ Cypher Queries│
+              └─────────────┘  │ for Insights  │
+                               └───────────────┘
 ```
 
 <br/>
