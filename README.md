@@ -75,7 +75,7 @@ flowchart TD
 
     Supa[("☁️ SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]:::db
     Exp["☁️ EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]:::box
-    Agora(("📞 AGORA.IO\nWebRTC\n(Voice Channels, Token)")]:::box
+    Agora(("📞 AGORA.IO\nWebRTC\n(Voice Channels, Token)")):::box
 
     S_cli ==> Supa
     A_cli ==> Exp
