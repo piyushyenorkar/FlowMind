@@ -140,19 +140,19 @@ flowchart TD
   </tr>
   <tr>
     <td align="center" width="25%">
-      <img src="https://img.shields.io/badge/Groq-Llama_3.3_70B-F55036?style=for-the-badge" /><br/>
+      <img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" height="40" /><br/>
       <b>Artificial Intelligence</b><br/>Groq Fast Inference
     </td>
     <td align="center" width="25%">
-      <img src="https://img.shields.io/badge/Agora-WebRTC-099DFD?style=for-the-badge" /><br/>
+      <img src="https://img.icons8.com/fluency/48/video-call.png" height="40" /><br/>
       <b>Voice & WebRTC</b><br/>Agora.io SDK
     </td>
     <td align="center" width="25%">
-      <img src="https://skillicons.dev/icons?i=vercel" /><br/>
+      <img src="https://skillicons.dev/icons?i=vercel" height="40" /><br/>
       <b>Frontend Hosting</b><br/>Vercel
     </td>
     <td align="center" width="25%">
-      <img src="https://img.shields.io/badge/Render-Backend-46E3B7?style=for-the-badge&logo=render&logoColor=white" /><br/>
+      <img src="https://cdn.simpleicons.org/render/46E3B7" height="40" /><br/>
       <b>Backend Hosting</b><br/>Render
     </td>
   </tr>
