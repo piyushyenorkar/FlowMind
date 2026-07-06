@@ -1,4 +1,4 @@
-<img src="https://capsule-render.vercel.app/api?type=waving&color=00BFFF&height=120&section=header" width="100%"/>
+<img src="flowmind/src/assets/readmelogo/wave_top.svg" width="100%"/>
 
 <div align="center">
   <img src="flowmind/src/assets/flowmind.png" alt="Flowmind Logo" height="100"/>
@@ -244,4 +244,4 @@ Built for **HackHazards '26** by **Team Starcy**:
 
 </div>
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=00BFFF&height=120&section=footer" width="100%"/>
+<img src="flowmind/src/assets/readmelogo/wave_bottom.svg" width="100%"/>
