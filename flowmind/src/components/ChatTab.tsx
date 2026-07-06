@@ -45,6 +45,83 @@ export default function ChatTab() {
     setLoading(false)
   }
 
+    const parseInline = (text: string) => {
+      const regex = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
+      const parts = text.split(regex);
+      return parts.map((part, i) => {
+        if (!part) return null;
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return <strong key={i} style={{ color: 'var(--text)', fontWeight: 700 }}>{part.slice(2, -2)}</strong>;
+        }
+        const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+        if (linkMatch) {
+          return (
+            <a 
+              key={i} 
+              href={linkMatch[2]} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={styles.msgLink}
+            >
+              {linkMatch[1]}
+            </a>
+          );
+        }
+        return part;
+      });
+    };
+
+    const renderMessageContent = (text: string) => {
+      const lines = text.split('\n');
+      return lines.map((line, j) => {
+        line = line.trim();
+        if (!line) return <div key={j} style={{ height: '8px' }} />;
+
+        if (line.startsWith('### ')) {
+          return <div key={j} className={styles.msgHeading}>{parseInline(line.slice(4))}</div>;
+        }
+        if (line.startsWith('## ')) {
+          return <div key={j} className={styles.msgHeading}>{parseInline(line.slice(3))}</div>;
+        }
+
+        const stepMatch = line.match(/^(\d+\.)\s+(.*)/);
+        if (stepMatch) {
+          return (
+            <div key={j} className={styles.msgStepBox}>
+              <div className={styles.stepNumber}>{stepMatch[1]}</div>
+              <div className={styles.stepText}>{parseInline(stepMatch[2])}</div>
+            </div>
+          );
+        }
+
+        const isImportant = line.startsWith('> ') || line.match(/^(?:\*\*?(?:Note|Important)\*\*?|Note|Important):/i);
+        if (isImportant) {
+          const content = line.startsWith('> ') ? line.slice(2) : line;
+          return (
+            <div key={j} className={styles.msgImportantBox}>
+              {parseInline(content)}
+            </div>
+          );
+        }
+
+        const bulletMatch = line.match(/^[-*]\s+(.*)/);
+        if (bulletMatch) {
+          return (
+            <div key={j} className={styles.msgBullet}>
+              <span className={styles.bulletDot}>•</span>
+              <span className={styles.bulletText}>{parseInline(bulletMatch[1])}</span>
+            </div>
+          );
+        }
+
+        return (
+          <p key={j} className={styles.msgLine}>
+            {parseInline(line)}
+          </p>
+        );
+      });
+    };
+
   return (
     <div className={styles.wrap}>
       <div className={styles.header}>
@@ -61,15 +138,7 @@ export default function ChatTab() {
           <div key={i} className={`${styles.msg} ${m.role === 'user' ? styles.user : styles.assistant}`}>
             {m.role === 'assistant' && <div className={styles.msgAvatar}><Bot size={16} /></div>}
             <div className={styles.msgBubble}>
-              {m.text.split('\n').map((line, j) => (
-                <p key={j} className={styles.msgLine}>
-                  {line.split(/(\*\*[^*]+\*\*)/).map((part, k) =>
-                    part.startsWith('**') && part.endsWith('**')
-                      ? <strong key={k}>{part.slice(2, -2)}</strong>
-                      : part
-                  )}
-                </p>
-              ))}
+              {renderMessageContent(m.text)}
             </div>
           </div>
         ))}

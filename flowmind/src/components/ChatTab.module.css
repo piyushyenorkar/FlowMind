@@ -87,6 +87,74 @@
   border-top-right-radius: 6px;
 }
 
+.msgHeading {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 16px 0 8px;
+}
+.msgHeading:first-child { margin-top: 0; }
+
+.msgStepBox {
+  display: flex;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 16px;
+  margin: 8px 0;
+}
+
+.msgImportantBox {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 16px;
+  margin: 8px 0;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.stepNumber {
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.stepText {
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.msgBullet {
+  display: flex;
+  gap: 10px;
+  margin: 6px 0;
+  padding-left: 4px;
+}
+
+.bulletDot {
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.bulletText {
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.msgLink {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.msgLink:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
 .msgLine { margin: 0 0 4px; }
 .msgLine:last-child { margin: 0; }
 

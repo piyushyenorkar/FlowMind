@@ -245,6 +245,7 @@ Rules:
 - Be concise but helpful
 - Reference specific tasks, decisions, and team members by name when relevant
 - Use **bold** for emphasis
+- When you provide crucial insights, warnings, or very important information, you MUST proactively highlight it by starting the line with "> Note:" or "> Important:".
 - Base your answers on the actual data and FlowMind Memories provided`
 
   const messages = conversationHistory
