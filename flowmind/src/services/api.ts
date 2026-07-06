@@ -178,17 +178,17 @@ TEAM DATA:
 • ${members.length} team members: ${members.map(m => m.name).join(', ')}
 
 NEO4J GRAPH INSIGHTS (Bottlenecks & Workload):
-${JSON.stringify(graphData, null, 1)}
+${JSON.stringify(graphData)}
 
 TASKS:
-${JSON.stringify(taskData, null, 1)}
+${JSON.stringify(taskData.slice(0, 50))}
 DECISIONS:
-${JSON.stringify(decisionData, null, 1)}
+${JSON.stringify(decisionData)}
 MEMBERS:
-${JSON.stringify(memberData, null, 1)}
+${JSON.stringify(memberData)}
 
 FLOWMIND MEMORY (past events, conversations, patterns):
-${memoryContext.substring(0, 4000)}
+${memoryContext.substring(0, 2000)}
 
 RULES:
 1. Reference ACTUAL task names and member names from the data above
@@ -207,7 +207,7 @@ Respond with ONLY valid JSON, no markdown, no explanation:
 Provide 2-4 items per category.`
 
   try {
-    const reply = await groqChat([{ role: 'user', content: 'Analyze this team data and FlowMind Memory.' }], systemPrompt, { maxTokens: 3000 })
+    const reply = await groqChat([{ role: 'user', content: 'Analyze this team data and FlowMind Memory.' }], systemPrompt, { maxTokens: 1000 })
     if (!reply) return null
 
     const cleaned = reply.replace(/```json|```/g, '').trim()

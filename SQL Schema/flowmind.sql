@@ -191,3 +191,14 @@ CREATE TABLE IF NOT EXISTS public.team_chat_reads (
 );
 
 ALTER TABLE public.team_chat_reads DISABLE ROW LEVEL SECURITY;
+
+-- AI Chats
+CREATE TABLE IF NOT EXISTS public.ai_chats (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  team_code TEXT REFERENCES public.teams(code) ON DELETE CASCADE,
+  role TEXT NOT NULL,
+  text TEXT NOT NULL,
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.ai_chats DISABLE ROW LEVEL SECURITY;
