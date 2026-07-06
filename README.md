@@ -1,6 +1,5 @@
 <div align="center">
   <img src="flowmind/src/assets/flowmind.png" alt="Flowmind Logo" height="100"/>
-  <br/>
   
   <h1>FlowMind — The PM That Never Forgets</h1>
   
@@ -74,16 +73,16 @@ flowchart TD
         State --> S_cli & A_cli & U_cli
     end
 
-    Supa[("SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]:::db
-    Exp["EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]:::box
-    Agora("AGORA.IO\nWebRTC\n(Voice Channels, Token)"):::box
+    Supa[("☁️ SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]:::db
+    Exp["☁️ EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]:::box
+    Agora(("📞 AGORA.IO\nWebRTC\n(Voice Channels, Token)")):::box
 
     S_cli ==> Supa
     A_cli ==> Exp
     U_cli ==> Agora
 
-    Groq["GROQ API\nLlama-3.3-70b\n(Meeting Analysis)"]:::box
-    Neo4j[("NEO4J AURA\nGraph DB\n(Team-Member-Task)")]:::db
+    Groq{"GROQ API\nLlama-3.3-70b\n(Meeting Analysis)"}:::box
+    Neo4j[("🕸️ NEO4J AURA\nGraph DB\n(Team-Member-Task)")]:::db
 
     Exp ==> Groq
     Exp ==> Neo4j
