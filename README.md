@@ -33,7 +33,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 <br/>
 
-## <img src="https://img.icons8.com/fluency/48/star.png" width="32" height="32" /> Features
+## <img src="https://img.icons8.com/fluency/48/magic-wand.png" width="32" height="32" /> Features
 
 **Live Voice Meetings** — Agora SDK WebRTC voice rooms for real-time team collaboration<br/>
 **Real-time Transcription** — Web Speech API with auto-reconnect capability<br/>
@@ -115,7 +115,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
       <b>Database</b><br/>Supabase (Realtime)
     </td>
     <td align="center" width="25%">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Neo4j-logo.png" width="90" /><br/>
+      <img src="https://img.shields.io/badge/Neo4j-Graph_DB-008CC1?style=for-the-badge&logo=neo4j&logoColor=white" /><br/>
       <b>Graph Database</b><br/>Neo4j Aura
     </td>
     <td align="center" width="25%">
