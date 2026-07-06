@@ -130,7 +130,7 @@ flowchart TD
       <b>Database</b><br/>Supabase (Realtime)
     </td>
     <td align="center" width="25%">
-      <img src="flowmind/src/assets/neo4j_badge.png" height="40" /><br/>
+      <img src="flowmind/src/assets/readmelogo/neo4j_badge.png" height="40" /><br/>
       <b>Graph Database</b><br/>Neo4j Aura
     </td>
     <td align="center" width="25%">
@@ -140,11 +140,11 @@ flowchart TD
   </tr>
   <tr>
     <td align="center" width="25%">
-      <img src="flowmind/src/assets/groq_badge.png" height="40" /><br/>
+      <img src="flowmind/src/assets/readmelogo/groq_badge.png" height="40" /><br/>
       <b>Artificial Intelligence</b><br/>Groq Fast Inference
     </td>
     <td align="center" width="25%">
-      <img src="flowmind/src/assets/agora_badge.png" height="40" /><br/>
+      <img src="flowmind/src/assets/readmelogo/agora_badge.png" height="40" /><br/>
       <b>Voice & WebRTC</b><br/>Agora.io SDK
     </td>
     <td align="center" width="25%">
@@ -152,7 +152,7 @@ flowchart TD
       <b>Frontend Hosting</b><br/>Vercel
     </td>
     <td align="center" width="25%">
-      <img src="flowmind/src/assets/render_badge.svg" height="40" /><br/>
+      <img src="flowmind/src/assets/readmelogo/render_badge.svg" height="40" /><br/>
       <b>Backend Hosting</b><br/>Render
     </td>
   </tr>
