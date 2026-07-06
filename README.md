@@ -35,15 +35,15 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 ## <img src="https://img.icons8.com/fluency/48/rocket.png" width="32" height="32" /> Features
 
-**Live Voice Meetings** — Agora SDK WebRTC voice rooms for real-time team collaboration<br/>
-**Real-time Transcription** — Web Speech API with auto-reconnect capability<br/>
-**AI Meeting Analysis** — Groq LLM automatically extracts tasks & decisions from transcripts<br/>
-**Smart Task Assignment** — AI matches tasks to members based on individual skill profiles<br/>
-**Neo4j Knowledge Graph** — Maps team relationships, tracks workloads, and detects bottlenecks<br/>
-**AI Insights Dashboard** — Graph-powered bottleneck & risk detection<br/>
-**Real-time Sync** — Supabase Realtime for instant updates across all members<br/>
-**AI Chat Assistant** — Context-aware team chatbot with memory<br/>
-**Team Management** — Skill profiles, DMs, group chat, applications
+<img src="https://img.icons8.com/fluency/48/microphone.png" width="20" height="20" align="absmiddle"/> **Live Voice Meetings** — Agora SDK WebRTC voice rooms for real-time team collaboration<br/>
+<img src="https://img.icons8.com/fluency/48/voice-recognition.png" width="20" height="20" align="absmiddle"/> **Real-time Transcription** — Web Speech API with auto-reconnect capability<br/>
+<img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" width="20" height="20" align="absmiddle"/> **AI Meeting Analysis** — Groq LLM automatically extracts tasks & decisions from transcripts<br/>
+<img src="https://img.icons8.com/fluency/48/task.png" width="20" height="20" align="absmiddle"/> **Smart Task Assignment** — AI matches tasks to members based on individual skill profiles<br/>
+<img src="https://img.icons8.com/fluency/48/network.png" width="20" height="20" align="absmiddle"/> **Neo4j Knowledge Graph** — Maps team relationships, tracks workloads, and detects bottlenecks<br/>
+<img src="https://img.icons8.com/fluency/48/combo-chart.png" width="20" height="20" align="absmiddle"/> **AI Insights Dashboard** — Graph-powered bottleneck & risk detection<br/>
+<img src="https://img.icons8.com/fluency/48/synchronize.png" width="20" height="20" align="absmiddle"/> **Real-time Sync** — Supabase Realtime for instant updates across all members<br/>
+<img src="https://img.icons8.com/fluency/48/chatbot.png" width="20" height="20" align="absmiddle"/> **AI Chat Assistant** — Context-aware team chatbot with memory<br/>
+<img src="https://img.icons8.com/fluency/48/group.png" width="20" height="20" align="absmiddle"/> **Team Management** — Skill profiles, DMs, group chat, applications
 
 <br/>
 
@@ -210,11 +210,5 @@ npm run dev
 Built for **HackHazards '26** by **Team Starcy**:
 - Piyush (Leader)
 - Debashree
-
-<br/>
-
-## <img src="https://img.icons8.com/fluency/48/certificate.png" width="32" height="32" /> License
-
-MIT
 
 </div>
