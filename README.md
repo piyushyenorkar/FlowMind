@@ -12,6 +12,7 @@
     <a href="https://neo4j.com"><img src="https://img.shields.io/badge/Neo4j-6.2-008CC1?logo=neo4j&logoColor=white" alt="Neo4j"></a>
     <a href="https://groq.com"><img src="https://img.shields.io/badge/Groq-llama--3.3--70b-F55036" alt="Groq"></a>
     <a href="https://agora.io"><img src="https://img.shields.io/badge/Agora-4.24-099DFD" alt="Agora"></a>
+    <br/>
     <a href="https://flowwithmind.vercel.app"><img src="https://img.shields.io/badge/Deployed-Vercel-000000?logo=vercel&logoColor=white" alt="Deployed on Vercel"></a>
     <a href="https://render.com"><img src="https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white" alt="Render Backend"></a>
   </p>
