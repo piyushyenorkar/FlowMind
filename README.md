@@ -25,7 +25,7 @@
 
 <div align="center">
 
-## <img src="https://unpkg.com/lucide-static@0.419.0/icons/book-open.svg" width="24" height="24" /> What is FlowMind?
+## <img src="https://img.icons8.com/fluency/48/open-book.png" width="32" height="32" /> What is FlowMind?
 
 **FlowMind** is an AI-powered project management platform that listens to your meetings, auto-assigns tasks based on member skills, and uses a **Neo4j knowledge graph** to detect bottlenecks before they derail your project.
 
@@ -33,7 +33,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 <br/>
 
-## <img src="https://unpkg.com/lucide-static@0.419.0/icons/sparkles.svg" width="24" height="24" /> Features
+## <img src="https://img.icons8.com/fluency/48/star.png" width="32" height="32" /> Features
 
 **Live Voice Meetings** — Agora SDK WebRTC voice rooms for real-time team collaboration<br/>
 **Real-time Transcription** — Web Speech API with auto-reconnect capability<br/>
@@ -47,7 +47,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 <br/>
 
-## <img src="https://unpkg.com/lucide-static@0.419.0/icons/network.svg" width="24" height="24" /> Architecture
+## <img src="https://img.icons8.com/fluency/48/flow-chart.png" width="32" height="32" /> Architecture
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -100,7 +100,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 <br/>
 
-## <img src="https://unpkg.com/lucide-static@0.419.0/icons/layers.svg" width="24" height="24" /> Tech Stack
+## <img src="https://img.icons8.com/fluency/48/layers.png" width="32" height="32" /> Tech Stack
 
 <br/>
 
@@ -145,7 +145,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
 
 <br/>
 
-## <img src="https://unpkg.com/lucide-static@0.419.0/icons/terminal.svg" width="24" height="24" /> Setup & Installation
+## <img src="https://img.icons8.com/fluency/48/console.png" width="32" height="32" /> Setup & Installation
 
 </div>
 
@@ -211,7 +211,7 @@ npm run dev
 
 <div align="center">
 
-## <img src="https://unpkg.com/lucide-static@0.419.0/icons/users.svg" width="24" height="24" /> Team
+## <img src="https://img.icons8.com/fluency/48/group.png" width="32" height="32" /> Team
 
 Built for **HackHazards '26** by **Team Starcy**:
 - Piyush (Leader)
@@ -219,7 +219,7 @@ Built for **HackHazards '26** by **Team Starcy**:
 
 <br/>
 
-## <img src="https://unpkg.com/lucide-static@0.419.0/icons/file-text.svg" width="24" height="24" /> License
+## <img src="https://img.icons8.com/fluency/48/certificate.png" width="32" height="32" /> License
 
 MIT
 
