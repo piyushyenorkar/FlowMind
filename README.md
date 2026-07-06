@@ -57,7 +57,7 @@ flowchart TD
     classDef accent fill:#3178C6,stroke:#222,stroke-width:2px,color:#fff;
     classDef db fill:#008CC1,stroke:#222,stroke-width:2px,color:#fff;
     
-    subgraph Frontend ["<img src='https://skillicons.dev/icons?i=react,ts,vite' height='20' /> FLOWMIND FRONTEND"]
+    subgraph Frontend ["FLOWMIND FRONTEND (React + TS + Vite)"]
         L["Leader Overview"]:::box
         M["Meetings Tab"]:::box
         T["Tasks Tab"]:::box
@@ -74,16 +74,16 @@ flowchart TD
         State --> S_cli & A_cli & U_cli
     end
 
-    Supa[("<img src='https://skillicons.dev/icons?i=supabase,postgres' height='20' /> <br/>SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]:::db
-    Exp["<img src='https://skillicons.dev/icons?i=express,nodejs' height='20' /> <br/>EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]:::box
-    Agora("<img src='https://img.icons8.com/fluency/48/video-call.png' height='20' /> <br/>AGORA.IO\nWebRTC\n(Voice Channels, Token)"):::box
+    Supa[("SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]:::db
+    Exp["EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]:::box
+    Agora("AGORA.IO\nWebRTC\n(Voice Channels, Token)"):::box
 
     S_cli ==> Supa
     A_cli ==> Exp
     U_cli ==> Agora
 
-    Groq["<img src='https://img.icons8.com/fluency/48/artificial-intelligence.png' height='20' /> <br/>GROQ API\nLlama-3.3-70b\n(Meeting Analysis)"]:::box
-    Neo4j[("<img src='https://raw.githubusercontent.com/piyushyenorkar/FlowMind/main/flowmind/src/assets/neo4j1.png' height='20' /> <br/>NEO4J AURA\nGraph DB\n(Team-Member-Task)")]:::db
+    Groq["GROQ API\nLlama-3.3-70b\n(Meeting Analysis)"]:::box
+    Neo4j[("NEO4J AURA\nGraph DB\n(Team-Member-Task)")]:::db
 
     Exp ==> Groq
     Exp ==> Neo4j
