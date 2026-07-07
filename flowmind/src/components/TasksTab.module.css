@@ -110,7 +110,8 @@
   flex-direction: row; 
   gap: 16px; 
   overflow-x: auto; 
-  padding-bottom: 12px;
+  padding: 12px 12px 40px 12px;
+  margin: -12px -12px -40px -12px;
   -ms-overflow-style: none; 
   scrollbar-width: none; 
 }
@@ -131,7 +132,7 @@
   
   flex-shrink: 0;
 }
-.taskCard:hover { background: var(--surface2); box-shadow: 7px 7px 7px rgba(0, 0, 0, 0.15); }
+.taskCard:hover { transform: translateY(-2px); box-shadow: 25px 25px 30px rgba(0, 0, 0, 0.2); background: var(--surface2); }
 .popoverOverlay {
   position: fixed;
   inset: 0;
@@ -191,8 +192,8 @@
 .update { font-size: 12px; color: var(--text2); padding: 8px 12px; background: var(--bg); border-radius: 8px; margin-bottom: 6px; line-height: 1.4; border: 1px solid var(--border); }
 .updateAuthor { color: var(--text); font-weight: 600; margin-right: 4px; }
 
-.statusBtns { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
-.statusBtn { background: var(--bg); border: 1px solid var(--border); color: var(--text2); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-.statusBtn:hover { border-color: var(--border2); color: var(--text); }
-.statusActive { background: var(--accent-glow); border-color: var(--accent); color: var(--accent2); }
+.statusBtns { display: flex; flex-direction: row; gap: 8px; margin-top: auto; }
+.statusBtn { flex: 1; background: var(--bg2); border: none; color: var(--text2); padding: 8px 14px; border-radius: 50px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-align: center; }
+.statusBtn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text); }
+.statusActive { background: var(--bg3); box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.15); color: var(--text); }
 
