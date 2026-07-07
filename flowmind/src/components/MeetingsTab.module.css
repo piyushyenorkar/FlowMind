@@ -22,7 +22,8 @@
 .headerSub { font-size: 13px; color: var(--text3); margin-top: 2px; }
 
 /* Stats */
-.statsRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.statsRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+.statsRow + div { margin-top: 0 !important; }
 .statCard { 
   background: var(--surface);
   backdrop-filter: blur(12px);
@@ -37,8 +38,21 @@
 .statLabel { font-size: 11px; color: var(--text3); margin-top: 2px; }
 
 /* Meeting cards grid */
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid { 
+  display: flex; 
+  flex-direction: row; 
+  gap: 16px; 
+  overflow-x: auto; 
+  padding: 12px 12px 40px 12px;
+  margin: -12px -12px -40px -12px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.grid::-webkit-scrollbar { display: none; }
 .meetingCard { 
+  min-width: 262px;
+  max-width: 262px;
+  flex: 1 0 auto;
   background: var(--surface);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px); 
