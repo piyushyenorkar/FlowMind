@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS public.teams (
   deadline TEXT,
   leader_name TEXT NOT NULL,
   group_chat_name TEXT,
+  github_link TEXT,
+  deploy_link TEXT,
   created_by TEXT REFERENCES public.users(email),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -192,10 +194,22 @@ CREATE TABLE IF NOT EXISTS public.team_chat_reads (
 
 ALTER TABLE public.team_chat_reads DISABLE ROW LEVEL SECURITY;
 
--- AI Chats
-CREATE TABLE IF NOT EXISTS public.ai_chats (
+-- AI Chat Sessions
+CREATE TABLE IF NOT EXISTS public.ai_chat_sessions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   team_code TEXT REFERENCES public.teams(code) ON DELETE CASCADE,
+  name TEXT NOT NULL DEFAULT 'New Chat',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.ai_chat_sessions DISABLE ROW LEVEL SECURITY;
+
+-- AI Chats
+DROP TABLE IF EXISTS public.ai_chats;
+CREATE TABLE IF NOT EXISTS public.ai_chats (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id UUID REFERENCES public.ai_chat_sessions(id) ON DELETE CASCADE,
   role TEXT NOT NULL,
   text TEXT NOT NULL,
   timestamp TIMESTAMPTZ DEFAULT NOW()

@@ -388,8 +388,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       groupChatName: teamData.group_chat_name,
       description: teamData.description,
       deadline: teamData.deadline,
-      leaderName: teamData.leader_name
-    } : { code, projectName: 'Team Project', groupChatName: '', description: '', deadline: '', leaderName: '' }
+      leaderName: teamData.leader_name,
+      githubLink: teamData.github_link || '',
+      deployLink: teamData.deploy_link || ''
+    } : { code, projectName: 'Team Project', groupChatName: '', description: '', deadline: '', leaderName: '', githubLink: '', deployLink: '' }
 
     window.location.hash = 'member-dashboard'
     setState((prev: any) => ({
@@ -431,8 +433,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       groupChatName: teamData.group_chat_name,
       description: teamData.description,
       deadline: teamData.deadline,
-      leaderName: teamData.leader_name
-    } : { code, projectName, groupChatName: '', description: '', deadline: '', leaderName }
+      leaderName: teamData.leader_name,
+      githubLink: teamData.github_link || '',
+      deployLink: teamData.deploy_link || ''
+    } : { code, projectName, groupChatName: '', description: '', deadline: '', leaderName, githubLink: '', deployLink: '' }
 
     const leader = { id: 'leader', name: leaderName, role: 'Leader', isLeader: true }
 
@@ -798,7 +802,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const updatedTeam = { ...prev.team, ...links }
 
       supabase.from('teams').update({
-        description: updatedTeam.description
+        github_link: updatedTeam.githubLink,
+        deploy_link: updatedTeam.deployLink
       }).eq('code', prev.team.code).then()
 
       return {
