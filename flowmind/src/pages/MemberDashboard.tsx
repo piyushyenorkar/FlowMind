@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
+import { History } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import MemoryFeed from '../components/MemoryFeed'
 import LeaderOverview from '../components/LeaderOverview'
 import MemberTasks from '../components/MemberTasks'
 import MeetingsTab from '../components/MeetingsTab'
 import ChatTab from '../components/ChatTab'
+import ChatHistoryMenu from '../components/ChatHistoryMenu'
 import DecisionsTab from '../components/DecisionsTab'
 import TeamMembers from '../components/TeamMembers'
 import GroupChat from '../components/GroupChat'
@@ -26,6 +28,7 @@ const TAB_TITLES = {
 export default function MemberDashboard() {
   const { dmTarget, update, members, team } = useApp()
   const [activeTab, setActiveTab] = useState('overview')
+  const [showChatHistory, setShowChatHistory] = useState(false)
 
   return (
     <div className={styles.layout}>
@@ -38,6 +41,9 @@ export default function MemberDashboard() {
           </div>
           {activeTab === 'groupchat' && members && (
             <FacepileChat members={members} />
+          )}
+          {activeTab === 'chat' && (
+            <ChatHistoryMenu />
           )}
         </div>
         <div className={styles.content}>
