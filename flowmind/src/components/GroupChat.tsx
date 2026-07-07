@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Brain, MessageSquare, ChevronUp, ChevronDown } from 'lucide-react'
+import { Brain, MessageSquare, ChevronUp, ChevronDown, Reply, X } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { retainMemory, recallMemory, groqChat } from '../services/api'
 import { supabase } from '../services/supabase'
@@ -10,7 +10,8 @@ function getMemberColor(name: string) {
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const hue = Math.abs(hash) % 360;
+  // Multiply by 137 (a prime number) to spread the hues widely across the color wheel
+  const hue = Math.abs(hash * 137) % 360;
   return `hsl(${hue}, 80%, 70%)`;
 }
 
@@ -25,6 +26,7 @@ export default function GroupChat() {
   const [memberReads, setMemberReads] = useState<Record<string, string>>(() => cachedGroupReads[teamCode] || {})
   const [isLoading, setIsLoading] = useState(() => !cachedGroupMessages[teamCode])
   const [text, setText] = useState('')
+  const [replyingTo, setReplyingTo] = useState<any | null>(null)
   const [summarizing, setSummarizing] = useState(false)
   const [showSummarize, setShowSummarize] = useState(false)
   const [summary, setSummary] = useState<string | null>(null)
@@ -102,10 +104,12 @@ export default function GroupChat() {
       team_code: teamCode,
       from_name: currentUser?.name || 'You',
       text: text.trim(),
+      reply_to_id: replyingTo ? replyingTo.id : null,
       timestamp: new Date().toISOString(),
     }
 
     setText('')
+    setReplyingTo(null)
 
     // Save to Supabase
     await supabase.from('group_chats').insert([msg])
@@ -257,39 +261,75 @@ Be concise but comprehensive. Use bullet points.`
                   </div>
                 )}
                 <div className={`${styles.msgRow} ${isMine ? styles.msgRowMine : styles.msgRowOther}`}>
-                  {isMine ? (
-                    <div className={`${styles.msgBubble} ${styles.msgMine}`}>
-                      <span className={styles.msgText}>{msg.text?.trim()}</span>
-                      <span className={styles.msgTimeBelow}>
-                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  ) : (
-                    <>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', maxWidth: '90%' }}>
-                        {showAvatar ? (
-                          <div className={styles.msgAvatar} style={{ marginTop: '4px' }}>
-                            {avatarUrl ? (
-                              <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
-                            ) : (
-                              <div style={{ width: '100%', height: '100%', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
-                                {msg.from_name?.charAt(0)?.toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div style={{ width: '24px', flexShrink: 0 }} />
-                        )}
-                        <div style={{ position: 'relative', padding: '6px 10px', borderRadius: '14px', borderBottomLeftRadius: '4px', fontSize: '13px', lineHeight: 1.5, wordBreak: 'break-word' as const, background: 'rgba(23, 23, 23, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', color: 'var(--text)' }}>
-                          {showSender && <div style={{ fontSize: '11px', fontWeight: 600, color: getMemberColor(msg.from_name), marginBottom: '4px' }}>{msg.from_name}</div>}
-                          <span className={styles.msgText}>{msg.text?.trim()}</span>
-                          <span style={{ position: 'absolute', bottom: '4px', right: '8px', fontSize: '9px', color: 'var(--text3)', opacity: 0.7, lineHeight: 1 }}>
-                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
+                  <div className={styles.msgWrapper}>
+                    {isMine && (
+                      <button className={styles.replyBtn} onClick={() => setReplyingTo(msg)} title="Reply">
+                        <Reply size={14} />
+                      </button>
+                    )}
+                    {isMine ? (
+                      <div className={`${styles.msgBubble} ${styles.msgMine}`} onDoubleClick={() => setReplyingTo(msg)}>
+                        {msg.reply_to_id && (() => {
+                           const parentMsg = messages.find(m => m.id === msg.reply_to_id)
+                           if (!parentMsg) return null
+                           return (
+                             <div className={styles.quotedMsg} style={{ borderLeftColor: getMemberColor(parentMsg.from_name) }}>
+                               <div className={styles.quotedAuthor} style={{ color: getMemberColor(parentMsg.from_name) }}>
+                                 {parentMsg.from_name === myName ? 'You' : parentMsg.from_name}
+                               </div>
+                               <div className={styles.quotedText}>{parentMsg.text}</div>
+                             </div>
+                           )
+                        })()}
+                        <span className={styles.msgText}>{msg.text?.trim()}</span>
+                        <span className={styles.msgTimeBelow}>
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', maxWidth: '100%' }}>
+                          {showAvatar ? (
+                            <div className={styles.msgAvatar} style={{ marginTop: '4px' }}>
+                              {avatarUrl ? (
+                                <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
+                              ) : (
+                                <div style={{ width: '100%', height: '100%', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+                                  {msg.from_name?.charAt(0)?.toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div style={{ width: '24px', flexShrink: 0 }} />
+                          )}
+                          <div className={`${styles.msgBubble} ${styles.msgOther}`} onDoubleClick={() => setReplyingTo(msg)}>
+                            {showSender && <div style={{ fontSize: '11px', fontWeight: 600, color: getMemberColor(msg.from_name), marginBottom: '4px' }}>{msg.from_name}</div>}
+                            {msg.reply_to_id && (() => {
+                               const parentMsg = messages.find(m => m.id === msg.reply_to_id)
+                               if (!parentMsg) return null
+                               return (
+                                 <div className={styles.quotedMsg} style={{ borderLeftColor: getMemberColor(parentMsg.from_name) }}>
+                                   <div className={styles.quotedAuthor} style={{ color: getMemberColor(parentMsg.from_name) }}>
+                                     {parentMsg.from_name === myName ? 'You' : parentMsg.from_name}
+                                   </div>
+                                   <div className={styles.quotedText}>{parentMsg.text}</div>
+                                 </div>
+                               )
+                            })()}
+                            <span className={styles.msgText}>{msg.text?.trim()}</span>
+                            <span className={styles.msgTimeBelow}>
+                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    {!isMine && (
+                      <button className={styles.replyBtn} onClick={() => setReplyingTo(msg)} title="Reply">
+                        <Reply size={14} />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Instagram-style Read Receipts */}
@@ -375,8 +415,25 @@ Be concise but comprehensive. Use bullet points.`
           </div>
         )}
 
+        {/* Reply Context UI */}
+        {replyingTo && (
+          <div className={styles.replyContext}>
+            <div className={styles.replyPreviewBox}>
+              <div className={styles.replyContextInfo}>
+                <div className={styles.replyContextAuthor}>
+                  Replying to {replyingTo.from_name === myName ? 'You' : replyingTo.from_name}
+                </div>
+                <div className={styles.replyContextText}>{replyingTo.text}</div>
+              </div>
+              <button className={styles.cancelReplyBtn} onClick={() => setReplyingTo(null)}>
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Input */}
-        <div className={`${styles.inputBar} ${styles.inputBarGroup}`} style={{ marginTop: '0' }}>
+        <div className={`${styles.inputBar} ${styles.inputBarGroup} ${replyingTo ? styles.inputBarReplying : ''}`} style={{ marginTop: '0' }}>
           <input
             placeholder="Message the team"
             value={text}

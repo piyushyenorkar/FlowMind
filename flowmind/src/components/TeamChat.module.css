@@ -177,6 +177,137 @@
   font-style: italic;
 }
 
+/* Replies */
+.msgWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.replyBtn {
+  background: var(--bg2);
+  border: none;
+  color: var(--text3);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+}
+.msgWrapper:hover .replyBtn {
+  opacity: 1;
+}
+.replyBtn:hover {
+  color: var(--text);
+  background: var(--bg3);
+}
+
+.quotedMsg {
+  background: rgba(255, 255, 255, 0.010);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+.msgMine .quotedMsg {
+  background: rgba(0, 0, 0, 0.35);
+  border-left-color: rgba(255, 255, 255, 0.8);
+}
+.quotedAuthor {
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 2px;
+  font-size: 11px;
+}
+.msgMine .quotedAuthor {
+  color: rgba(255, 255, 255, 0.9);
+}
+.quotedText {
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+.msgMine .quotedText {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.replyContext {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  margin: 0 auto 0 auto;
+  max-width: 760px;
+  width: 100%;
+  padding: 12px 12px 8px 12px;
+  display: flex;
+  align-items: center;
+}
+.replyPreviewBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px 8px 16px;
+  border-radius: 13px;
+}
+.replyPreviewBox::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--accent);
+}
+.replyContextInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.replyContextAuthor {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.replyContextText {
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+.cancelReplyBtn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+.cancelReplyBtn:hover {
+  color: var(--text);
+}
+
 /* Input bar */
 .inputBar {
   display: flex;
@@ -194,6 +325,14 @@
   margin: 16px auto 0 auto;
   max-width: 760px;
   width: 100%;
+}
+
+.inputBarReplying {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  border-top: none;
 }
 
 .inputBarDirect {
