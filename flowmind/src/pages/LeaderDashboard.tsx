@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { History } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import MemoryFeed from '../components/MemoryFeed'
 import LeaderOverview from '../components/LeaderOverview'
@@ -6,6 +7,7 @@ import TasksTab from '../components/TasksTab'
 import MeetingsTab from '../components/MeetingsTab'
 import DecisionsTab from '../components/DecisionsTab'
 import ChatTab from '../components/ChatTab'
+import ChatHistoryMenu from '../components/ChatHistoryMenu'
 import TeamMembers from '../components/TeamMembers'
 import GroupChat from '../components/GroupChat'
 import DirectChat from '../components/DirectChat'
@@ -29,6 +31,7 @@ export default function LeaderDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleInput, setTitleInput] = useState('')
+  const [showChatHistory, setShowChatHistory] = useState(false)
 
   const handleTitleClick = () => {
     if (activeTab === 'groupchat') {
@@ -87,6 +90,9 @@ export default function LeaderDashboard() {
           </div>
           {activeTab === 'groupchat' && members && (
             <FacepileChat members={members} />
+          )}
+          {activeTab === 'chat' && (
+            <ChatHistoryMenu />
           )}
         </div>
         <div className={styles.content}>
