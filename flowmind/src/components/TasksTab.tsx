@@ -189,8 +189,8 @@ function TaskCard({ task, onStatusChange }) {
                   ))}
                 </div>
               )}
+              <div className={styles.updatesTitle}>Update Status</div>
               <div className={styles.statusBtns}>
-                <div className={styles.updatesTitle}>Update Status</div>
                 {['todo', 'in-progress', 'done'].map(s => (
                   <button
                     key={s}
