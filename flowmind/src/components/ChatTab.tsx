@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Bot, Brain, ChevronUp, ChevronDown } from 'lucide-react'
+import { Bot, Brain, ChevronUp, ChevronDown, History, X, Edit2, Trash2, Plus } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { sendChatMessage } from '../services/api'
+import { sendChatMessage, createAiChatSession, saveAiChatMessage, renameAiChatSession, deleteAiChatSession } from '../services/api'
+import { supabase } from '../services/supabase'
 import styles from './ChatTab.module.css'
 import flowmindLogo from '../assets/flowmind.png'
 
@@ -12,115 +13,196 @@ const SUGGESTIONS = [
   'What decisions were made about the project?',
 ]
 
-export default function ChatTab() {
-  const { tasks, decisions, members, memoryFeed, currentUser, team } = useApp()
+export default function ChatTab({ 
+  showSessionsModal = false, 
+  setShowSessionsModal = () => {} 
+}: { 
+  showSessionsModal?: boolean, 
+  setShowSessionsModal?: (val: boolean) => void 
+}) {
+  const { tasks, decisions, members, memoryFeed, currentUser, team, aiChatSessions, activeAiSessionId, update } = useApp()
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      text: `Hey ${currentUser?.name || 'there'}! I'm your AI project assistant. I have access to your team's full FlowMind Memory — all tasks, decisions, and activity. Ask me anything about your project.`,
-    }
-  ])
+  const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const bottomRef = useRef(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  // Modals state
+  const [editingSession, setEditingSession] = useState<any>(null)
+  const [editName, setEditName] = useState('')
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Fetch messages when active session changes
+  useEffect(() => {
+    let active = true;
+    const fetchMessages = async () => {
+      if (!activeAiSessionId) {
+        if (active) setMessages([{ role: 'assistant', text: `Hey ${currentUser?.name || 'there'}! I'm your AI project assistant. I have access to your team's full FlowMind Memory — all tasks, decisions, and activity. Ask me anything about your project.` }])
+        return
+      }
+      
+      const { data } = await supabase.from('ai_chats').select('*').eq('session_id', activeAiSessionId).order('timestamp', { ascending: true })
+      if (active) {
+        if (data && data.length > 0) {
+          setMessages(data)
+        } else {
+          setMessages([{ role: 'assistant', text: `Hey ${currentUser?.name || 'there'}! I'm your AI project assistant. I have access to your team's full FlowMind Memory — all tasks, decisions, and activity. Ask me anything about your project.` }])
+        }
+      }
+    }
+    fetchMessages()
+
+    if (!activeAiSessionId) return;
+
+    const channel = supabase.channel(`ai-chats-${activeAiSessionId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ai_chats', filter: `session_id=eq.${activeAiSessionId}` }, payload => {
+        setMessages(prev => {
+          // avoid duplicates if we optimistically updated
+          if (prev.some(m => m.id === payload.new.id || (m.role === payload.new.role && m.text === payload.new.text && !m.id))) {
+            return prev.map(m => (!m.id && m.text === payload.new.text ? payload.new : m))
+          }
+          return [...prev, payload.new]
+        })
+      }).subscribe()
+
+    return () => { 
+      active = false;
+      supabase.removeChannel(channel)
+    }
+  }, [activeAiSessionId, currentUser?.name])
+
   const send = async (text?: string) => {
     const msg = text || input.trim()
     if (!msg || loading) return
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', text: msg }])
+    
+    // Optimistic UI
+    const tempUserMsg = { role: 'user', text: msg }
+    setMessages(prev => [...prev, tempUserMsg])
     setLoading(true)
+    
     try {
+      let currentSessionId = activeAiSessionId
+      if (!currentSessionId) {
+        const newSession = await createAiChatSession(team?.code, msg.substring(0, 30) + '...')
+        currentSessionId = newSession.id
+        update({ activeAiSessionId: currentSessionId, aiChatSessions: [newSession, ...(aiChatSessions || [])] })
+      }
+
+      await saveAiChatMessage(currentSessionId, 'user', msg)
+      
       const context = { tasks, decisions, members, memoryFeed }
       const reply = await sendChatMessage(team?.code, msg, context, messages)
-      setMessages(prev => [...prev, { role: 'assistant', text: reply }])
+      
+      await saveAiChatMessage(currentSessionId, 'assistant', reply)
+      
+      setMessages(prev => {
+        if (prev[prev.length - 1]?.text === reply) return prev
+        return [...prev, { role: 'assistant', text: reply }]
+      })
     } catch (e) {
       setMessages(prev => [...prev, { role: 'assistant', text: 'Sorry, something went wrong. Please try again.' }])
     }
     setLoading(false)
   }
 
-    const parseInline = (text: string) => {
-      const regex = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
-      const parts = text.split(regex);
-      return parts.map((part, i) => {
-        if (!part) return null;
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return <strong key={i} style={{ color: 'var(--text)', fontWeight: 700 }}>{part.slice(2, -2)}</strong>;
-        }
-        const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-        if (linkMatch) {
-          return (
-            <a 
-              key={i} 
-              href={linkMatch[2]} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className={styles.msgLink}
-            >
-              {linkMatch[1]}
-            </a>
-          );
-        }
-        return part;
-      });
-    };
+  const handleCreateNewChat = () => {
+    update({ activeAiSessionId: null })
+    setShowSessionsModal(false)
+  }
 
-    const renderMessageContent = (text: string) => {
-      const lines = text.split('\n');
-      return lines.map((line, j) => {
-        line = line.trim();
-        if (!line) return <div key={j} style={{ height: '8px' }} />;
+  const handleRename = async () => {
+    if (!editingSession || !editName.trim()) return
+    await renameAiChatSession(editingSession.id, editName)
+    update({
+      aiChatSessions: aiChatSessions.map((s: any) => s.id === editingSession.id ? { ...s, name: editName } : s)
+    })
+    setEditingSession(null)
+  }
 
-        if (line.startsWith('### ')) {
-          return <div key={j} className={styles.msgHeading}>{parseInline(line.slice(4))}</div>;
-        }
-        if (line.startsWith('## ')) {
-          return <div key={j} className={styles.msgHeading}>{parseInline(line.slice(3))}</div>;
-        }
+  const handleDelete = async (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this chat?')) return
+    await deleteAiChatSession(sessionId)
+    update({
+      aiChatSessions: aiChatSessions.filter((s: any) => s.id !== sessionId),
+      activeAiSessionId: activeAiSessionId === sessionId ? null : activeAiSessionId
+    })
+  }
 
-        const stepMatch = line.match(/^(\d+\.)\s+(.*)/);
-        if (stepMatch) {
-          return (
-            <div key={j} className={styles.msgStepBox}>
-              <div className={styles.stepNumber}>{stepMatch[1]}</div>
-              <div className={styles.stepText}>{parseInline(stepMatch[2])}</div>
-            </div>
-          );
-        }
-
-        const isImportant = line.startsWith('> ') || line.match(/^(?:\*\*?(?:Note|Important)\*\*?|Note|Important):/i);
-        if (isImportant) {
-          const content = line.startsWith('> ') ? line.slice(2) : line;
-          return (
-            <div key={j} className={styles.msgImportantBox}>
-              {parseInline(content)}
-            </div>
-          );
-        }
-
-        const bulletMatch = line.match(/^[-*]\s+(.*)/);
-        if (bulletMatch) {
-          return (
-            <div key={j} className={styles.msgBullet}>
-              <span className={styles.bulletDot}>•</span>
-              <span className={styles.bulletText}>{parseInline(bulletMatch[1])}</span>
-            </div>
-          );
-        }
-
+  const parseInline = (text: string) => {
+    const regex = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
+    const parts = text.split(regex);
+    return parts.map((part, i) => {
+      if (!part) return null;
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} style={{ color: 'var(--text)', fontWeight: 700 }}>{part.slice(2, -2)}</strong>;
+      }
+      const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (linkMatch) {
         return (
-          <p key={j} className={styles.msgLine}>
-            {parseInline(line)}
-          </p>
+          <a key={i} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className={styles.msgLink}>
+            {linkMatch[1]}
+          </a>
         );
-      });
-    };
+      }
+      return part;
+    });
+  };
+
+  const renderMessageContent = (text: string) => {
+    const lines = text.split('\n');
+    return lines.map((line, j) => {
+      line = line.trim();
+      if (!line) return <div key={j} style={{ height: '8px' }} />;
+
+      if (line.startsWith('### ')) {
+        return <div key={j} className={styles.msgHeading}>{parseInline(line.slice(4))}</div>;
+      }
+      if (line.startsWith('## ')) {
+        return <div key={j} className={styles.msgHeading}>{parseInline(line.slice(3))}</div>;
+      }
+
+      const stepMatch = line.match(/^(\d+\.)\s+(.*)/);
+      if (stepMatch) {
+        return (
+          <div key={j} className={styles.msgStepBox}>
+            <div className={styles.stepNumber}>{stepMatch[1]}</div>
+            <div className={styles.stepText}>{parseInline(stepMatch[2])}</div>
+          </div>
+        );
+      }
+
+      const isImportant = line.startsWith('> ') || line.match(/^(?:\*\*?(?:Note|Important)\*\*?|Note|Important):/i);
+      if (isImportant) {
+        const content = line.startsWith('> ') ? line.slice(2) : line;
+        return (
+          <div key={j} className={styles.msgImportantBox}>
+            {parseInline(content)}
+          </div>
+        );
+      }
+
+      const bulletMatch = line.match(/^[-*]\s+(.*)/);
+      if (bulletMatch) {
+        return (
+          <div key={j} className={styles.msgBullet}>
+            <span className={styles.bulletDot}>•</span>
+            <span className={styles.bulletText}>{parseInline(bulletMatch[1])}</span>
+          </div>
+        );
+      }
+
+      return (
+        <p key={j} className={styles.msgLine}>
+          {parseInline(line)}
+        </p>
+      );
+    });
+  };
 
   return (
     <div className={styles.wrap}>
@@ -196,6 +278,68 @@ export default function ChatTab() {
           </button>
         </div>
       </div>
+
+      {showSessionsModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowSessionsModal(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <span>Chat History</span>
+              <button className={styles.modalClose} onClick={() => setShowSessionsModal(false)}><X size={20} /></button>
+            </div>
+            
+            <button className={styles.newChatBtn} onClick={handleCreateNewChat}>
+              <Plus size={18} /> New Chat
+            </button>
+
+            <div className={styles.sessionList}>
+              {aiChatSessions?.length === 0 && (
+                <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '20px 0', fontSize: '14px' }}>No chat history yet.</div>
+              )}
+              {aiChatSessions?.map((session: any) => (
+                <div 
+                  key={session.id} 
+                  className={`${styles.sessionItem} ${activeAiSessionId === session.id ? styles.active : ''}`}
+                  onClick={() => { update({ activeAiSessionId: session.id }); setShowSessionsModal(false); }}
+                >
+                  <div className={styles.sessionName}>{session.name}</div>
+                  <div className={styles.sessionActions}>
+                    <button className={styles.editBtn} onClick={(e) => { e.stopPropagation(); setEditingSession(session); setEditName(session.name); }}>
+                      <Edit2 size={14} />
+                    </button>
+                    <button className={styles.deleteBtn} onClick={(e) => handleDelete(e, session.id)}>
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingSession && (
+        <div className={styles.modalOverlay} onClick={() => setEditingSession(null)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <span>Rename Chat</span>
+              <button className={styles.modalClose} onClick={() => setEditingSession(null)}><X size={20} /></button>
+            </div>
+            <input 
+              className={styles.modalInput}
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              placeholder="Enter new name..."
+              autoFocus
+              onKeyDown={e => e.key === 'Enter' && handleRename()}
+            />
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setEditingSession(null)}>Cancel</button>
+              <button className={styles.saveBtn} onClick={handleRename}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
