@@ -1,6 +1,7 @@
 // ─── FlowMind API Service Layer ────────────────────────────────────────────────
 // Routes through the backend server for secure API key handling and Neo4j integration
 
+import { supabase } from './supabase';
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000') + '/api'
 
 // ── Hindsight Memory ───────────────────────────────────────────────────────────
@@ -257,4 +258,44 @@ Rules:
 
   const reply = await groqChat(messages, systemPrompt)
   return reply || "I've searched FlowMind Memory for context on your question."
+}
+
+// ── AI Chat Sessions ───────────────────────────────────────────────────────────
+
+export async function createAiChatSession(teamCode: string, name: string = 'New Chat') {
+  const { data, error } = await supabase
+    .from('ai_chat_sessions')
+    .insert([{ team_code: teamCode, name }])
+    .select('*')
+    .single()
+  if (error) console.error('Error creating chat session:', error)
+  return data
+}
+
+export async function renameAiChatSession(sessionId: string, newName: string) {
+  const { error } = await supabase
+    .from('ai_chat_sessions')
+    .update({ name: newName, updated_at: new Date().toISOString() })
+    .eq('id', sessionId)
+  if (error) console.error('Error renaming chat session:', error)
+}
+
+export async function deleteAiChatSession(sessionId: string) {
+  const { error } = await supabase
+    .from('ai_chat_sessions')
+    .delete()
+    .eq('id', sessionId)
+  if (error) console.error('Error deleting chat session:', error)
+}
+
+export async function saveAiChatMessage(sessionId: string, role: string, text: string) {
+  const { error } = await supabase
+    .from('ai_chats')
+    .insert([{ session_id: sessionId, role, text }])
+  if (error) {
+    console.error('Error saving chat message:', error)
+  } else {
+    // Update session updated_at
+    await supabase.from('ai_chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', sessionId)
+  }
 }
