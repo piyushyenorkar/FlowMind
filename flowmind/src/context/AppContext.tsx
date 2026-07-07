@@ -56,6 +56,8 @@ const getInitialState = () => {
     meetings: [],
     memberProfiles: {},
     dmTarget: null,
+    aiChatSessions: [],
+    activeAiSessionId: null,
   }
 }
 
@@ -132,7 +134,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       startedAt: m.started_at || null,
     })) || []
 
-    // Fetch profiles (local team overrides)
+    const { data: sessionsData } = await supabase.from('ai_chat_sessions').select('*').eq('team_code', teamCode).order('updated_at', { ascending: false })
+
     const { data: profData } = await supabase.from('member_profiles').select('*').eq('team_code', teamCode)
     const memberProfiles: Record<string, any> = {}
     profData?.forEach(p => { memberProfiles[p.member_name] = p.profile_data })
@@ -150,7 +153,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     setState((prev: any) => ({
-      ...prev, members, tasks, decisions, memoryFeed, meetings, memberProfiles
+      ...prev, members, tasks, decisions, memoryFeed, meetings, aiChatSessions: sessionsData || [], activeAiSessionId: null, memberProfiles
     }))
   }, [])
 
@@ -208,6 +211,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
       .subscribe()
 
+    const aiSessionsChannel = supabase.channel('ai-sessions-channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ai_chat_sessions', filter: `team_code=eq.${state.team.code}` }, async () => {
+        const { data } = await supabase.from('ai_chat_sessions').select('*').eq('team_code', state.team.code).order('updated_at', { ascending: false })
+        if (data) {
+          setState((prev: any) => ({ ...prev, aiChatSessions: data }))
+        }
+      })
+      .subscribe()
+
     // Polling fallback: refetch meetings every 5s to guarantee real-time list updates
     // This covers cases where Supabase Realtime publication may not be enabled
     const pollInterval = setInterval(async () => {
@@ -238,6 +250,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => {
       supabase.removeChannel(channel)
       supabase.removeChannel(teamsChannel)
+      supabase.removeChannel(aiSessionsChannel)
       clearInterval(pollInterval)
     }
   }, [state.team?.code])
@@ -332,6 +345,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       meetings: [],
       memberProfiles: leaderProfile,
       memoryFeed: [],
+      aiChatSessions: [],
+      activeAiSessionId: null,
     }))
 
     addMemory({
@@ -389,6 +404,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       meetings: [],
       memberProfiles: {},
       memoryFeed: [],
+      aiChatSessions: [],
+      activeAiSessionId: null,
     }))
 
     await syncTeamData(code)
@@ -432,6 +449,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       meetings: [],
       memberProfiles: {},
       memoryFeed: [],
+      aiChatSessions: [],
+      activeAiSessionId: null,
     }))
 
     await syncTeamData(code)
@@ -808,6 +827,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       members: [],
       meetings: [],
       memberProfiles: {},
+      aiChatSessions: [],
+      activeAiSessionId: null,
     })
   }, [])
 
