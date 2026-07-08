@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext'
 import { retainMemory, recallMemory, groqChat } from '../services/api'
 import { supabase } from '../services/supabase'
 import styles from './TeamChat.module.css'
+import favicon from '../assets/favicon.png'
 
 function getMemberColor(name: string) {
   let hash = 0;
@@ -18,6 +19,66 @@ function getMemberColor(name: string) {
 const cachedGroupMessages: Record<string, any[]> = {}
 const cachedGroupReads: Record<string, Record<string, string>> = {}
 
+const AISummaryFormatter = ({ text }: { text: string }) => {
+  if (!text.includes('**')) {
+    return <span className={styles.msgText}>{text}</span>
+  }
+
+  const lines = text.split('\n')
+  const elements = []
+  
+  let currentSection: string[] = []
+  let sectionTitle = ''
+
+  const renderSection = (title: string, items: string[], idx: number) => {
+    return (
+      <div key={idx} className={styles.aiSummaryBox}>
+        <div className={styles.aiSummaryHeading}>
+          <div className={styles.aiSummaryBullet} />
+          {title.replace(/\*\*/g, '').replace(':', '').replace(/^\*\s*/, '')}
+        </div>
+        <ul className={styles.aiSummaryList}>
+          {items.map((item, i) => (
+            <li key={i}>{item.replace(/^\s*\*\s*/, '').replace(/\*\*/g, '')}</li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  let introText: string[] = []
+  let isParsingSection = false
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+
+    if (line.startsWith('* **') || line.startsWith('**')) {
+      if (sectionTitle) {
+        elements.push(renderSection(sectionTitle, currentSection, i))
+      }
+      sectionTitle = line
+      currentSection = []
+      isParsingSection = true
+    } else if (isParsingSection) {
+       currentSection.push(line)
+    } else {
+       introText.push(line)
+    }
+  }
+
+  if (sectionTitle) {
+    elements.push(renderSection(sectionTitle, currentSection, lines.length))
+  }
+
+  return (
+    <div className={styles.aiSummaryContainer}>
+      {introText.length > 0 && <div className={styles.aiSummaryIntro}>{introText.join(' ')}</div>}
+      {elements}
+    </div>
+  )
+}
+
 export default function GroupChat() {
   const { team, currentUser, members, memberProfiles } = useApp()
   const teamCode = team?.code || ''
@@ -29,7 +90,6 @@ export default function GroupChat() {
   const [replyingTo, setReplyingTo] = useState<any | null>(null)
   const [summarizing, setSummarizing] = useState(false)
   const [showSummarize, setShowSummarize] = useState(false)
-  const [summary, setSummary] = useState<string | null>(null)
   const bottomRef = useRef<any>(null)
 
   // Load messages & read receipts
@@ -134,7 +194,6 @@ export default function GroupChat() {
 
   const handleSummarize = async () => {
     setSummarizing(true)
-    setSummary(null)
 
     try {
       const recentMsgs = messages.slice(-30)
@@ -163,7 +222,21 @@ Be concise but comprehensive. Use bullet points.`
       )
 
       const summaryText = reply || 'Unable to generate summary. Please try again.'
-      setSummary(summaryText)
+      
+      const aiMsg = {
+        team_code: teamCode,
+        from_name: 'FlowMind AI',
+        text: summaryText,
+        timestamp: new Date().toISOString()
+      }
+
+      const { data: insertedMsg } = await supabase.from('group_chats').insert([aiMsg]).select().single()
+
+      setMessages(prev => {
+        const newMsgs = [...prev, insertedMsg || aiMsg]
+        cachedGroupMessages[teamCode] = newMsgs
+        return newMsgs
+      })
 
       retainMemory(
         teamCode,
@@ -172,7 +245,18 @@ Be concise but comprehensive. Use bullet points.`
       )
     } catch (err) {
       console.warn('[GroupChat] Summarize error:', err)
-      setSummary('Failed to generate summary. Please try again.')
+      const errorMsg = {
+        team_code: teamCode,
+        from_name: 'FlowMind AI',
+        text: 'Failed to generate summary. Please try again.',
+        timestamp: new Date().toISOString()
+      }
+      const { data: insertedErr } = await supabase.from('group_chats').insert([errorMsg]).select().single()
+      setMessages(prev => {
+        const newMsgs = [...prev, insertedErr || errorMsg]
+        cachedGroupMessages[teamCode] = newMsgs
+        return newMsgs
+      })
     }
     setSummarizing(false)
   }
@@ -248,7 +332,8 @@ Be concise but comprehensive. Use bullet points.`
             }
 
             const showSender = !isMine && (!prevMsg || prevMsg.from_name !== msg.from_name || showDateDivider)
-            const avatarUrl = memberProfiles?.[msg.from_name]?.photoUrl || null
+            const isSystemMsg = msg.from_name === 'FlowMind AI'
+            const avatarUrl = isSystemMsg ? favicon : (memberProfiles?.[msg.from_name]?.photoUrl || null)
             const showAvatar = !isMine && (!prevMsg || prevMsg.from_name !== msg.from_name || showDateDivider)
 
             const readers = readReceiptsByIndex[i] || []
@@ -292,7 +377,7 @@ Be concise but comprehensive. Use bullet points.`
                           {showAvatar ? (
                             <div className={styles.msgAvatar} style={{ marginTop: '4px' }}>
                               {avatarUrl ? (
-                                <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }} />
+                                <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: isSystemMsg ? 'contain' : 'cover', background: isSystemMsg ? 'rgba(255,255,255,0.05)' : 'transparent' }} />
                               ) : (
                                 <div style={{ width: '100%', height: '100%', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
                                   {msg.from_name?.charAt(0)?.toUpperCase()}
@@ -316,7 +401,11 @@ Be concise but comprehensive. Use bullet points.`
                                  </div>
                                )
                             })()}
-                            <span className={styles.msgText}>{msg.text?.trim()}</span>
+                            {isSystemMsg ? (
+                              <AISummaryFormatter text={msg.text?.trim()} />
+                            ) : (
+                              <span className={styles.msgText}>{msg.text?.trim()}</span>
+                            )}
                             <span className={styles.msgTimeBelow}>
                               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -368,16 +457,7 @@ Be concise but comprehensive. Use bullet points.`
             )
           })}
 
-          {/* Summary card */}
-          {summary && (
-            <div className={styles.summaryCard}>
-              <div className={styles.summaryTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Brain size={16} /> AI Summary
-              </div>
-              <div className={styles.summaryText}>{summary}</div>
-            </div>
-          )}
-
+          {/* Bottom ref */}
           <div ref={bottomRef} />
         </div>
       )}
