@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { History } from 'lucide-react'
+import { History, Edit2 } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import MemoryFeed from '../components/MemoryFeed'
 import LeaderOverview from '../components/LeaderOverview'
@@ -83,7 +83,10 @@ export default function LeaderDashboard() {
                 }}
               />
             ) : activeTab === 'groupchat' ? (
-              team?.groupChatName || 'Group Chat'
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span>{team?.groupChatName || 'Group Chat'}</span>
+                <Edit2 size={16} style={{ color: 'var(--text3)' }} />
+              </div>
             ) : (
               TAB_TITLES[activeTab as keyof typeof TAB_TITLES]
             )}
