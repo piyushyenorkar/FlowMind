@@ -141,6 +141,74 @@
   height: 1px;
 }
 
+.headerOnlinePulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation: pulsePulse 2s infinite;
+}
+
+@keyframes pulsePulse {
+  0% { box-shadow: 0 0 0 0 rgba(62, 207, 142, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(62, 207, 142, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(62, 207, 142, 0); }
+}
+
+.aiSummaryContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.aiSummaryIntro {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.aiSummaryBox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.aiSummaryHeading {
+  display: flex;
+  align-items: center;
+  padding-left: 11px;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.aiSummaryBullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.aiSummaryList {
+  margin: 0;
+  padding-left: 25px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aiSummaryList li {
+  position: relative;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+
 .msgMine {
   background: var(--accent);
   color: #fff;
