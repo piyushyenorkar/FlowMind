@@ -60,26 +60,23 @@ export default function Sidebar({ activeTab, setActiveTab }) {
 
     try {
       setUploadingLogo(true)
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${team.code}_${Date.now()}.${fileExt}`
-      const filePath = `team_logos/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('logos')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data } = supabase.storage.from('logos').getPublicUrl(filePath)
-      if (data?.publicUrl) {
-        updateTeamLogo(data.publicUrl)
+      
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        updateTeamLogo(base64String)
+        setUploadingLogo(false)
+        if (fileInputRef.current) fileInputRef.current.value = ''
       }
+      reader.onerror = () => {
+        alert('Failed to read file')
+        setUploadingLogo(false)
+      }
+      reader.readAsDataURL(file)
     } catch (err: any) {
       console.error('Error uploading logo:', err.message)
-      alert('Failed to upload logo: ' + err.message + '\nMake sure the "logos" storage bucket is created and public in Supabase.')
-    } finally {
+      alert('Failed to upload logo: ' + err.message)
       setUploadingLogo(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 

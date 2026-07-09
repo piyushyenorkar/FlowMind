@@ -203,7 +203,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           if (prev.team && prev.team.code === payload.new.code) {
             return {
               ...prev,
-              team: { ...prev.team, projectName: payload.new.project_name, groupChatName: payload.new.group_chat_name }
+              team: { 
+                ...prev.team, 
+                projectName: payload.new.project_name, 
+                groupChatName: payload.new.group_chat_name,
+                logoUrl: payload.new.logo_url
+              }
             }
           }
           return prev
@@ -390,8 +395,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deadline: teamData.deadline,
       leaderName: teamData.leader_name,
       githubLink: teamData.github_link || '',
-      deployLink: teamData.deploy_link || ''
-    } : { code, projectName: 'Team Project', groupChatName: '', description: '', deadline: '', leaderName: '', githubLink: '', deployLink: '' }
+      deployLink: teamData.deploy_link || '',
+      logoUrl: teamData.logo_url || ''
+    } : { code, projectName: 'Team Project', groupChatName: '', description: '', deadline: '', leaderName: '', githubLink: '', deployLink: '', logoUrl: '' }
 
     window.location.hash = 'member-dashboard'
     setState((prev: any) => ({
@@ -435,8 +441,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deadline: teamData.deadline,
       leaderName: teamData.leader_name,
       githubLink: teamData.github_link || '',
-      deployLink: teamData.deploy_link || ''
-    } : { code, projectName, groupChatName: '', description: '', deadline: '', leaderName, githubLink: '', deployLink: '' }
+      deployLink: teamData.deploy_link || '',
+      logoUrl: teamData.logo_url || ''
+    } : { code, projectName, groupChatName: '', description: '', deadline: '', leaderName, githubLink: '', deployLink: '', logoUrl: '' }
 
     const leader = { id: 'leader', name: leaderName, role: 'Leader', isLeader: true }
 
