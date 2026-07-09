@@ -818,6 +818,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  const updateTeamLogo = useCallback((logoUrl: string) => {
+    setState((prev: any) => {
+      if (!prev.team) return prev
+      const updatedTeam = { ...prev.team, logoUrl }
+
+      supabase.from('teams').update({
+        logo_url: logoUrl
+      }).eq('code', prev.team.code).then()
+
+      return {
+        ...prev,
+        team: updatedTeam,
+      }
+    })
+  }, [])
+
   const reset = useCallback(() => {
     localStorage.removeItem('flowmind_state')
     window.location.hash = ''
@@ -855,6 +871,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       joinLiveMeeting,
       updateMemberProfile,
       updateTeamLinks,
+      updateTeamLogo,
       navigate,
       reset,
     }}>
