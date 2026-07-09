@@ -7,7 +7,7 @@ import { X, Search, Globe, Zap, Crown, Pin } from 'lucide-react'
 import MemberJoin from '../pages/MemberJoin'
 
 export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
-  const { loadTeamAsLeader, joinTeam, navigate } = useApp()
+  const { loadTeamAsLeader, joinTeam, navigate, team } = useApp()
   const { user, getMyTeams, togglePinTeam } = useAuth()
   const [teams, setTeams] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,14 +84,14 @@ export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
             <div className={styles.noTeams}>No teams created yet</div>
           ) : (
             ledTeams.map(t => (
-              <div key={t.code} className={styles.teamItem} onClick={() => { loadTeamAsLeader(t.code, t.projectName, user?.name || ''); onClose() }}>
+              <div key={t.code} className={`${styles.teamItem} ${team?.code === t.code ? styles.active : ''}`} onClick={() => { loadTeamAsLeader(t.code, t.projectName, user?.name || ''); onClose() }}>
                 <div className={styles.teamIcon} style={{ background: t.logoUrl ? 'var(--surface2)' : 'var(--accent-glow)', color: 'var(--accent)', padding: t.logoUrl ? 0 : '', overflow: 'hidden' }}>
                   {t.logoUrl ? <img src={t.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Crown size={16}/>}
                 </div>
                 <div className={styles.teamInfo}>
                   <div className={styles.teamName}>
                     {t.projectName}
-                    {t.source === 'universal' && <span className={styles.universalBadge} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={12} /> Universal</span>}
+                    {t.source === 'universal' && <span className={styles.universalBadge} title="Universal"><Globe size={14} /></span>}
                   </div>
                   <div className={styles.teamMeta}>Code: {t.code} · Leader</div>
                 </div>
@@ -117,14 +117,14 @@ export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
             <div className={styles.noTeams}>No teams joined yet</div>
           ) : (
             joinedTeams.map(t => (
-              <div key={t.code} className={styles.teamItem} onClick={() => { joinTeam(t.code, user?.name || ''); onClose() }}>
+              <div key={t.code} className={`${styles.teamItem} ${team?.code === t.code ? styles.active : ''}`} onClick={() => { joinTeam(t.code, user?.name || ''); onClose() }}>
                 <div className={styles.teamIcon} style={{ background: t.logoUrl ? 'var(--surface2)' : t.source === 'universal' ? 'rgba(62, 207, 142, 0.1)' : 'rgba(255,255,255,0.05)', color: t.source === 'universal' ? 'var(--accent)' : 'var(--text)', padding: t.logoUrl ? 0 : '', overflow: 'hidden' }}>
                   {t.logoUrl ? <img src={t.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : t.source === 'universal' ? <Globe size={16} /> : <Zap size={16} />}
                 </div>
                 <div className={styles.teamInfo}>
                   <div className={styles.teamName}>
                     {t.projectName}
-                    {t.source === 'universal' && <span className={styles.universalBadge} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Globe size={12} /> Universal</span>}
+                    {t.source === 'universal' && <span className={styles.universalBadge} title="Universal"><Globe size={14} /></span>}
                   </div>
                   <div className={styles.teamMeta}>Code: {t.code} · Member</div>
                 </div>
@@ -147,10 +147,10 @@ export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
 
         {/* Quick actions */}
         <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-          <button className="btn-secondary" onClick={() => setShowJoinModal(true)} style={{ flex: 1, padding: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <button className="btn-secondary" onClick={() => setShowJoinModal(true)} style={{ flex: 1, padding: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '16px' }}>
             <Zap size={14}/> Join with Code
           </button>
-          <button className="btn-ghost" onClick={() => { navigate('find-teams'); onClose() }} style={{ flex: 1, padding: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <button className="btn-ghost" onClick={() => { navigate('find-teams'); onClose() }} style={{ flex: 1, padding: '10px', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', borderRadius: '16px' }}>
             <Search size={14}/> Find Teams
           </button>
         </div>
