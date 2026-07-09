@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS public.user_teams (
   team_code TEXT REFERENCES public.teams(code) ON DELETE CASCADE,
   role TEXT NOT NULL,
   source TEXT NOT NULL,
+  is_pinned BOOLEAN DEFAULT FALSE,
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(user_email, team_code)
 );
