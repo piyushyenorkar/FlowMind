@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useApp } from '../context/AppContext'
+import { supabase } from '../services/supabase'
 import TeamSwitcher from './TeamSwitcher'
 import styles from './Sidebar.module.css'
 import { 
@@ -19,7 +20,8 @@ import {
   User,
   Edit2,
   X,
-  Save
+  Save,
+  Plus
 } from 'lucide-react'
 
 const LEADER_ITEMS = [
@@ -43,11 +45,43 @@ const MEMBER_ITEMS = [
 ]
 
 export default function Sidebar({ activeTab, setActiveTab }) {
-  const { team, currentUser, role, navigate, updateTeamLinks } = useApp()
+  const { team, currentUser, role, navigate, updateTeamLinks, updateTeamLogo } = useApp()
   const [showSwitcher, setShowSwitcher] = useState(false)
   const [showLinksModal, setShowLinksModal] = useState(false)
   const [editingLinks, setEditingLinks] = useState(false)
   const [linksForm, setLinksForm] = useState({ github: '', deploy: '' })
+  
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !team) return
+
+    try {
+      setUploadingLogo(true)
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${team.code}_${Date.now()}.${fileExt}`
+      const filePath = `team_logos/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('logos')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage.from('logos').getPublicUrl(filePath)
+      if (data?.publicUrl) {
+        updateTeamLogo(data.publicUrl)
+      }
+    } catch (err: any) {
+      console.error('Error uploading logo:', err.message)
+      alert('Failed to upload logo: ' + err.message + '\nMake sure the "logos" storage bucket is created and public in Supabase.')
+    } finally {
+      setUploadingLogo(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const handleEditLinks = () => {
     setLinksForm({ github: team?.githubLink || '', deploy: team?.deployLink || '' })
@@ -71,9 +105,31 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         </div>
 
         <div className={styles.project}>
-          <div className={styles.projectName}>{team?.projectName || 'Project'}</div>
-          <div className={styles.projectCode}>
-            {role === 'leader' ? `Code: ${team?.code}` : `Team: ${team?.code}`}
+          <input 
+            type="file" 
+            accept="image/*" 
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleLogoUpload}
+          />
+          <div className={styles.projectInfo}>
+            <div className={styles.projectName}>{team?.projectName || 'Project'}</div>
+            <div className={styles.projectCode}>
+              {role === 'leader' ? `Code: ${team?.code}` : `Team: ${team?.code}`}
+            </div>
+          </div>
+          <div 
+            className={styles.projectLogoBox} 
+            title={team?.logoUrl ? "Click to change logo" : "Click to add logo"}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploadingLogo ? (
+              <span className="spinner" style={{ width: '16px', height: '16px', border: '2px solid var(--text3)', borderTopColor: 'transparent', borderRadius: '50%' }} />
+            ) : team?.logoUrl ? (
+              <img src={team.logoUrl} alt="Logo" />
+            ) : (
+              <Plus size={16} strokeWidth={2.7} style={{ opacity: 0.8 }} />
+            )}
           </div>
         </div>
 
