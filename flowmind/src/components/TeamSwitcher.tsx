@@ -3,12 +3,12 @@ import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import styles from './TeamSwitcher.module.css'
 
-import { X, Search, Globe, Zap, Crown } from 'lucide-react'
+import { X, Search, Globe, Zap, Crown, Pin } from 'lucide-react'
 import MemberJoin from '../pages/MemberJoin'
 
 export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
   const { loadTeamAsLeader, joinTeam, navigate } = useApp()
-  const { user, getMyTeams } = useAuth()
+  const { user, getMyTeams, togglePinTeam } = useAuth()
   const [teams, setTeams] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showJoinModal, setShowJoinModal] = useState(false)
@@ -24,8 +24,24 @@ export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
     return () => { mounted = false }
   }, [getMyTeams])
 
-  const ledTeams = teams.filter(t => t.role === 'leader')
-  const joinedTeams = teams.filter(t => t.role === 'member')
+  const ledTeams = teams.filter(t => t.role === 'leader').sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  })
+  const joinedTeams = teams.filter(t => t.role === 'member').sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime();
+  })
+
+  const handlePinToggle = async (e: React.MouseEvent, teamCode: string, isPinned: boolean) => {
+    e.stopPropagation()
+    const res = await togglePinTeam(teamCode, isPinned)
+    if (res.success) {
+      setTeams(prev => prev.map(t => t.code === teamCode ? { ...t, isPinned: !isPinned } : t))
+    }
+  }
 
   const handleSelect = (team) => {
     if (team.role === 'leader') {
@@ -69,7 +85,9 @@ export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
           ) : (
             ledTeams.map(t => (
               <div key={t.code} className={styles.teamItem} onClick={() => { loadTeamAsLeader(t.code, t.projectName, user?.name || ''); onClose() }}>
-                <div className={styles.teamIcon} style={{ background: 'var(--accent-glow)', color: 'var(--accent)' }}><Crown size={16}/></div>
+                <div className={styles.teamIcon} style={{ background: t.logoUrl ? 'var(--surface2)' : 'var(--accent-glow)', color: 'var(--accent)', padding: t.logoUrl ? 0 : '', overflow: 'hidden' }}>
+                  {t.logoUrl ? <img src={t.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Crown size={16}/>}
+                </div>
                 <div className={styles.teamInfo}>
                   <div className={styles.teamName}>
                     {t.projectName}
@@ -77,6 +95,13 @@ export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
                   </div>
                   <div className={styles.teamMeta}>Code: {t.code} · Leader</div>
                 </div>
+                <button 
+                  onClick={(e) => handlePinToggle(e, t.code, t.isPinned)}
+                  style={{ background: 'transparent', border: 'none', color: t.isPinned ? 'var(--accent)' : 'var(--text3)', opacity: t.isPinned ? 1 : 0.6, cursor: 'pointer', transition: 'all 0.2s', padding: '4px', display: 'flex', alignItems: 'center' }}
+                  title={t.isPinned ? "Unpin team" : "Pin team"}
+                >
+                  <Pin size={14} fill={t.isPinned ? 'var(--accent)' : 'none'} style={{ transform: 'rotate(45deg)' }} />
+                </button>
                 <svg className={styles.teamArrow} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 18l6-6-6-6"/>
                 </svg>
@@ -93,8 +118,8 @@ export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
           ) : (
             joinedTeams.map(t => (
               <div key={t.code} className={styles.teamItem} onClick={() => { joinTeam(t.code, user?.name || ''); onClose() }}>
-                <div className={styles.teamIcon} style={{ background: t.source === 'universal' ? 'rgba(62, 207, 142, 0.1)' : 'rgba(255,255,255,0.05)', color: t.source === 'universal' ? 'var(--accent)' : 'var(--text)' }}>
-                  {t.source === 'universal' ? <Globe size={16} /> : <Zap size={16} />}
+                <div className={styles.teamIcon} style={{ background: t.logoUrl ? 'var(--surface2)' : t.source === 'universal' ? 'rgba(62, 207, 142, 0.1)' : 'rgba(255,255,255,0.05)', color: t.source === 'universal' ? 'var(--accent)' : 'var(--text)', padding: t.logoUrl ? 0 : '', overflow: 'hidden' }}>
+                  {t.logoUrl ? <img src={t.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : t.source === 'universal' ? <Globe size={16} /> : <Zap size={16} />}
                 </div>
                 <div className={styles.teamInfo}>
                   <div className={styles.teamName}>
@@ -103,6 +128,13 @@ export default function TeamSwitcher({ onClose }: { onClose: () => void }) {
                   </div>
                   <div className={styles.teamMeta}>Code: {t.code} · Member</div>
                 </div>
+                <button 
+                  onClick={(e) => handlePinToggle(e, t.code, t.isPinned)}
+                  style={{ background: 'transparent', border: 'none', color: t.isPinned ? 'var(--accent)' : 'var(--text3)', opacity: t.isPinned ? 1 : 0.6, cursor: 'pointer', transition: 'all 0.2s', padding: '4px', display: 'flex', alignItems: 'center' }}
+                  title={t.isPinned ? "Unpin team" : "Pin team"}
+                >
+                  <Pin size={14} fill={t.isPinned ? 'var(--accent)' : 'none'} style={{ transform: 'rotate(45deg)' }} />
+                </button>
                 <svg className={styles.teamArrow} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M9 18l6-6-6-6"/>
                 </svg>
