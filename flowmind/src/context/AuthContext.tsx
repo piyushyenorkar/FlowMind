@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getMyTeams = useCallback(async () => {
     if (!user?.email) return []
-    const { data, error } = await supabase.from('user_teams').select(`*, teams ( project_name, group_chat_name, description, deadline, created_at )`).eq('user_email', user.email)
+    const { data, error } = await supabase.from('user_teams').select(`*, teams ( project_name, group_chat_name, description, deadline, created_at, logo_url )`).eq('user_email', user.email)
     if (error || !data) return []
     return data.map(d => {
       let desc = d.teams?.description
@@ -137,11 +137,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: desc,
         deadline: d.teams?.deadline,
         createdAt: d.teams?.created_at,
+        logoUrl: d.teams?.logo_url,
         role: d.role,
         source: d.source,
+        isPinned: d.is_pinned,
         joinedAt: d.joined_at
       }
     })
+  }, [user])
+
+  const togglePinTeam = useCallback(async (teamCode: string, currentPinStatus: boolean) => {
+    if (!user?.email) return { error: 'Not logged in' }
+
+    const { error } = await supabase.from('user_teams')
+      .update({ is_pinned: !currentPinStatus })
+      .eq('user_email', user.email)
+      .eq('team_code', teamCode)
+
+    if (error) return { error: error.message }
+    return { success: true }
   }, [user])
 
   // ── Universal Teams ───────────────────────────────────────────────────
@@ -389,7 +403,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       saveUniversalTeam, getUniversalTeams, getMyUniversalTeams, getAcceptedRoles,
       applyToTeam, getMyApplications, getReceivedApplications,
       updateApplication, addChatMessage, getApplication,
-      updateGlobalProfile,
+      updateGlobalProfile, togglePinTeam,
       isAuthenticated: !!user,
     }}>
       {children}
