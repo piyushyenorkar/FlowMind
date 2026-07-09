@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { History } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import MemoryFeed from '../components/MemoryFeed'
@@ -27,12 +27,29 @@ const TAB_TITLES = {
 
 export default function MemberDashboard() {
   const { dmTarget, update, members, team } = useApp()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') || 'overview';
+  })
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setActiveTab(params.get('tab') || 'overview');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleTabChange = (tab: string) => {
+    window.history.pushState({}, '', `${window.location.pathname}?tab=${tab}`);
+    setActiveTab(tab);
+  };
   const [showChatHistory, setShowChatHistory] = useState(false)
 
   return (
     <div className={styles.layout}>
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
 
       <main className={styles.main}>
         <div className={styles.topBar} style={{ justifyContent: 'space-between' }}>
@@ -47,7 +64,7 @@ export default function MemberDashboard() {
           )}
         </div>
         <div className={styles.content}>
-          {activeTab === 'overview' && <LeaderOverview setActiveTab={setActiveTab} />}
+          {activeTab === 'overview' && <LeaderOverview setActiveTab={handleTabChange} />}
           {activeTab === 'mytasks' && <MemberTasks />}
           {activeTab === 'meetings' && <MeetingsTab />}
           {activeTab === 'chat' && <ChatTab />}
