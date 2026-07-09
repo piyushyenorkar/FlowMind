@@ -41,12 +41,12 @@ const getInitialState = () => {
     if (data) saved = JSON.parse(data)
   } catch (e) { }
 
-  let hash = window.location.hash.slice(1)
-  if (!hash) hash = 'landing'
+  let path = window.location.pathname.slice(1)
+  if (!path || path === '') path = 'landing'
 
   return {
     role: saved?.role || null,
-    page: hash,
+    page: path,
     team: saved?.team || null,
     currentUser: saved?.currentUser || null,
     tasks: [],
@@ -66,14 +66,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [initialFetchDone, setInitialFetchDone] = useState(false)
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1)
-      if (hash) {
-        setState((prev: any) => ({ ...prev, page: hash }))
-      }
+    const handlePopState = () => {
+      let path = window.location.pathname.slice(1)
+      if (!path || path === '') path = 'landing'
+      setState((prev: any) => ({ ...prev, page: path }))
     }
-    window.addEventListener('hashchange', handleHashChange)
-    return () => window.removeEventListener('hashchange', handleHashChange)
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   useEffect(() => {
@@ -337,7 +336,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { data: leaderUser } = await supabase.from('users').select('name, profile_data').eq('name', leaderName).single()
     const leaderProfile = leaderUser?.profile_data ? { [leaderName]: leaderUser.profile_data } : {}
 
-    window.location.hash = 'leader-dashboard'
+    window.history.pushState({}, '', '/leader-dashboard')
     setState((prev: any) => ({
       ...prev,
       role: 'leader',
@@ -399,7 +398,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       logoUrl: teamData.logo_url || ''
     } : { code, projectName: 'Team Project', groupChatName: '', description: '', deadline: '', leaderName: '', githubLink: '', deployLink: '', logoUrl: '' }
 
-    window.location.hash = 'member-dashboard'
+    window.history.pushState({}, '', '/member-dashboard')
     setState((prev: any) => ({
       ...prev,
       role: 'member',
@@ -447,7 +446,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const leader = { id: 'leader', name: leaderName, role: 'Leader', isLeader: true }
 
-    window.location.hash = 'leader-dashboard'
+    window.history.pushState({}, '', '/leader-dashboard')
     setState((prev: any) => ({
       ...prev,
       role: 'leader',
@@ -630,9 +629,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return decision
   }, [])
 
-  const navigate = useCallback((page: string) => {
-    window.location.hash = page
-    setState((prev: any) => ({ ...prev, page }))
+  const navigate = useCallback((targetPage: string) => {
+    window.history.pushState({}, '', '/' + (targetPage === 'landing' ? '' : targetPage))
+    setState((prev: any) => {
+      const isNavigatingAwayFromActiveSession = prev.activeAiSessionId && targetPage !== prev.page
+      return {
+        ...prev,
+        page: targetPage,
+        activeAiSessionId: isNavigatingAwayFromActiveSession ? null : prev.activeAiSessionId
+      }
+    })
   }, [])
 
   const scheduleMeeting = useCallback(async (meetingData: any) => {
@@ -843,7 +849,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const reset = useCallback(() => {
     localStorage.removeItem('flowmind_state')
-    window.location.hash = ''
+    window.history.pushState({}, '', '/')
     setState({
       role: null,
       page: 'landing',
