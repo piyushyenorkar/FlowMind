@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
-import { User, LogOut, Crown, Search, Zap, Globe, Edit, Clock, Info, X } from 'lucide-react'
+import { User, LogOut, Crown, Search, Zap, Globe, Edit, Clock, Info, X, Pin } from 'lucide-react'
 import styles from './UserDashboard.module.css'
 import MemberProfile from '../components/MemberProfile'
 import LeaderSetup from './LeaderSetup'
@@ -9,7 +9,7 @@ import MemberJoin from './MemberJoin'
 
 export default function UserDashboard() {
   const { navigate, loadTeamAsLeader, joinTeam, reset } = useApp()
-  const { user, getMyTeams, signout } = useAuth()
+  const { user, getMyTeams, signout, togglePinTeam } = useAuth()
 
   const [teams, setTeams] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,8 +90,24 @@ export default function UserDashboard() {
     return () => { mounted = false }
   }, [getMyTeams])
 
-  const ledTeams = teams.filter(t => t.role === 'leader').sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-  const joinedTeams = teams.filter(t => t.role === 'member').sort((a, b) => new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime())
+  const ledTeams = teams.filter(t => t.role === 'leader').sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  })
+  const joinedTeams = teams.filter(t => t.role === 'member').sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime();
+  })
+
+  const handlePinToggle = async (e: React.MouseEvent, teamCode: string, isPinned: boolean) => {
+    e.stopPropagation()
+    const res = await togglePinTeam(teamCode, isPinned)
+    if (res.success) {
+      setTeams(prev => prev.map(t => t.code === teamCode ? { ...t, isPinned: !isPinned } : t))
+    }
+  }
 
   const handleSelect = (team: any) => {
     if (team.role === 'leader') {
@@ -249,7 +265,9 @@ export default function UserDashboard() {
                         {ledTeams.map((t, i) => (
                           <div key={i} className={styles.teamCardPremium} onClick={() => handleSelect(t)} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%' }}>
-                              <div className={styles.teamIcon}><Crown size={20} /></div>
+                              <div className={styles.teamIcon} style={{ background: t.logoUrl ? 'var(--surface2)' : 'rgba(255,255,255,0.05)', color: 'var(--text)', padding: t.logoUrl ? 0 : '', overflow: 'hidden' }}>
+                                {t.logoUrl ? <img src={t.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Crown size={20} />}
+                              </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div className={styles.teamName} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.projectName}</div>
                                 <div className={styles.teamCodeBadge}>
@@ -282,6 +300,14 @@ export default function UserDashboard() {
                                 </div>
                               )}
                             </div>
+                            <button 
+                              className={`${styles.pinBtn} ${t.isPinned ? styles.pinned : ''}`}
+                              onClick={(e) => handlePinToggle(e, t.code, t.isPinned)}
+                              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: t.isPinned ? 'var(--accent)' : 'var(--text3)', cursor: 'pointer', transition: 'all 0.2s', zIndex: 10 }}
+                              title={t.isPinned ? "Unpin team" : "Pin team"}
+                            >
+                              <Pin size={16} fill={t.isPinned ? 'var(--accent)' : 'none'} style={{ transform: 'rotate(45deg)' }} />
+                            </button>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2" style={{ position: 'absolute', bottom: '16px', right: '16px', opacity: 0.6 }}>
                               <path d="M9 18l6-6-6-6" />
                             </svg>
@@ -303,8 +329,8 @@ export default function UserDashboard() {
                         {joinedTeams.map((t, i) => (
                           <div key={i} className={styles.teamCardPremium} onClick={() => handleSelect(t)} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%' }}>
-                              <div className={styles.teamIcon}>
-                                {t.source === 'universal' ? <Globe size={20} /> : <Zap size={20} />}
+                              <div className={styles.teamIcon} style={{ background: t.logoUrl ? 'var(--surface2)' : 'rgba(255,255,255,0.05)', color: 'var(--text)', padding: t.logoUrl ? 0 : '', overflow: 'hidden' }}>
+                                {t.logoUrl ? <img src={t.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : t.source === 'universal' ? <Globe size={20} /> : <Zap size={20} />}
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <div className={styles.teamName} style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.projectName}</div>
@@ -338,6 +364,14 @@ export default function UserDashboard() {
                                 </div>
                               )}
                             </div>
+                            <button 
+                              className={`${styles.pinBtn} ${t.isPinned ? styles.pinned : ''}`}
+                              onClick={(e) => handlePinToggle(e, t.code, t.isPinned)}
+                              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: t.isPinned ? 'var(--accent)' : 'var(--text3)', cursor: 'pointer', transition: 'all 0.2s', zIndex: 10 }}
+                              title={t.isPinned ? "Unpin team" : "Pin team"}
+                            >
+                              <Pin size={16} fill={t.isPinned ? 'var(--accent)' : 'none'} style={{ transform: 'rotate(45deg)' }} />
+                            </button>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2" style={{ position: 'absolute', bottom: '16px', right: '16px', opacity: 0.6 }}>
                               <path d="M9 18l6-6-6-6" />
                             </svg>
