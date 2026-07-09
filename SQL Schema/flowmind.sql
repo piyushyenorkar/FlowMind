@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.teams (
   group_chat_name TEXT,
   github_link TEXT,
   deploy_link TEXT,
+  logo_url TEXT,
   created_by TEXT REFERENCES public.users(email),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -221,3 +222,9 @@ CREATE TABLE IF NOT EXISTS public.ai_chats (
 );
 
 ALTER TABLE public.ai_chats DISABLE ROW LEVEL SECURITY;
+
+-- Storage Setup for Project Logos
+INSERT INTO storage.buckets (id, name, public) VALUES ('logos', 'logos', true) ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'logos');
+CREATE POLICY "Public Insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'logos');
