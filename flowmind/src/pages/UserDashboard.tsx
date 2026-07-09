@@ -79,10 +79,18 @@ export default function UserDashboard() {
   useEffect(() => {
     let mounted = true
     const fetchTeams = async () => {
-      setLoading(true)
+      const cached = localStorage.getItem('flowmind_my_teams')
+      if (cached) {
+        setTeams(JSON.parse(cached))
+        setLoading(false)
+      } else {
+        setLoading(true)
+      }
+      
       const fetchedTeams = await getMyTeams()
       if (mounted) {
         setTeams(fetchedTeams)
+        localStorage.setItem('flowmind_my_teams', JSON.stringify(fetchedTeams))
         setLoading(false)
       }
     }
@@ -231,29 +239,30 @@ export default function UserDashboard() {
             <p className={styles.sub}>Select a team to continue your work or discover new ones.</p>
           </div>
 
-          {loading ? (
+          <div style={{ textAlign: 'center' }}>
+            <div className={styles.segmentedControl}>
+              <button
+                className={`${styles.segmentBtn} ${activeTab === 'lead' ? styles.active : ''}`}
+                onClick={() => setActiveTab('lead')}
+              >
+                <Crown size={16} /> Teams You Lead
+              </button>
+              <button
+                className={`${styles.segmentBtn} ${activeTab === 'join' ? styles.active : ''}`}
+                onClick={() => setActiveTab('join')}
+              >
+                <User size={16} /> Teams You Joined
+              </button>
+            </div>
+          </div>
+
+          {loading && teams.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text3)' }}>
               <span className="spinner" style={{ display: 'inline-block', marginBottom: '16px' }} />
               <div>Loading your teams...</div>
             </div>
           ) : (
             <>
-              <div style={{ textAlign: 'center' }}>
-                <div className={styles.segmentedControl}>
-                  <button
-                    className={`${styles.segmentBtn} ${activeTab === 'lead' ? styles.active : ''}`}
-                    onClick={() => setActiveTab('lead')}
-                  >
-                    <Crown size={16} /> Teams You Lead
-                  </button>
-                  <button
-                    className={`${styles.segmentBtn} ${activeTab === 'join' ? styles.active : ''}`}
-                    onClick={() => setActiveTab('join')}
-                  >
-                    <User size={16} /> Teams You Joined
-                  </button>
-                </div>
-              </div>
 
               {activeTab === 'lead' && (
                 <div className={styles.section}>
