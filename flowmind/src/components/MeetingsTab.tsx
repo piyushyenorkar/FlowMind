@@ -87,10 +87,10 @@ export default function MeetingsTab() {
       setViewInternal('list')
     } else {
       if (historyDepth.current === 0) {
-        window.history.pushState({ meetingsView: newView }, '', window.location.hash)
+        window.history.pushState({ meetingsView: newView }, '', window.location.pathname)
         historyDepth.current = 1
       } else {
-        window.history.replaceState({ meetingsView: newView }, '', window.location.hash)
+        window.history.replaceState({ meetingsView: newView }, '', window.location.pathname)
       }
       setViewInternal(newView)
     }
