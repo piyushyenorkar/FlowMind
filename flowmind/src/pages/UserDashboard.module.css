@@ -246,6 +246,22 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
+.pinBtn {
+  opacity: 0;
+}
+
+.teamCardPremium:hover .pinBtn {
+  opacity: 0.6;
+}
+
+.pinBtn:hover {
+  opacity: 1 !important;
+}
+
+.pinBtn.pinned {
+  opacity: 1 !important;
+}
+
 .teamIcon {
   width: 52px;
   height: 52px;
