@@ -135,12 +135,14 @@ CREATE TABLE IF NOT EXISTS public.group_chats (
   team_code TEXT REFERENCES public.teams(code) ON DELETE CASCADE,
   from_name TEXT NOT NULL,
   text TEXT NOT NULL,
+  is_edited BOOLEAN DEFAULT FALSE,
   reply_to_id UUID REFERENCES public.group_chats(id) ON DELETE SET NULL,
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Migration: If group_chats already exists, run this in Supabase SQL editor:
 -- ALTER TABLE public.group_chats ADD COLUMN IF NOT EXISTS reply_to_id UUID REFERENCES public.group_chats(id) ON DELETE SET NULL;
+-- ALTER TABLE public.group_chats ADD COLUMN IF NOT EXISTS is_edited BOOLEAN DEFAULT FALSE;
 
 
 -- Direct Chats
@@ -149,8 +151,14 @@ CREATE TABLE IF NOT EXISTS public.direct_chats (
   chat_key TEXT NOT NULL,
   from_name TEXT NOT NULL,
   text TEXT NOT NULL,
+  is_edited BOOLEAN DEFAULT FALSE,
+  reply_to_id UUID REFERENCES public.direct_chats(id) ON DELETE SET NULL,
   timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migration: If direct_chats already exists, run this in Supabase SQL editor:
+-- ALTER TABLE public.direct_chats ADD COLUMN IF NOT EXISTS reply_to_id UUID REFERENCES public.direct_chats(id) ON DELETE SET NULL;
+-- ALTER TABLE public.direct_chats ADD COLUMN IF NOT EXISTS is_edited BOOLEAN DEFAULT FALSE;
 
 -- Applications
 CREATE TABLE IF NOT EXISTS public.applications (
