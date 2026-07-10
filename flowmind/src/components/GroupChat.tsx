@@ -88,9 +88,19 @@ export default function GroupChat() {
   const [isLoading, setIsLoading] = useState(() => !cachedGroupMessages[teamCode])
   const [text, setText] = useState('')
   const [replyingTo, setReplyingTo] = useState<any | null>(null)
+  const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null)
   const [summarizing, setSummarizing] = useState(false)
   const [showSummarize, setShowSummarize] = useState(false)
   const bottomRef = useRef<any>(null)
+
+  const handleScrollToMsg = (id: string) => {
+    const el = document.getElementById(`msg-${id}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setHighlightedMsgId(id)
+      setTimeout(() => setHighlightedMsgId(null), 1500)
+    }
+  }
 
   // Load messages & read receipts
   useEffect(() => {
@@ -345,7 +355,7 @@ Be concise but comprehensive. Use bullet points.`
                     <span className={styles.dateDividerText}>{getDateLabel(msg.timestamp)}</span>
                   </div>
                 )}
-                <div className={`${styles.msgRow} ${isMine ? styles.msgRowMine : styles.msgRowOther}`}>
+                <div id={`msg-${msg.id}`} className={`${styles.msgRow} ${isMine ? styles.msgRowMine : styles.msgRowOther}`}>
                   <div className={styles.msgWrapper}>
                     {isMine && (
                       <button className={styles.replyBtn} onClick={() => setReplyingTo(msg)} title="Reply">
@@ -353,12 +363,12 @@ Be concise but comprehensive. Use bullet points.`
                       </button>
                     )}
                     {isMine ? (
-                      <div className={`${styles.msgBubble} ${styles.msgMine}`} onDoubleClick={() => setReplyingTo(msg)}>
+                      <div className={`${styles.msgBubble} ${styles.msgMine} ${highlightedMsgId === msg.id ? styles.highlightMsg : ''}`} onDoubleClick={() => setReplyingTo(msg)}>
                         {msg.reply_to_id && (() => {
                            const parentMsg = messages.find(m => m.id === msg.reply_to_id)
                            if (!parentMsg) return null
                            return (
-                             <div className={styles.quotedMsg} style={{ borderLeftColor: getMemberColor(parentMsg.from_name) }}>
+                             <div className={styles.quotedMsg} style={{ borderLeftColor: getMemberColor(parentMsg.from_name) }} onClick={() => handleScrollToMsg(parentMsg.id)}>
                                <div className={styles.quotedAuthor} style={{ color: getMemberColor(parentMsg.from_name) }}>
                                  {parentMsg.from_name === myName ? 'You' : parentMsg.from_name}
                                </div>
@@ -387,13 +397,13 @@ Be concise but comprehensive. Use bullet points.`
                           ) : (
                             <div style={{ width: '24px', flexShrink: 0 }} />
                           )}
-                          <div className={`${styles.msgBubble} ${styles.msgOther}`} onDoubleClick={() => setReplyingTo(msg)}>
+                          <div className={`${styles.msgBubble} ${styles.msgOther} ${highlightedMsgId === msg.id ? styles.highlightMsg : ''}`} onDoubleClick={() => setReplyingTo(msg)}>
                             {showSender && <div style={{ fontSize: '11px', fontWeight: 600, color: getMemberColor(msg.from_name), marginBottom: '4px' }}>{msg.from_name}</div>}
                             {msg.reply_to_id && (() => {
                                const parentMsg = messages.find(m => m.id === msg.reply_to_id)
                                if (!parentMsg) return null
                                return (
-                                 <div className={styles.quotedMsg} style={{ borderLeftColor: getMemberColor(parentMsg.from_name) }}>
+                                 <div className={styles.quotedMsg} style={{ borderLeftColor: getMemberColor(parentMsg.from_name) }} onClick={() => handleScrollToMsg(parentMsg.id)}>
                                    <div className={styles.quotedAuthor} style={{ color: getMemberColor(parentMsg.from_name) }}>
                                      {parentMsg.from_name === myName ? 'You' : parentMsg.from_name}
                                    </div>
