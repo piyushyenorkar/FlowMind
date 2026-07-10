@@ -73,10 +73,10 @@
   color: var(--text);
 }
 
-/* Messages area */
 .messages {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px 8px;
   display: flex;
   flex-direction: column;
@@ -128,6 +128,8 @@
   font-size: 13px;
   line-height: 1.5;
   word-break: break-word;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .msgText {
@@ -148,6 +150,15 @@
   background: var(--accent);
   box-shadow: 0 0 10px var(--accent);
   animation: pulsePulse 2s infinite;
+}
+
+.highlightMsg {
+  animation: highlightPulse 1.5s ease-out;
+}
+
+@keyframes highlightPulse {
+  0% { filter: brightness(1.7) drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
+  100% { filter: brightness(1) drop-shadow(0 0 0px rgba(255,255,255,0)); }
 }
 
 @keyframes pulsePulse {
@@ -251,6 +262,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
 }
 .replyBtn {
   background: var(--bg2);
@@ -663,4 +675,21 @@
 .readReceiptAvatar:hover .readReceiptTooltip {
   visibility: visible;
   opacity: 1;
+}
+
+.highlightMsg {
+  animation: highlightPulse 1.5s ease-out;
+}
+
+@keyframes highlightPulse {
+  0% { 
+    background-color: rgba(120, 120, 120, 0.479);
+    
+  }
+  30% { 
+    background-color: rgba(120, 120, 120, 0.498);
+  }
+  100% { 
+    transform: translateY(0); 
+  }
 }
