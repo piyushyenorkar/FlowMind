@@ -238,7 +238,7 @@ export default function DirectChat({ targetMember, onClose }: any) {
                         })()}
                         <span className={styles.msgText}>{msg.text?.trim()}</span>
                         <span className={styles.msgTimeBelow}>
-                          {msg.is_edited && <span style={{ marginRight: '4px', fontStyle: 'italic', opacity: 0.8 }}>(edited)</span>}
+                          {msg.is_edited && <span style={{ marginRight: '4px', fontStyle: 'italic', opacity: 0.5, fontSize: '0.7em' }}>(edited)</span>}
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
