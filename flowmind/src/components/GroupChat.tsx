@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Brain, MessageSquare, ChevronUp, ChevronDown, Reply, X } from 'lucide-react'
+import { Brain, MessageSquare, ChevronUp, ChevronDown, Reply, X, Edit2, Trash2 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { retainMemory, recallMemory, groqChat } from '../services/api'
 import { supabase } from '../services/supabase'
@@ -88,6 +88,8 @@ export default function GroupChat() {
   const [isLoading, setIsLoading] = useState(() => !cachedGroupMessages[teamCode])
   const [text, setText] = useState('')
   const [replyingTo, setReplyingTo] = useState<any | null>(null)
+  const [editingMsg, setEditingMsg] = useState<any | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ msg: any, x: number, y: number, confirmDelete?: boolean } | null>(null)
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null)
   const [summarizing, setSummarizing] = useState(false)
   const [showSummarize, setShowSummarize] = useState(false)
@@ -100,6 +102,28 @@ export default function GroupChat() {
       setHighlightedMsgId(id)
       setTimeout(() => setHighlightedMsgId(null), 1500)
     }
+  }
+
+  const handleContextMenu = (e: React.MouseEvent, msg: any) => {
+    e.preventDefault()
+    setContextMenu({ msg, x: e.clientX, y: e.clientY })
+  }
+
+  const handleDeleteMessage = async (msgId: string) => {
+    await supabase.from('group_chats').delete().eq('id', msgId)
+    setMessages(prev => {
+      const newMsgs = prev.filter(m => m.id !== msgId)
+      cachedGroupMessages[teamCode] = newMsgs
+      return newMsgs
+    })
+    setContextMenu(null)
+  }
+
+  const handleEditMessage = (msg: any) => {
+    setEditingMsg(msg)
+    setText(msg.text)
+    setReplyingTo(null)
+    setContextMenu(null)
   }
 
   // Load messages & read receipts
@@ -170,6 +194,19 @@ export default function GroupChat() {
 
   const handleSend = async () => {
     if (!text.trim()) return
+    if (editingMsg) {
+      // Update existing message
+      await supabase.from('group_chats').update({ text: text.trim(), is_edited: true }).eq('id', editingMsg.id)
+      setMessages(prev => {
+        const newMsgs = prev.map(m => m.id === editingMsg.id ? { ...m, text: text.trim(), is_edited: true } : m)
+        cachedGroupMessages[teamCode] = newMsgs
+        return newMsgs
+      })
+      setText('')
+      setEditingMsg(null)
+      return
+    }
+
     const msg = {
       team_code: teamCode,
       from_name: currentUser?.name || 'You',
@@ -363,7 +400,7 @@ Be concise but comprehensive. Use bullet points.`
                       </button>
                     )}
                     {isMine ? (
-                      <div className={`${styles.msgBubble} ${styles.msgMine} ${highlightedMsgId === msg.id ? styles.highlightMsg : ''}`} onDoubleClick={() => setReplyingTo(msg)}>
+                      <div className={`${styles.msgBubble} ${styles.msgMine} ${highlightedMsgId === msg.id ? styles.highlightMsg : ''}`} onDoubleClick={() => setReplyingTo(msg)} onContextMenu={(e) => handleContextMenu(e, msg)}>
                         {msg.reply_to_id && (() => {
                            const parentMsg = messages.find(m => m.id === msg.reply_to_id)
                            if (!parentMsg) return null
@@ -378,6 +415,7 @@ Be concise but comprehensive. Use bullet points.`
                         })()}
                         <span className={styles.msgText}>{msg.text?.trim()}</span>
                         <span className={styles.msgTimeBelow}>
+                          {msg.is_edited && <span style={{ marginRight: '4px', fontStyle: 'italic', opacity: 0.8 }}>(edited)</span>}
                           {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -417,6 +455,7 @@ Be concise but comprehensive. Use bullet points.`
                               <span className={styles.msgText}>{msg.text?.trim()}</span>
                             )}
                             <span className={styles.msgTimeBelow}>
+                              {msg.is_edited && <span style={{ marginRight: '4px', fontStyle: 'italic', opacity: 0.8 }}>(edited)</span>}
                               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
@@ -505,17 +544,85 @@ Be concise but comprehensive. Use bullet points.`
           </div>
         )}
 
-        {/* Reply Context UI */}
-        {replyingTo && (
+      {/* Context Menu Modal */}
+      {contextMenu && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setContextMenu(null)} />
+          <div style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: Math.min(contextMenu.x, window.innerWidth - (contextMenu.confirmDelete ? 240 : 180)),
+            width: contextMenu.confirmDelete ? '220px' : '160px',
+            background: '#1a1a1a',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            padding: '8px',
+            zIndex: 1000,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)'
+          }}>
+            {contextMenu.confirmDelete ? (
+              <div style={{ padding: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                  <Trash2 size={20} color="#fff" />
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text)', marginBottom: '12px', textAlign: 'center', lineHeight: 1.4 }}>
+                  Delete permanently from both sides?
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => setContextMenu({ ...contextMenu, confirmDelete: false })}
+                    style={{ flex: 1, padding: '6px', borderRadius: '20px', background: 'transparent', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer', fontSize: '12px' }}
+                  >
+                    No
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteMessage(contextMenu.msg.id)}
+                    style={{ flex: 1, padding: '6px', borderRadius: '20px', background: '#ff4d4f', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '12px' }}
+                  >
+                    Yes
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: '11px', color: 'var(--text2)', padding: '4px 8px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Message Options</div>
+                <div 
+                  onClick={() => handleEditMessage(contextMenu.msg)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'background 0.15s' }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <Edit2 size={16} color="var(--text)" />
+                  <span style={{ color: 'var(--text)' }}>Edit</span>
+                </div>
+                <div 
+                  onClick={() => setContextMenu({ ...contextMenu, confirmDelete: true })}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '8px', cursor: 'pointer', transition: 'background 0.15s' }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  <Trash2 size={16} color="var(--text)" />
+                  <span style={{ color: 'var(--text)' }}>Delete</span>
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Reply Context UI */}
+      {(replyingTo || editingMsg) && (
           <div className={styles.replyContext}>
             <div className={styles.replyPreviewBox}>
               <div className={styles.replyContextInfo}>
                 <div className={styles.replyContextAuthor}>
-                  Replying to {replyingTo.from_name === myName ? 'You' : replyingTo.from_name}
+                  {editingMsg ? 'Editing message' : `Replying to ${replyingTo.from_name === myName ? 'You' : replyingTo.from_name}`}
                 </div>
-                <div className={styles.replyContextText}>{replyingTo.text}</div>
+                <div className={styles.replyContextText}>{editingMsg ? 'Update your message' : replyingTo.text}</div>
               </div>
-              <button className={styles.cancelReplyBtn} onClick={() => setReplyingTo(null)}>
+              <button className={styles.cancelReplyBtn} onClick={() => { setReplyingTo(null); setEditingMsg(null); setText('') }}>
                 <X size={16} />
               </button>
             </div>
@@ -523,7 +630,7 @@ Be concise but comprehensive. Use bullet points.`
         )}
 
         {/* Input */}
-        <div className={`${styles.inputBar} ${styles.inputBarGroup} ${replyingTo ? styles.inputBarReplying : ''}`} style={{ marginTop: '0' }}>
+        <div className={`${styles.inputBar} ${styles.inputBarGroup} ${replyingTo || editingMsg ? styles.inputBarReplying : ''}`} style={{ marginTop: '0' }}>
           <input
             placeholder="Message the team"
             value={text}
