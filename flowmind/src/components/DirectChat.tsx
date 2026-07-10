@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Crown, MessageSquare, ChevronUp, ChevronDown, X } from 'lucide-react'
+import { Crown, MessageSquare, ChevronUp, ChevronDown, X, Reply } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { retainMemory } from '../services/api'
 import { supabase } from '../services/supabase'
@@ -8,6 +8,15 @@ import styles from './TeamChat.module.css'
 function getChatKey(teamCode: string, name1: string, name2: string) {
   const sorted = [name1, name2].sort()
   return `${teamCode}_${sorted[0]}_${sorted[1]}`
+}
+
+function getMemberColor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash * 137) % 360;
+  return `hsl(${hue}, 80%, 70%)`;
 }
 
 const cachedDirectMessages: Record<string, any[]> = {}
@@ -19,7 +28,18 @@ export default function DirectChat({ targetMember, onClose }: any) {
   const [messages, setMessages] = useState<any[]>(() => cachedDirectMessages[chatKey] || [])
   const [isLoading, setIsLoading] = useState(() => !cachedDirectMessages[chatKey])
   const [text, setText] = useState('')
+  const [replyingTo, setReplyingTo] = useState<any | null>(null)
+  const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null)
   const bottomRef = useRef<any>(null)
+
+  const handleScrollToMsg = (id: string) => {
+    const el = document.getElementById(`msg-${id}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setHighlightedMsgId(id)
+      setTimeout(() => setHighlightedMsgId(null), 1500)
+    }
+  }
 
   // Load messages
   useEffect(() => {
@@ -62,10 +82,12 @@ export default function DirectChat({ targetMember, onClose }: any) {
       chat_key: chatKey,
       from_name: currentUser?.name || 'You',
       text: text.trim(),
+      reply_to_id: replyingTo?.id || null,
       timestamp: new Date().toISOString(),
     }
     
     setText('')
+    setReplyingTo(null)
     
     // Save to Supabase
     await supabase.from('direct_chats').insert([msg])
@@ -157,13 +179,37 @@ export default function DirectChat({ targetMember, onClose }: any) {
                       <span className={styles.dateDividerText}>{getDateLabel(msg.timestamp)}</span>
                     </div>
                   )}
-                  <div className={`${styles.msgRow} ${isMine ? styles.msgRowMine : styles.msgRowOther}`}>
-                  <div className={`${styles.msgBubble} ${isMine ? styles.msgMine : styles.msgOther}`}>
-                    <span className={styles.msgText}>{msg.text?.trim()}</span>
-                    <span className={styles.msgTimeBelow}>
-                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
+                  <div id={`msg-${msg.id}`} className={`${styles.msgRow} ${isMine ? styles.msgRowMine : styles.msgRowOther}`}>
+                    <div className={styles.msgWrapper}>
+                      {isMine && (
+                        <button className={styles.replyBtn} onClick={() => setReplyingTo(msg)} title="Reply">
+                          <Reply size={14} />
+                        </button>
+                      )}
+                      <div className={`${styles.msgBubble} ${isMine ? styles.msgMine : styles.msgOther} ${highlightedMsgId === msg.id ? styles.highlightMsg : ''}`} onDoubleClick={() => setReplyingTo(msg)}>
+                        {msg.reply_to_id && (() => {
+                           const parentMsg = messages.find(m => m.id === msg.reply_to_id)
+                           if (!parentMsg) return null
+                           return (
+                             <div className={styles.quotedMsg} style={{ borderLeftColor: getMemberColor(parentMsg.from_name) }} onClick={() => handleScrollToMsg(parentMsg.id)}>
+                               <div className={styles.quotedAuthor} style={{ color: getMemberColor(parentMsg.from_name) }}>
+                                 {parentMsg.from_name === myName ? 'You' : parentMsg.from_name}
+                               </div>
+                               <div className={styles.quotedText}>{parentMsg.text}</div>
+                             </div>
+                           )
+                        })()}
+                        <span className={styles.msgText}>{msg.text?.trim()}</span>
+                        <span className={styles.msgTimeBelow}>
+                          {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      {!isMine && (
+                        <button className={styles.replyBtn} onClick={() => setReplyingTo(msg)} title="Reply">
+                          <Reply size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </React.Fragment>
               )
@@ -173,17 +219,35 @@ export default function DirectChat({ targetMember, onClose }: any) {
         )}
 
         {/* Input */}
-        <div className={`${styles.inputBar} ${styles.inputBarDirect}`}>
-          <input
-            placeholder={`Message ${targetMember?.name}`}
-            value={text}
-            onChange={e => setText(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSend()}
-            autoFocus
-          />
-          <button className={styles.sendBtn} onClick={handleSend} disabled={!text.trim()}>
-            {text.trim() ? <ChevronUp size={20} strokeWidth={2.5} style={{ marginLeft: '1px' }} /> : <ChevronDown size={20} strokeWidth={2.5} style={{ marginLeft: '1px' }} />}
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+          {/* Reply Context UI */}
+          {replyingTo && (
+            <div className={styles.replyContext} style={{ margin: '12px 20px 0 20px', width: 'calc(100% - 40px)', maxWidth: 'none', boxSizing: 'border-box' }}>
+              <div className={styles.replyPreviewBox}>
+                <div className={styles.replyContextInfo}>
+                  <div className={styles.replyContextAuthor}>
+                    Replying to {replyingTo.from_name === myName ? 'You' : replyingTo.from_name}
+                  </div>
+                  <div className={styles.replyContextText}>{replyingTo.text}</div>
+                </div>
+                <button className={styles.cancelReplyBtn} onClick={() => setReplyingTo(null)}>
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+          <div className={`${styles.inputBar} ${styles.inputBarDirect} ${replyingTo ? styles.inputBarReplying : ''}`} style={{ marginTop: replyingTo ? '0' : '', boxSizing: 'border-box' }}>
+            <input
+              placeholder={`Message ${targetMember?.name}`}
+              value={text}
+              onChange={e => setText(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              autoFocus
+            />
+            <button className={styles.sendBtn} onClick={handleSend} disabled={!text.trim()}>
+              {text.trim() ? <ChevronUp size={20} strokeWidth={2.5} style={{ marginLeft: '1px' }} /> : <ChevronDown size={20} strokeWidth={2.5} style={{ marginLeft: '1px' }} />}
+            </button>
+          </div>
         </div>
       </div>
   )
