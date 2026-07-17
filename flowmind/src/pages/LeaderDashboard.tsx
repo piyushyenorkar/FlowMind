@@ -36,7 +36,11 @@ export default function LeaderDashboard() {
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
-      setActiveTab(params.get('tab') || 'overview');
+      const tab = params.get('tab') || 'overview';
+      setActiveTab(tab);
+      if (tab !== 'overview') {
+        setShowMethodologyCanvas(false);
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -45,10 +49,14 @@ export default function LeaderDashboard() {
   const handleTabChange = (tab: string) => {
     window.history.pushState({}, '', `${window.location.pathname}?tab=${tab}`);
     setActiveTab(tab);
+    if (tab !== 'overview') {
+      setShowMethodologyCanvas(false);
+    }
   };
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleInput, setTitleInput] = useState('')
   const [showChatHistory, setShowChatHistory] = useState(false)
+  const [showMethodologyCanvas, setShowMethodologyCanvas] = useState(false)
 
   const handleTitleClick = () => {
     if (activeTab === 'groupchat') {
@@ -68,55 +76,78 @@ export default function LeaderDashboard() {
   }
 
   return (
-    <div className={styles.layout}>
+    <div className={styles.layout} style={showMethodologyCanvas ? { gridTemplateColumns: '260px 1fr' } : {}}>
       <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} />
 
       <main className={styles.main}>
-        <div className={styles.topBar} style={{ justifyContent: 'space-between' }}>
-          <div
-            className={styles.pageTitle}
-            onClick={handleTitleClick}
-            style={activeTab === 'groupchat' ? { cursor: 'pointer' } : {}}
-            title={activeTab === 'groupchat' ? 'Click to edit team name' : undefined}
-          >
-            {activeTab === 'groupchat' && editingTitle ? (
-              <input
-                value={titleInput}
-                onChange={e => setTitleInput(e.target.value)}
-                onBlur={handleTitleSave}
-                onKeyDown={e => e.key === 'Enter' && handleTitleSave()}
-                autoFocus
+        {!showMethodologyCanvas && (
+          <div className={styles.topBar} style={{ justifyContent: 'space-between' }}>
+            <div
+              className={styles.pageTitle}
+              onClick={handleTitleClick}
+              style={activeTab === 'groupchat' ? { cursor: 'pointer' } : {}}
+              title={activeTab === 'groupchat' ? 'Click to edit team name' : undefined}
+            >
+              {activeTab === 'groupchat' && editingTitle ? (
+                <input
+                  value={titleInput}
+                  onChange={e => setTitleInput(e.target.value)}
+                  onBlur={handleTitleSave}
+                  onKeyDown={e => e.key === 'Enter' && handleTitleSave()}
+                  autoFocus
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'var(--text)',
+                    fontFamily: 'inherit',
+                    fontSize: 'inherit',
+                    fontWeight: 'inherit',
+                    padding: 0,
+                    margin: 0,
+                    width: '300px'
+                  }}
+                />
+              ) : activeTab === 'groupchat' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span>{team?.groupChatName || 'Group Chat'}</span>
+                  <Edit2 size={16} style={{ color: 'var(--text3)' }} />
+                </div>
+              ) : (
+                TAB_TITLES[activeTab as keyof typeof TAB_TITLES]
+              )}
+            </div>
+            {activeTab === 'groupchat' && members && (
+              <FacepileChat members={members} />
+            )}
+            {activeTab === 'chat' && (
+              <ChatHistoryMenu />
+            )}
+            {activeTab === 'overview' && !showMethodologyCanvas && (
+              <button 
+                onClick={() => setShowMethodologyCanvas(true)}
                 style={{
-                  background: 'transparent',
+                  background: 'var(--primary)',
+                  color: '#fff',
                   border: 'none',
-                  outline: 'none',
-                  color: 'var(--text)',
-                  fontFamily: 'inherit',
-                  fontSize: 'inherit',
-                  fontWeight: 'inherit',
-                  padding: 0,
-                  margin: 0,
-                  width: '300px'
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'background 0.2s'
                 }}
-              />
-            ) : activeTab === 'groupchat' ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span>{team?.groupChatName || 'Group Chat'}</span>
-                <Edit2 size={16} style={{ color: 'var(--text3)' }} />
-              </div>
-            ) : (
-              TAB_TITLES[activeTab as keyof typeof TAB_TITLES]
+              >
+                Select Methodology
+              </button>
             )}
           </div>
-          {activeTab === 'groupchat' && members && (
-            <FacepileChat members={members} />
-          )}
-          {activeTab === 'chat' && (
-            <ChatHistoryMenu />
-          )}
-        </div>
-        <div className={styles.content}>
-          {activeTab === 'overview' && <LeaderOverview setActiveTab={handleTabChange} />}
+        )}
+        <div className={styles.content} style={showMethodologyCanvas ? { padding: 0 } : {}}>
+            {activeTab === 'overview' && <LeaderOverview setActiveTab={handleTabChange} showMethodologyCanvas={showMethodologyCanvas} setShowMethodologyCanvas={setShowMethodologyCanvas} />}
           {activeTab === 'tasks' && <TasksTab />}
           {activeTab === 'meetings' && <MeetingsTab />}
           {activeTab === 'decisions' && <DecisionsTab />}
@@ -126,10 +157,12 @@ export default function LeaderDashboard() {
         </div>
       </main>
 
-      {dmTarget ? (
-        <DirectChat targetMember={dmTarget} onClose={() => update({ dmTarget: null })} />
-      ) : (
-        <MemoryFeed />
+      {!showMethodologyCanvas && (
+        dmTarget ? (
+          <DirectChat targetMember={dmTarget} onClose={() => update({ dmTarget: null })} />
+        ) : (
+          <MemoryFeed />
+        )
       )}
     </div>
   )
