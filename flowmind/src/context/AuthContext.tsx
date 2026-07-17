@@ -125,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getMyTeams = useCallback(async () => {
     if (!user?.email) return []
-    const { data, error } = await supabase.from('user_teams').select(`*, teams ( project_name, group_chat_name, description, deadline, created_at, logo_url )`).eq('user_email', user.email)
+    const { data, error } = await supabase.from('user_teams').select(`*, teams ( project_name, group_chat_name, description, deadline, created_at, logo_url, sdlc_model )`).eq('user_email', user.email)
     if (error || !data) return []
     return data.map(d => {
       let desc = d.teams?.description
@@ -138,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         deadline: d.teams?.deadline,
         createdAt: d.teams?.created_at,
         logoUrl: d.teams?.logo_url,
+        sdlcModel: d.teams?.sdlc_model || 'None',
         role: d.role,
         source: d.source,
         isPinned: d.is_pinned,
@@ -176,6 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       deadline: teamData.deadline,
       leader_name: teamData.leaderName,
       created_by: user.email,
+      sdlc_model: 'None',
       created_at: new Date().toISOString()
     }])
 
@@ -207,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         code: d.code, name: d.project_name, projectName: d.project_name,
         description: meta.description, deadline: d.deadline, leaderName: d.leader_name,
         leaderPhoto: photoMap[d.created_by] || null,
+        sdlcModel: d.sdlc_model || 'None',
         createdBy: d.created_by, createdAt: d.created_at,
         purpose: meta.purpose, rolesNeeded: meta.rolesNeeded, maxMembers: meta.maxMembers,
         city: meta.city, state: meta.state
@@ -235,6 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         code: d.code, name: d.project_name, projectName: d.project_name,
         description: meta.description, deadline: d.deadline, leaderName: d.leader_name,
         leaderPhoto: photoMap[d.created_by] || null,
+        sdlcModel: d.sdlc_model || 'None',
         createdBy: d.created_by, createdAt: d.created_at,
         purpose: meta.purpose, rolesNeeded: meta.rolesNeeded, maxMembers: meta.maxMembers,
         city: meta.city, state: meta.state
