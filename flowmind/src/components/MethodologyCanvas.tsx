@@ -168,15 +168,44 @@ const defaultEdgeOptions = {
 const MODEL_DETAILS: Record<string, { desc: React.ReactNode, nodes: Node[], edges: Edge[] }> = {
   scrum: {
     desc: (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <p><strong>Scrum</strong> is an agile framework that helps teams work together. It encourages teams to learn through experiences, self-organize, and reflect on their wins and losses to continuously improve.</p>
-        <p>Work is divided into short, time-boxed iterations called <strong>Sprints</strong> (usually 1-4 weeks). It relies on fixed roles like the Scrum Master, Product Owner, and Developers.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px', lineHeight: '1.5' }}>
+        <h3 style={{ margin: 0, color: '#ffffff', fontSize: '18px' }}>Scrum</h3>
+        <p style={{ margin: 0 }}><strong>Scrum</strong> is an agile framework that helps teams work together. It encourages teams to learn through experiences, self-organize, and reflect on their wins and losses to continuously improve. Work is divided into short, time-boxed iterations called <strong>Sprints</strong> (usually 1-4 weeks).</p>
+        
         <div>
-          <strong>Best For:</strong>
-          <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-            <li>Complex projects with changing requirements</li>
-            <li>Teams that need frequent feedback and adaptability</li>
-            <li>Continuous product development</li>
+          <h4 style={{ margin: '0 0 8px 0', color: '#60a5fa' }}>Key Ceremonies & Steps</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li><strong>Sprint Planning:</strong> Define what can be delivered in the sprint and how.</li>
+            <li><strong>Daily Standup:</strong> 15-minute daily sync for the team.</li>
+            <li><strong>Sprint Review:</strong> Demo the work to stakeholders.</li>
+            <li><strong>Sprint Retrospective:</strong> Reflect on what went well and what to improve.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#4ade80' }}>Advantages</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>High adaptability to changing requirements.</li>
+            <li>Frequent delivery of value to the customer.</li>
+            <li>Strong team collaboration and transparency.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#f87171' }}>Disadvantages</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Scope creep can easily happen without a strong Product Owner.</li>
+            <li>Requires highly experienced, self-motivated team members.</li>
+            <li>Too many meetings if not managed strictly.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#c084fc' }}>Best Applications</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Complex projects with evolving requirements.</li>
+            <li>Continuous product development (SaaS).</li>
+            <li>Teams that need frequent feedback.</li>
           </ul>
         </div>
       </div>
@@ -196,15 +225,44 @@ const MODEL_DETAILS: Record<string, { desc: React.ReactNode, nodes: Node[], edge
   },
   kanban: {
     desc: (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <p><strong>Kanban</strong> is a visual framework used to implement agile software development. It requires real-time communication of capacity and full transparency of work.</p>
-        <p>Unlike Scrum, Kanban has no fixed timeboxes (sprints). Instead, work is pulled continuously from a backlog. <strong>Work In Progress (WIP) limits</strong> are crucial to prevent bottlenecks and ensure smooth flow.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px', lineHeight: '1.5' }}>
+        <h3 style={{ margin: 0, color: '#ffffff', fontSize: '18px' }}>Kanban</h3>
+        <p style={{ margin: 0 }}><strong>Kanban</strong> is a visual framework that requires real-time communication of capacity and full transparency of work. Unlike Scrum, it has no fixed timeboxes. Work is pulled continuously, and <strong>WIP limits</strong> prevent bottlenecks.</p>
+        
         <div>
-          <strong>Best For:</strong>
-          <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-            <li>Support and maintenance teams</li>
-            <li>Continuous delivery pipelines</li>
-            <li>Teams struggling with bottlenecks and overloading</li>
+          <h4 style={{ margin: '0 0 8px 0', color: '#60a5fa' }}>Key Principles & Steps</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li><strong>Visualize the Workflow:</strong> Map out all steps on a physical or digital board.</li>
+            <li><strong>Limit WIP (Work In Progress):</strong> Stop starting, start finishing.</li>
+            <li><strong>Manage Flow:</strong> Monitor and resolve bottlenecks immediately.</li>
+            <li><strong>Make Policies Explicit:</strong> Define exactly what "Done" means.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#4ade80' }}>Advantages</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Highly flexible; changes can be made at any time.</li>
+            <li>Reduces waste and maximizes efficiency.</li>
+            <li>Continuous, smooth delivery of features.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#f87171' }}>Disadvantages</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Lack of timeframes can lead to endless development loops.</li>
+            <li>Can become chaotic if the board is not kept updated.</li>
+            <li>Doesn't prescribe specific roles, which can blur responsibilities.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#c084fc' }}>Best Applications</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Support, maintenance, and bug-fixing teams.</li>
+            <li>Continuous delivery pipelines.</li>
+            <li>Teams struggling with bottlenecks and overloading.</li>
           </ul>
         </div>
       </div>
@@ -225,15 +283,45 @@ const MODEL_DETAILS: Record<string, { desc: React.ReactNode, nodes: Node[], edge
   },
   waterfall: {
     desc: (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <p><strong>Waterfall</strong> is a traditional, linear approach to software development. Each phase must be completed before the next phase can begin, and there is typically no overlapping.</p>
-        <p>It emphasizes thorough documentation, upfront planning, and clear milestones. However, it can be rigid and makes it difficult to accommodate changes later in the process.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px', lineHeight: '1.5' }}>
+        <h3 style={{ margin: 0, color: '#ffffff', fontSize: '18px' }}>Waterfall</h3>
+        <p style={{ margin: 0 }}><strong>Waterfall</strong> is a traditional, linear approach to software development. Each phase must be completed before the next phase begins. It emphasizes thorough documentation and upfront planning.</p>
+        
         <div>
-          <strong>Best For:</strong>
-          <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-            <li>Projects with clearly defined, unchanging requirements</li>
-            <li>Strict regulatory environments</li>
-            <li>Short, simple projects with predictable outcomes</li>
+          <h4 style={{ margin: '0 0 8px 0', color: '#60a5fa' }}>Key Phases & Steps</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li><strong>Requirements:</strong> Gather and document all requirements upfront.</li>
+            <li><strong>Design:</strong> Create detailed technical architecture and UI designs.</li>
+            <li><strong>Implementation:</strong> Write the code based exactly on the designs.</li>
+            <li><strong>Testing:</strong> Verify the code against the original requirements.</li>
+            <li><strong>Deployment:</strong> Release the finished product.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#4ade80' }}>Advantages</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Clear milestones, deadlines, and expected costs.</li>
+            <li>Extensive documentation makes onboarding new developers easy.</li>
+            <li>Very easy to manage due to its rigid structure.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#f87171' }}>Disadvantages</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Extremely inflexible to changes later in the process.</li>
+            <li>Testing happens very late, making bugs expensive to fix.</li>
+            <li>Working software isn't produced until late in the lifecycle.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#c084fc' }}>Best Applications</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Strict regulatory environments (healthcare, aerospace).</li>
+            <li>Projects with clearly defined, unchanging requirements.</li>
+            <li>Short, simple projects with predictable outcomes.</li>
           </ul>
         </div>
       </div>
@@ -254,15 +342,44 @@ const MODEL_DETAILS: Record<string, { desc: React.ReactNode, nodes: Node[], edge
   },
   agile: {
     desc: (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <p><strong>Agile / Incremental</strong> breaks the product down into small, usable increments. Instead of delivering a massive product at the very end, each cycle delivers a functional piece of the system.</p>
-        <p>This approach allows developers to learn from each increment and adjust the architecture and requirements based on real user feedback.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '13px', lineHeight: '1.5' }}>
+        <h3 style={{ margin: 0, color: '#ffffff', fontSize: '18px' }}>Agile / Incremental</h3>
+        <p style={{ margin: 0 }}><strong>Agile / Incremental</strong> breaks the product down into small, usable increments. Instead of delivering a massive product at the very end, each cycle delivers a functional, tested piece of the system.</p>
+        
         <div>
-          <strong>Best For:</strong>
-          <ul style={{ paddingLeft: '20px', marginTop: '4px' }}>
-            <li>Startups building MVPs</li>
-            <li>Projects where user feedback dictates the roadmap</li>
-            <li>Large systems that can be modularized</li>
+          <h4 style={{ margin: '0 0 8px 0', color: '#60a5fa' }}>Key Phases & Steps</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li><strong>Initial Planning:</strong> Establish the core vision and high-level architecture.</li>
+            <li><strong>Iterative Cycles:</strong> Loop through Design -&gt; Code -&gt; Test phases in small batches.</li>
+            <li><strong>Feedback Loop:</strong> Gather user feedback on the increment and adjust requirements.</li>
+            <li><strong>Final Release:</strong> Integrate the polished increments into the final product.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#4ade80' }}>Advantages</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Generates working software quickly and early during the life cycle.</li>
+            <li>More flexible and less costly to change scope and requirements.</li>
+            <li>Easier to test and debug during smaller iterations.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#f87171' }}>Disadvantages</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Requires good planning and design early on to integrate pieces later.</li>
+            <li>Total cost of the complete system is often higher than a single pass.</li>
+            <li>Can suffer from "architecture decay" if not carefully refactored.</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 style={{ margin: '0 0 8px 0', color: '#c084fc' }}>Best Applications</h4>
+          <ul style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <li>Startups building Minimum Viable Products (MVPs).</li>
+            <li>Projects where user feedback dictates the product roadmap.</li>
+            <li>Large, complex systems that can be easily modularized.</li>
           </ul>
         </div>
       </div>
@@ -541,15 +658,21 @@ export default function MethodologyCanvas({ onClose }: { onClose: () => void }) 
             background: 'var(--surface2)',
             border: '1px solid var(--border)',
             borderRadius: '16px',
-            padding: '24px',
-            width: '360px',
-            color: 'var(--text)',
+            width: '420px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
-            animation: 'fadeIn 0.2s ease-out'
+            animation: 'fadeIn 0.2s ease-out',
+            overflow: 'hidden'
           }}>
-            {MODEL_DETAILS[activeModel].desc}
+            <div style={{
+              padding: '24px',
+              maxHeight: '400px',
+              overflowY: 'auto',
+              color: 'var(--text)',
+            }}>
+              {MODEL_DETAILS[activeModel].desc}
+            </div>
           </div>
         )}
         <div style={{
