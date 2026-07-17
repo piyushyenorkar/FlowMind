@@ -7,8 +7,9 @@ import Avatar from './Avatar'
 import flowmindLogo from '../assets/flowmind.png'
 import neo4jLogo from '../assets/neo4j.png'
 import { generateInsights } from '../services/api'
+import MethodologyCanvas from './MethodologyCanvas.tsx'
 
-export default function LeaderOverview({ setActiveTab }) {
+export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, setShowMethodologyCanvas }: { setActiveTab: any, showMethodologyCanvas?: boolean, setShowMethodologyCanvas?: any }) {
   const { team, tasks, decisions, members, memoryFeed, memberProfiles, role } = useApp()
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [showInsightsModal, setShowInsightsModal] = useState(false)
@@ -40,6 +41,14 @@ export default function LeaderOverview({ setActiveTab }) {
   const healthScore = tasks.length === 0 ? 100 : Math.round((done / tasks.length) * 60 + (inProgress / tasks.length) * 30 + 10)
 
   const healthColor = healthScore >= 70 ? 'var(--green)' : healthScore >= 40 ? 'var(--yellow)' : 'var(--red)'
+
+  if (showMethodologyCanvas) {
+    return (
+      <div style={{ flex: 1, display: 'flex', background: '#1a1a1a', height: '100%', width: '100%' }}>
+        <MethodologyCanvas onClose={() => setShowMethodologyCanvas?.(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.wrap}>
