@@ -10,6 +10,7 @@ import {
   Scale, 
   Sparkles, 
   MessageSquare, 
+  Bot,
   Users, 
   MessagesSquare, 
   Github, 
@@ -29,7 +30,7 @@ const LEADER_ITEMS = [
   { id: 'tasks', icon: CheckSquare, label: 'Tasks' },
   { id: 'meetings', icon: Mic, label: 'Meetings' },
   { id: 'decisions', icon: Scale, label: 'Decisions' },
-  { id: 'chat', icon: MessageSquare, label: 'AI Assistant' },
+  { id: 'chat', icon: Bot, label: 'AI Assistant' },
   { id: 'members', icon: Users, label: 'Team Members' },
   { id: 'groupchat', icon: MessagesSquare, label: 'Group Chat' },
 ]
@@ -39,7 +40,7 @@ const MEMBER_ITEMS = [
   { id: 'mytasks', icon: CheckSquare, label: 'My Tasks' },
   { id: 'meetings', icon: Mic, label: 'Meetings' },
   { id: 'decisions', icon: Scale, label: 'Decisions' },
-  { id: 'chat', icon: MessageSquare, label: 'AI Assistant' },
+  { id: 'chat', icon: Bot, label: 'AI Assistant' },
   { id: 'members', icon: Users, label: 'Team Members' },
   { id: 'groupchat', icon: MessagesSquare, label: 'Group Chat' },
 ]
@@ -141,7 +142,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 onClick={() => setActiveTab(item.id)}
               >
                 <div className={styles.iconWrapper}>
-                  <Icon size={18} className={styles.navIcon} strokeWidth={2} />
+                  <Icon size={item.id === 'chat' ? 20 : 18} className={styles.navIcon} strokeWidth={2} />
                 </div>
                 <div className={styles.nameBox}>
                   <span className={styles.navLabel}>{item.label}</span>
