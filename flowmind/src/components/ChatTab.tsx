@@ -218,7 +218,7 @@ export default function ChatTab({
       <div className={styles.messages}>
         {messages.map((m, i) => (
           <div key={i} className={`${styles.msg} ${m.role === 'user' ? styles.user : styles.assistant}`}>
-            {m.role === 'assistant' && <div className={styles.msgAvatar}><Bot size={16} /></div>}
+            {m.role === 'assistant' && <div className={styles.msgAvatar}><Bot size={20} /></div>}
             <div className={styles.msgBubble}>
               {renderMessageContent(m.text)}
             </div>
@@ -226,7 +226,7 @@ export default function ChatTab({
         ))}
         {loading && (
           <div className={`${styles.msg} ${styles.assistant}`}>
-            <div className={styles.msgAvatar}><Bot size={16} /></div>
+            <div className={styles.msgAvatar}><Bot size={20} /></div>
             <div className={styles.msgBubble}>
               <div className={styles.typing}>
                 <span /><span /><span />

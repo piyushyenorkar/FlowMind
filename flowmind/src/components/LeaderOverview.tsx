@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import styles from './LeaderOverview.module.css'
-import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, MessageSquare, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network, RefreshCw } from 'lucide-react'
+import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, Bot, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network, RefreshCw } from 'lucide-react'
 import TeamMembers from './TeamMembers'
 import Avatar from './Avatar'
 import flowmindLogo from '../assets/flowmind.png'
@@ -162,8 +162,8 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
           <button className={styles.verticalActionBtn} onClick={() => setActiveTab('decisions')} title="Log a Decision">
             <Scale size={20} />
           </button>
-          <button className={styles.verticalActionBtn} onClick={() => setActiveTab('chat')} title="Ask AI AI Assistant">
-            <MessageSquare size={20} />
+          <button className={styles.verticalActionBtn} onClick={() => setActiveTab('chat')} title="Ask AI Assistant">
+            <Bot size={20} />
           </button>
         </div>
       </div>
