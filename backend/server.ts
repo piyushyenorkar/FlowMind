@@ -30,8 +30,13 @@ app.get('/api/health', (_req: Request, res: Response) => {
 // ── Hindsight Routes ────────────────────────────────────────────────────────────
 
 app.post('/api/hindsight/retain', async (req: Request, res: Response) => {
-  const { bankId, messages, metadata } = req.body
+  const { bankId, messages, metadata, items } = req.body
   try {
+    const payloadItems = items || (messages ? messages.map((m: any) => ({
+      content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+      metadata: metadata || {}
+    })) : [])
+
     const response = await fetch(
       `${HINDSIGHT_BASE}/v1/default/banks/${bankId}/memories`,
       {
@@ -40,7 +45,7 @@ app.post('/api/hindsight/retain', async (req: Request, res: Response) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${HINDSIGHT_KEY}`,
         },
-        body: JSON.stringify({ messages, metadata }),
+        body: JSON.stringify({ items: payloadItems, messages, metadata }),
       }
     )
     if (!response.ok) {
@@ -193,8 +198,15 @@ app.post('/api/neo4j/graph-insights', async (req: Request, res: Response) => {
     console.log('[API] /api/neo4j/graph-insights SUCCESS')
     res.json(data)
   } catch (err: any) {
-    console.error('[Neo4j graph-insights]', err.message)
-    res.status(500).json({ error: err.message })
+    console.warn('[Neo4j graph-insights] Neo4j unavailable/paused, using graceful fallback:', err.message)
+    // Return fallback graph structure so Groq AI insights continue without disruption
+    res.json({
+      memberWorkloads: [],
+      taskChains: [],
+      stats: { totalNodes: 0, totalRelationships: 0 },
+      source: 'fallback',
+      message: 'Neo4j database instance is paused or unreachable'
+    })
   }
 })
 
