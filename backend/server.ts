@@ -8,13 +8,14 @@ const { RtcTokenBuilder, RtcRole } = agoraToken
 
 const app = express()
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '50mb' }))
 
 const HINDSIGHT_BASE = process.env.HINDSIGHT_BASE_URL!
 const HINDSIGHT_KEY  = process.env.HINDSIGHT_API_KEY!
 const GROQ_KEYS      = (process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean)
 const GROQ_DEFAULT_MODEL = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b'
 const GROQ_FALLBACK_MODELS = [GROQ_DEFAULT_MODEL, 'openai/gpt-oss-120b', 'openai/gpt-oss-20b']
+const GNANI_KEY      = process.env.GNANI_API_KEY || ''
 const AGORA_APP_ID   = process.env.AGORA_APP_ID!
 
 let currentGroqKeyIndex = 0
@@ -194,6 +195,115 @@ app.post('/api/neo4j/graph-insights', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('[Neo4j graph-insights]', err.message)
     res.status(500).json({ error: err.message })
+  }
+})
+
+// ── Gnani AI Routes (Prisma STT & Timbre TTS) ───────────────────────────────────
+
+app.post('/api/gnani/transcribe', async (req: Request, res: Response) => {
+  try {
+    if (!GNANI_KEY) {
+      res.status(500).json({ success: false, error: 'GNANI_API_KEY not configured in backend environment' })
+      return
+    }
+
+    const { audio, languageCode, format, model } = req.body
+    if (!audio) {
+      res.status(400).json({ success: false, error: 'Audio data is required (base64 encoded)' })
+      return
+    }
+
+    const audioBuffer = Buffer.from(audio, 'base64')
+    if (audioBuffer.length === 0) {
+      res.status(400).json({ success: false, error: 'Audio buffer is empty' })
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('audio_file', new Blob([audioBuffer], { type: 'audio/wav' }), 'recording.wav')
+    formData.append('model', model || 'prisma-v3.0')
+    formData.append('language_code', languageCode || 'indic-auto')
+    formData.append('format', format || 'transcribe')
+
+    const response = await fetch('https://api.vachana.ai/stt/v3', {
+      method: 'POST',
+      headers: {
+        'X-API-Key-ID': GNANI_KEY,
+      },
+      body: formData,
+    })
+
+    const data = await response.json().catch(() => null)
+    if (!response.ok || !data?.success) {
+      const errMsg = data?.error?.message || data?.message || `Gnani STT API error ${response.status}`
+      console.warn('[Gnani STT]', errMsg)
+      res.status(response.status || 500).json({ success: false, error: errMsg })
+      return
+    }
+
+    res.json({
+      success: true,
+      transcript: data.transcript || '',
+      model: data.model || 'prisma-v3.0',
+      detected_language_code: data.detected_language_code || null,
+      processing_time: data.processing_time || null,
+      end_to_end_latency: data.end_to_end_latency || null,
+    })
+  } catch (err: any) {
+    console.error('[Gnani STT]', err.message)
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+app.post('/api/gnani/tts', async (req: Request, res: Response) => {
+  try {
+    if (!GNANI_KEY) {
+      res.status(500).json({ success: false, error: 'GNANI_API_KEY not configured in backend environment' })
+      return
+    }
+
+    const { text, voice, language, speed } = req.body
+    if (!text || !text.trim()) {
+      res.status(400).json({ success: false, error: 'Text is required for TTS' })
+      return
+    }
+
+    const response = await fetch('https://api.vachana.ai/api/v1/tts/inference', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key-ID': GNANI_KEY,
+      },
+      body: JSON.stringify({
+        text: text.trim(),
+        voice: voice || 'Shivani',
+        model: 'timbre-v3.0',
+        language: language || 'hi-IN',
+        speed: speed ?? 1,
+        audio_config: {
+          encoding: 'linear_pcm',
+          container: 'wav',
+          num_channels: 1,
+          sample_rate: 24000,
+          sample_width: 2,
+        },
+      }),
+    })
+
+    if (!response.ok) {
+      const errText = await response.text().catch(() => '')
+      console.warn('[Gnani TTS]', response.status, errText)
+      res.status(response.status).json({ success: false, error: errText })
+      return
+    }
+
+    const audioBuffer = await response.arrayBuffer()
+    res.setHeader('Content-Type', 'audio/wav')
+    res.setHeader('Content-Length', audioBuffer.byteLength)
+    res.send(Buffer.from(audioBuffer))
+  } catch (err: any) {
+    console.error('[Gnani TTS]', err.message)
+    res.status(500).json({ success: false, error: err.message })
   }
 })
 
