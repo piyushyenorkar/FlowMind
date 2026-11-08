@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw, ShieldCheck, LogOut, ArrowUp, ArrowRight, ArrowDown, Target, Zap } from 'lucide-react'
+import { Check, CheckCircle2, Mic, MicOff, FileText, Pin, Scale, Users, User, Bookmark, Bot, Clock, Calendar, Brain, Loader2, ChevronDown, ChevronUp, Edit2, X, Play, History, RefreshCw, ShieldCheck, LogOut, ArrowUp, ArrowRight, ArrowDown, Target, Zap, Globe, AlertTriangle, Info, Volume2, Square } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../services/supabase'
 import Avatar from './Avatar'
-import { analyzeMeeting } from '../utils/meetingAnalyzer'
+import { analyzeMeeting, generateHinglishExplanation } from '../utils/meetingAnalyzer'
 import { storeMeeting, storeTask } from '../utils/hindsightClient'
 import { useAgora } from '../hooks/useAgora'
+import { WavSegmentRecorder } from '../utils/wavRecorder'
+import { transcribeWithGnani, playGnaniTTS, stopGnaniAudio } from '../services/api'
 import styles from './MeetingsTab.module.css'
 
 import favicon from '../assets/favicon.png'
@@ -473,6 +475,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
   const [agenda, setAgenda] = useState(selectedMeeting?.agenda || '')
   const [transcript, setTranscript] = useState('')
   const [duration, setDuration] = useState(0)
+  const [meetingEngine, setMeetingEngine] = useState<'gnani' | 'webspeech'>('gnani')
 
   const [analysis, setAnalysis] = useState(null)
   const [checkedTasks, setCheckedTasks] = useState({})
@@ -571,6 +574,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
       transcript,
       duration,
       summary: analysis.summary,
+      summaryHinglish: analysis.summaryHinglish || '',
       keyTopics: analysis.keyTopics,
       tasksCreated: createdTasks,
       decisionsLogged: loggedDecisions,
@@ -680,6 +684,8 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
           onLeave={() => setView('list')}
           memberProfiles={memberProfiles}
           showToast={showToast}
+          engine={meetingEngine}
+          setEngine={setMeetingEngine}
           onStart={() => {
             const mId = selectedMeeting?.id || (meetings.find(m => m.id === selectedMeeting?.id)?.id)
             if (mId) startLiveMeeting(mId);
@@ -700,6 +706,7 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
         <ReviewSection
           analysis={analysis}
           attendees={attendees}
+          engine={meetingEngine}
           checkedTasks={checkedTasks}
           setCheckedTasks={setCheckedTasks}
           checkedDecisions={checkedDecisions}
@@ -728,11 +735,22 @@ function CreateFlow({ members, tasks, decisions, memberProfiles, addTask, addDec
 }
 
 // ═══════════ VOICE ROOM ══════════════════════════════════════════════════
-function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, setDuration, onEnd, onLeave, memberProfiles, onStart, showToast, initialMicOn }) {
+function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, setDuration, onEnd, onLeave, memberProfiles, onStart, showToast, initialMicOn, engine: propEngine, setEngine: propSetEngine }: any) {
   const { user } = useAuth()
   const title = meeting?.title || 'Live Meeting'
   const attendees = meeting?.attendees || []
   const activeAttendees = meeting?.activeAttendees || []
+
+  const [internalEngine, setInternalEngine] = useState<'gnani' | 'webspeech'>('gnani')
+  const activeEngine = propEngine || internalEngine
+  const setEngine = (eng: 'gnani' | 'webspeech') => {
+    setInternalEngine(eng)
+    propSetEngine?.(eng)
+  }
+  const [gnaniError, setGnaniError] = useState<string | null>(null)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const wavRecorderRef = useRef<WavSegmentRecorder | null>(null)
+  const gnaniTimerRef = useRef<any>(null)
 
   const [micStatus, setMicStatus] = useState<'idle' | 'requesting' | 'listening' | 'paused' | 'denied' | 'unsupported'>(initialMicOn ? 'listening' : 'idle')
   const [meetingState, setMeetingState] = useState(meeting?.status === 'ongoing' ? 'active' : 'idle') // idle | active | paused
@@ -897,13 +915,94 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      clearInterval(timerRef.current)
+      clearInterval(gnaniTimerRef.current)
+      wavRecorderRef.current?.stop()
       recognitionRef.current?.stop()
       agora.leave()
     }
   }, [])
 
-  // ── Robust Declarative Speech Recognition ────────────────────────────
+  // ── Gnani Segment Flush & Transcribe ─────────────────────────────────
+  const flushGnaniSegment = useCallback(async () => {
+    if (!wavRecorderRef.current) return
+    const segment = wavRecorderRef.current.flushSegment()
+    if (!segment || !segment.base64) return
+
+    setIsTranscribing(true)
+    try {
+      const res = await transcribeWithGnani(segment.base64, 'indic-auto')
+      if (res.success && res.transcript && res.transcript.trim()) {
+        const text = res.transcript.trim()
+        console.log('[VoiceRoom] Gnani Prisma transcribed:', text)
+        const newLine = `${user?.name || 'Speaker'}: ${text}\n`
+        finalTranscriptRef.current += newLine
+        setTranscript(finalTranscriptRef.current)
+        setGnaniError(null)
+
+        if (broadcastChannelRef.current) {
+          broadcastChannelRef.current.send({
+            type: 'broadcast',
+            event: 'speech',
+            payload: { text: newLine.trim() }
+          }).catch((e: any) => console.warn('[VoiceRoom] Broadcast error:', e))
+        }
+      } else if (!res.success && res.error) {
+        console.warn('[VoiceRoom] Gnani STT:', res.error)
+        setGnaniError(res.error)
+      }
+    } catch (err: any) {
+      console.warn('[VoiceRoom] Gnani STT error:', err)
+      setGnaniError(err.message || 'Transcription error')
+    } finally {
+      setIsTranscribing(false)
+    }
+  }, [user?.name, setTranscript])
+
+  // ── Gnani STT Recording Lifecycle ───────────────────────────────────
   useEffect(() => {
+    if (activeEngine !== 'gnani') {
+      clearInterval(gnaniTimerRef.current)
+      if (wavRecorderRef.current) {
+        wavRecorderRef.current.stop()
+        wavRecorderRef.current = null
+      }
+      return
+    }
+
+    if (micStatus === 'listening') {
+      const recorder = new WavSegmentRecorder()
+      wavRecorderRef.current = recorder
+      recorder.start().then(ok => {
+        if (!ok) {
+          setGnaniError('Microphone access denied or audio device not found')
+          setMicStatus('denied')
+        }
+      })
+
+      // Flush self-contained segments every 10 seconds while speech is active
+      gnaniTimerRef.current = setInterval(() => {
+        flushGnaniSegment()
+      }, 10000)
+
+      return () => {
+        clearInterval(gnaniTimerRef.current)
+      }
+    } else {
+      clearInterval(gnaniTimerRef.current)
+      if (wavRecorderRef.current) {
+        flushGnaniSegment()
+      }
+    }
+  }, [activeEngine, micStatus, flushGnaniSegment])
+
+  // ── Browser Web Speech Recognition (Alternative Engine) ──────────────
+  useEffect(() => {
+    if (activeEngine !== 'webspeech') {
+      recognitionRef.current?.stop()
+      return
+    }
+
     if (micStatus !== 'listening') {
       recognitionRef.current?.stop()
       return
@@ -981,7 +1080,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     return () => {
       recognition.stop()
     }
-  }, [micStatus, user?.name])
+  }, [activeEngine, micStatus, user?.name])
 
   const startListening = () => {
     stoppedByUserRef.current = false
@@ -993,6 +1092,9 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     stoppedByUserRef.current = true
     if (!agora.isMuted) agora.toggleMute()
     setMicStatus('paused')
+    if (activeEngine === 'gnani') {
+      flushGnaniSegment()
+    }
   }
 
   const resumeListening = () => {
@@ -1001,10 +1103,32 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
     setMicStatus('listening')
   }
 
-  const handleEnd = () => {
+  const handleEnd = async () => {
     stoppedByUserRef.current = true
     clearInterval(timerRef.current)
-    recognitionRef.current?.stop()
+    clearInterval(gnaniTimerRef.current)
+
+    if (activeEngine === 'gnani' && wavRecorderRef.current) {
+      const finalSeg = wavRecorderRef.current.stop()
+      wavRecorderRef.current = null
+      if (finalSeg && finalSeg.base64) {
+        try {
+          setIsTranscribing(true)
+          const res = await transcribeWithGnani(finalSeg.base64, 'indic-auto')
+          if (res.success && res.transcript && res.transcript.trim()) {
+            finalTranscriptRef.current += `${user?.name || 'Speaker'}: ${res.transcript.trim()}\n`
+            setTranscript(finalTranscriptRef.current)
+          }
+        } catch (e) {
+          console.warn('[VoiceRoom] Final Gnani transcription error:', e)
+        } finally {
+          setIsTranscribing(false)
+        }
+      }
+    } else {
+      recognitionRef.current?.stop()
+    }
+
     agora.leave()
     // Ensure final transcript is set
     setTranscript(finalTranscriptRef.current)
@@ -1100,6 +1224,47 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       )}
       */}
 
+      {/* Transcription Engine Selector */}
+      <div className={styles.engineSelectorContainer}>
+        <div className={styles.engineSelector}>
+          <button
+            type="button"
+            className={`${styles.engineBtn} ${activeEngine === 'gnani' ? styles.engineBtnActive : ''}`}
+            onClick={() => { setEngine('gnani'); setGnaniError(null); }}
+            title="Sovereign Indian Voice AI with native Hinglish and Indic code-mixed transcription"
+          >
+            <Zap size={14} style={{ color: activeEngine === 'gnani' ? '#fbbf24' : 'inherit' }} />
+            <span>Gnani Prisma v3.0 (Default)</span>
+          </button>
+          <button
+            type="button"
+            className={`${styles.engineBtn} ${activeEngine === 'webspeech' ? styles.engineBtnActive : ''}`}
+            onClick={() => { setEngine('webspeech'); setGnaniError(null); }}
+            title="Browser Web Speech API (English only fallback)"
+          >
+            <Globe size={14} />
+            <span>Browser Web Speech API</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Gnani STT Error & One-Click Fallback Banner */}
+      {gnaniError && activeEngine === 'gnani' && (
+        <div className={styles.gnaniErrorBanner}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <AlertTriangle size={16} />
+            <span>Gnani STT: {gnaniError}</span>
+          </div>
+          <button
+            type="button"
+            className={styles.fallbackSwitchBtn}
+            onClick={() => { setEngine('webspeech'); setGnaniError(null); }}
+          >
+            Switch to Web Speech API
+          </button>
+        </div>
+      )}
+
       <div className={styles.participantGrid}>
         {attendees.map((name, i) => {
           const isMe = name === user?.name;
@@ -1175,7 +1340,48 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
       {/* Transcript — always visible */}
       <div className={styles.transcriptSection} style={{ position: 'relative' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '4px' }}><FileText size={16} /> Live Transcript</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <FileText size={16} /> Live Transcript
+            </span>
+            <div
+              className={`${styles.engineInfoBtn} ${activeEngine === 'gnani' ? styles.engineInfoBtnGnani : styles.engineInfoBtnWebSpeech}`}
+              title="Transcription engine info"
+            >
+              {activeEngine === 'gnani' ? (
+                <Zap size={13} className={styles.engineStandardIcon} style={{ color: '#fbbf24' }} />
+              ) : (
+                <Globe size={13} className={styles.engineStandardIcon} style={{ color: '#60a5fa' }} />
+              )}
+              <Info size={11} className={styles.engineInfoIcon} />
+              <div className={styles.infoTooltip}>
+                {activeEngine === 'gnani' ? (
+                  <>
+                    <div className={styles.infoTooltipTitle}>
+                      <Zap size={13} style={{ color: '#fbbf24' }} /> Gnani Prisma v3.0 (Hinglish/Indic)
+                    </div>
+                    <div className={styles.infoTooltipContent}>
+                      Trained on 14M+ hours of Indian speech. Natively transcribes code-mixed Hinglish and 10+ Indic languages with 16kHz telephony-grade accuracy.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.infoTooltipTitle}>
+                      <Globe size={13} style={{ color: '#60a5fa' }} /> Browser Web Speech API
+                    </div>
+                    <div className={styles.infoTooltipContent}>
+                      Standard client-side speech recognition engine. Best suited for clean, single-language English speech.
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            {isTranscribing && (
+              <span className={styles.transcribingPulse}>
+                <Loader2 size={12} className={styles.spin} /> Transcribing audio...
+              </span>
+            )}
+          </div>
           <span style={{ fontSize: '11px', color: 'var(--text3)' }}>{transcript.split('\n').filter(l => l.trim()).length} lines</span>
         </div>
         <div className={styles.transcriptArea}>
@@ -1300,6 +1506,7 @@ function VoiceRoom({ meeting, isLeader, transcript, setTranscript, duration, set
 function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting, tasks, decisions, currentUser, startLiveMeeting, meetings, showToast, initialMicOn }) {
   const [transcript, setTranscript] = useState('')
   const [duration, setDuration] = useState(0)
+  const [meetingEngine, setMeetingEngine] = useState<'gnani' | 'webspeech'>('gnani')
 
   // Derive host status from who created the meeting
   const isHost = isHostOfMeeting(meeting, currentUser?.name)
@@ -1323,17 +1530,160 @@ function ActiveVoiceRoom({ meeting, members, memberProfiles, setView, addMeeting
       memberProfiles={memberProfiles}
       showToast={showToast}
       initialMicOn={initialMicOn}
+      engine={meetingEngine}
+      setEngine={setMeetingEngine}
     />
   )
 }
 
 // ═══════════ REVIEW SECTION ═══════════════════════════════════════════════
-function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, checkedDecisions, setCheckedDecisions, taskAssignees, setTaskAssignees, onBack, onConfirm }) {
+function ReviewSection({ analysis, attendees, engine = 'gnani', checkedTasks, setCheckedTasks, checkedDecisions, setCheckedDecisions, taskAssignees, setTaskAssignees, onBack, onConfirm }: any) {
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
   const checkedCount = Object.values(checkedTasks).filter(Boolean).length
 
+  const [playingTTS, setPlayingTTS] = useState<string | null>(null)
+  const [loadingTTS, setLoadingTTS] = useState<string | null>(null)
+  const stopFnRef = useRef<(() => void) | null>(null)
+
+  // Language toggle: Hinglish (default) vs English
+  const [summaryLang, setSummaryLang] = useState<'hinglish' | 'english'>('hinglish')
+  const [dynamicHinglish, setDynamicHinglish] = useState<string>('')
+  const [isTranslating, setIsTranslating] = useState(false)
+
+  useEffect(() => {
+    return () => {
+      stopGnaniAudio()
+    }
+  }, [])
+
+  // Auto-generate Hinglish explanation if meeting only has English summary
+  useEffect(() => {
+    if (summaryLang === 'hinglish' && !analysis?.summaryHinglish && !dynamicHinglish && analysis?.summary) {
+      setIsTranslating(true)
+      generateHinglishExplanation(analysis.summary).then(res => {
+        setDynamicHinglish(res)
+        setIsTranslating(false)
+      }).catch(() => setIsTranslating(false))
+    }
+  }, [summaryLang, analysis?.summaryHinglish, analysis?.summary, dynamicHinglish])
+
+  const currentSummaryText = summaryLang === 'hinglish'
+    ? (analysis?.summaryHinglish || dynamicHinglish || analysis?.summary || '')
+    : (analysis?.summary || '')
+
+  const handleSpeak = async (key: string, text: string) => {
+    if (playingTTS === key) {
+      stopGnaniAudio()
+      stopFnRef.current?.()
+      setPlayingTTS(null)
+      setLoadingTTS(null)
+      return
+    }
+
+    stopGnaniAudio()
+    stopFnRef.current?.()
+    setPlayingTTS(null)
+    setLoadingTTS(key)
+
+    const cancelFn = await playGnaniTTS(text, {
+      voice: 'Shivani',
+      language: 'hi-IN',
+      onStart: () => {
+        setLoadingTTS(null)
+        setPlayingTTS(key)
+      },
+      onEnd: () => {
+        setPlayingTTS(null)
+        setLoadingTTS(null)
+      },
+      onError: () => {
+        setPlayingTTS(null)
+        setLoadingTTS(null)
+      }
+    })
+    stopFnRef.current = cancelFn
+  }
+
+  const tasksSpokenText = analysis?.tasks && analysis.tasks.length > 0
+    ? (summaryLang === 'hinglish'
+        ? `Meeting ke tasks: ` + analysis.tasks.map((t: any, idx: number) => 
+            `Task ${idx + 1}: ${t.title}. Assigned to ${taskAssignees[idx] || t.assignedTo || 'team'}. Priority ${t.priority || 'medium'}. Deadline: ${t.deadline || 'not specified'}.`
+          ).join(' ')
+        : `Extracted tasks: ` + analysis.tasks.map((t: any, idx: number) => 
+            `Task ${idx + 1}: ${t.title}. Assigned to ${taskAssignees[idx] || t.assignedTo || 'team'}. Priority: ${t.priority || 'medium'}. Deadline: ${t.deadline || 'not specified'}.`
+          ).join(' ')
+      )
+    : (summaryLang === 'hinglish' ? 'Meeting mein koi tasks nahi hain.' : 'No tasks were extracted from this meeting.')
+
+  const decisionsSpokenText = analysis?.decisions && analysis.decisions.length > 0
+    ? (summaryLang === 'hinglish'
+        ? `Logged decisions: ` + analysis.decisions.map((d: any, idx: number) => 
+            `Decision ${idx + 1}: ${d.decision}. Reason: ${d.reason || 'None'}.`
+          ).join(' ')
+        : `Logged decisions: ` + analysis.decisions.map((d: any, idx: number) => 
+            `Decision ${idx + 1}: ${d.decision}. Reason: ${d.reason || 'None'}. Impact: ${d.impact || 'standard'}.`
+          ).join(' ')
+      )
+    : (summaryLang === 'hinglish' ? 'Meeting mein koi decisions log nahi hue.' : 'No decisions were logged from this meeting.')
+
+  const fullBriefingText = summaryLang === 'hinglish'
+    ? `Meeting briefing. Summary: ${currentSummaryText || 'Summary available nahi hai'}. ${tasksSpokenText}. ${decisionsSpokenText}. Yeh thi meeting ki complete briefing.`
+    : `Meeting briefing. Summary: ${currentSummaryText || 'No summary available'}. ${tasksSpokenText}. ${decisionsSpokenText}. That concludes the meeting summary.`
+
   return (
     <div className={styles.wrap}>
+      {/* Gnani Timbre TTS Briefing Bar with Universal Language Selector */}
+      <div className={styles.briefingBar}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          <div className={styles.briefingInfo}>
+            <Zap size={14} className={styles.briefingInfoIcon} />
+            <span>Gnani Timbre v3.0 Voice AI</span>
+          </div>
+
+          {/* Universal Language Selector: Hinglish (Default) vs English */}
+          <div className={styles.langToggle}>
+            <button
+              type="button"
+              className={`${styles.langToggleBtn} ${summaryLang === 'hinglish' ? styles.langToggleBtnActive : ''}`}
+              onClick={() => setSummaryLang('hinglish')}
+            >
+              Hinglish (Default)
+            </button>
+            <button
+              type="button"
+              className={`${styles.langToggleBtn} ${summaryLang === 'english' ? styles.langToggleBtnActive : ''}`}
+              onClick={() => setSummaryLang('english')}
+            >
+              English
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className={`${styles.briefingBtn} ${playingTTS === 'briefing' ? styles.briefingBtnPlaying : ''}`}
+          onClick={() => handleSpeak('briefing', fullBriefingText)}
+          title={`Listen to full audio briefing in ${summaryLang === 'hinglish' ? 'Hinglish' : 'English'} (Gnani Timbre v3.0)`}
+        >
+          {loadingTTS === 'briefing' ? (
+            <>
+              <Loader2 size={13} className={styles.spin} />
+              <span>Generating Voice...</span>
+            </>
+          ) : playingTTS === 'briefing' ? (
+            <>
+              <Square size={13} style={{ fill: '#fbbf24' }} />
+              <span>Stop Briefing</span>
+            </>
+          ) : (
+            <>
+              <Volume2 size={13} />
+              <span>Listen Full Briefing</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Summary */}
       <div className={styles.reviewSection}>
         <div className={styles.summaryCard}>
@@ -1343,23 +1693,95 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
                 <img src={favicon} alt="AI" style={{ width: '26px', height: '26px', borderRadius: '4px' }} />
               </div>
               <div className={styles.summaryLabel}>AI Summary</div>
+              <button
+                type="button"
+                className={`${styles.summaryVoiceBtn} ${playingTTS === 'summary' ? styles.summaryVoiceBtnPlaying : ''}`}
+                onClick={() => handleSpeak('summary', currentSummaryText)}
+                title={`Listen to ${summaryLang === 'hinglish' ? 'Hinglish' : 'English'} summary (Gnani Timbre)`}
+              >
+                {loadingTTS === 'summary' ? (
+                  <Loader2 size={13} className={styles.spin} />
+                ) : playingTTS === 'summary' ? (
+                  <Square size={12} style={{ fill: '#fbbf24' }} />
+                ) : (
+                  <Volume2 size={14} />
+                )}
+              </button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span
+                className="tag"
+                style={{
+                  background: engine === 'gnani' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                  color: engine === 'gnani' ? '#fbbf24' : '#60a5fa',
+                  border: 'none',
+                  padding: '4px 10px',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                }}
+              >
+                {engine === 'gnani' ? (
+                  <>
+                    <Zap size={12} style={{ color: '#fbbf24' }} />
+                    <span>TRANSCRIBED BY GNANI</span>
+                  </>
+                ) : (
+                  <>
+                    <Globe size={12} style={{ color: '#60a5fa' }} />
+                    <span>TRANSCRIBED BY WEB SPEECH API</span>
+                  </>
+                )}
+              </span>
               <span className="tag" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text2)', border: 'none', padding: '4px 10px', textTransform: 'uppercase' }}>MEMORY-BACKED</span>
             </div>
           </div>
-          <div className={styles.summaryText}>{analysis.summary}</div>
+          <div className={styles.summaryText}>
+            {isTranslating ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--text3)' }}>
+                <Loader2 size={13} className={styles.spin} /> Explaining in Hinglish...
+              </span>
+            ) : (
+              currentSummaryText
+            )}
+          </div>
           <div className={styles.topicTags}>
-            {analysis.keyTopics?.map((t, i) => <span key={i} className="tag" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text2)', border: 'none', padding: '4px 10px', textTransform: 'uppercase' }}>{t}</span>)}
+            {analysis.keyTopics?.map((t: string, i: number) => <span key={i} className="tag" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text2)', border: 'none', padding: '4px 10px', textTransform: 'uppercase' }}>{t}</span>)}
           </div>
         </div>
       </div>
 
       {/* Tasks */}
       <div className={styles.reviewSection}>
-        <div className={styles.reviewHeader}>
-          <div className={styles.reviewTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Pin size={18} /> Tasks Extracted ({analysis.tasks?.length || 0})</div>
-          <div className={styles.reviewSub}>Review and edit before creating</div>
+        <div className={styles.reviewHeader} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div className={styles.reviewTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Pin size={18} /> Tasks Extracted ({analysis.tasks?.length || 0})</div>
+            <div className={styles.reviewSub}>Review and edit before creating</div>
+          </div>
+          <button
+            type="button"
+            className={`${styles.ttsBtn} ${playingTTS === 'tasks' ? styles.ttsBtnPlaying : ''}`}
+            onClick={() => handleSpeak('tasks', tasksSpokenText)}
+            title="Listen to all extracted tasks"
+          >
+            {loadingTTS === 'tasks' ? (
+              <>
+                <Loader2 size={11} className={styles.spin} />
+                <span>Synthesizing...</span>
+              </>
+            ) : playingTTS === 'tasks' ? (
+              <>
+                <Square size={11} style={{ fill: '#fbbf24' }} />
+                <span>Stop</span>
+              </>
+            ) : (
+              <>
+                <Volume2 size={11} />
+                <span>Listen Tasks</span>
+              </>
+            )}
+          </button>
         </div>
         {analysis.tasks?.map((t, i) => (
           <div key={i} className={styles.taskCard} style={{ zIndex: openDropdownIndex === i ? 50 : 1, position: 'relative' }}>
@@ -1373,7 +1795,20 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
               </button>
             </div>
             <div className={styles.taskContent}>
-              <div className={styles.taskTitle}>{t.title}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <div className={styles.taskTitle}>{t.title}</div>
+                <button
+                  type="button"
+                  className={`${styles.ttsIconBtn} ${playingTTS === `task_${i}` ? styles.ttsIconBtnPlaying : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSpeak(`task_${i}`, `Task: ${t.title}. Assigned to ${taskAssignees[i] || t.assignedTo || 'team'}. Priority: ${t.priority}. Deadline: ${t.deadline || 'not specified'}. ${t.description || ''}`);
+                  }}
+                  title="Listen to this task (Gnani Timbre)"
+                >
+                  {loadingTTS === `task_${i}` ? <Loader2 size={11} className={styles.spin} /> : playingTTS === `task_${i}` ? <Square size={11} style={{ fill: '#fbbf24' }} /> : <Volume2 size={11} />}
+                </button>
+              </div>
               <div className={styles.taskDesc}>{t.description}</div>
               <div className={styles.taskMeta}>
                 <span className={`tag ${styles.greyPill}`} style={{ border: 'none', padding: '4px 10px', color: t.priority === 'high' ? 'rgba(244, 63, 94, 0.8)' : t.priority === 'medium' ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.8)' }}>
@@ -1435,8 +1870,31 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
 
       {/* Decisions */}
       <div className={styles.reviewSection}>
-        <div className={styles.reviewHeader}>
+        <div className={styles.reviewHeader} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className={styles.reviewTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Scale size={18} /> Decisions ({analysis.decisions?.length || 0})</div>
+          <button
+            type="button"
+            className={`${styles.ttsBtn} ${playingTTS === 'decisions' ? styles.ttsBtnPlaying : ''}`}
+            onClick={() => handleSpeak('decisions', decisionsSpokenText)}
+            title="Listen to all decisions"
+          >
+            {loadingTTS === 'decisions' ? (
+              <>
+                <Loader2 size={11} className={styles.spin} />
+                <span>Synthesizing...</span>
+              </>
+            ) : playingTTS === 'decisions' ? (
+              <>
+                <Square size={11} style={{ fill: '#fbbf24' }} />
+                <span>Stop</span>
+              </>
+            ) : (
+              <>
+                <Volume2 size={11} />
+                <span>Listen Decisions</span>
+              </>
+            )}
+          </button>
         </div>
         {analysis.decisions?.map((d, i) => (
           <div key={i} className={styles.decisionCard}>
@@ -1450,7 +1908,20 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
               </button>
             </div>
             <div className={styles.decisionContent}>
-              <div className={styles.decisionText}>{d.decision}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <div className={styles.decisionText}>{d.decision}</div>
+                <button
+                  type="button"
+                  className={`${styles.ttsIconBtn} ${playingTTS === `dec_${i}` ? styles.ttsIconBtnPlaying : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSpeak(`dec_${i}`, `Decision: ${d.decision}. Reason: ${d.reason}. Impact: ${d.impact}.`);
+                  }}
+                  title="Listen to this decision (Gnani Timbre)"
+                >
+                  {loadingTTS === `dec_${i}` ? <Loader2 size={11} className={styles.spin} /> : playingTTS === `dec_${i}` ? <Square size={11} style={{ fill: '#fbbf24' }} /> : <Volume2 size={11} />}
+                </button>
+              </div>
               <div className={styles.decisionReason}>{d.reason}</div>
               <span className={`tag ${styles.greyPill}`} style={{ border: 'none', padding: '4px 10px', marginTop: '10px', display: 'inline-flex', color: d.impact === 'high' ? 'rgba(244, 63, 94, 0.8)' : d.impact === 'medium' ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.8)' }}>
                 {d.impact === 'high' ? <ArrowUp size={12} /> : d.impact === 'medium' ? <ArrowRight size={12} /> : <ArrowDown size={12} />}
@@ -1509,7 +1980,96 @@ function ReviewSection({ analysis, attendees, checkedTasks, setCheckedTasks, che
 // ═══════════ DETAIL VIEW ════════════════════════════════════════════════════
 function DetailView({ meeting, tasks: allTasks, setView }) {
   const [showTranscript, setShowTranscript] = useState(false)
+  const [playingTTS, setPlayingTTS] = useState<string | null>(null)
+  const [loadingTTS, setLoadingTTS] = useState<string | null>(null)
+  const stopFnRef = useRef<(() => void) | null>(null)
+
+  // Language toggle: Hinglish (default) vs English
+  const [summaryLang, setSummaryLang] = useState<'hinglish' | 'english'>('hinglish')
+  const [dynamicHinglish, setDynamicHinglish] = useState<string>('')
+  const [isTranslating, setIsTranslating] = useState(false)
+
+  useEffect(() => {
+    return () => {
+      stopGnaniAudio()
+    }
+  }, [])
+
+  // Auto-generate Hinglish explanation if meeting only has English summary
+  useEffect(() => {
+    if (summaryLang === 'hinglish' && !meeting?.summaryHinglish && !dynamicHinglish && meeting?.summary) {
+      setIsTranslating(true)
+      generateHinglishExplanation(meeting.summary).then(res => {
+        setDynamicHinglish(res)
+        setIsTranslating(false)
+      }).catch(() => setIsTranslating(false))
+    }
+  }, [summaryLang, meeting?.summaryHinglish, meeting?.summary, dynamicHinglish])
+
   if (!meeting) return null
+
+  const currentSummaryText = summaryLang === 'hinglish'
+    ? (meeting?.summaryHinglish || dynamicHinglish || meeting?.summary || '')
+    : (meeting?.summary || '')
+
+  const handleSpeak = async (key: string, text: string) => {
+    if (playingTTS === key) {
+      stopGnaniAudio()
+      stopFnRef.current?.()
+      setPlayingTTS(null)
+      setLoadingTTS(null)
+      return
+    }
+
+    stopGnaniAudio()
+    stopFnRef.current?.()
+    setPlayingTTS(null)
+    setLoadingTTS(key)
+
+    const cancelFn = await playGnaniTTS(text, {
+      voice: 'Shivani',
+      language: 'hi-IN',
+      onStart: () => {
+        setLoadingTTS(null)
+        setPlayingTTS(key)
+      },
+      onEnd: () => {
+        setPlayingTTS(null)
+        setLoadingTTS(null)
+      },
+      onError: () => {
+        setPlayingTTS(null)
+        setLoadingTTS(null)
+      }
+    })
+    stopFnRef.current = cancelFn
+  }
+
+  const tasksSpokenText = meeting?.tasksCreated && meeting.tasksCreated.length > 0
+    ? (summaryLang === 'hinglish'
+        ? `Meeting ke tasks: ` + meeting.tasksCreated.map((t: any, idx: number) => 
+            `Task ${idx + 1}: ${t.title}. Assigned to ${t.assignedTo || 'team'}.`
+          ).join(' ')
+        : `Extracted tasks: ` + meeting.tasksCreated.map((t: any, idx: number) => 
+            `Task ${idx + 1}: ${t.title}. Assigned to ${t.assignedTo || 'team'}.`
+          ).join(' ')
+      )
+    : (summaryLang === 'hinglish' ? 'Meeting mein koi tasks nahi hain.' : 'No tasks were extracted from this meeting.')
+
+  const decisionsSpokenText = meeting?.decisionsLogged && meeting.decisionsLogged.length > 0
+    ? (summaryLang === 'hinglish'
+        ? `Logged decisions: ` + meeting.decisionsLogged.map((d: any, idx: number) => 
+            `Decision ${idx + 1}: ${d.decision}. Reason: ${d.reason || 'None'}.`
+          ).join(' ')
+        : `Logged decisions: ` + meeting.decisionsLogged.map((d: any, idx: number) => 
+            `Decision ${idx + 1}: ${d.decision}. Reason: ${d.reason || 'None'}.`
+          ).join(' ')
+      )
+    : (summaryLang === 'hinglish' ? 'Meeting mein koi decisions log nahi hue.' : 'No decisions were logged from this meeting.')
+
+  const fullBriefingText = summaryLang === 'hinglish'
+    ? `Meeting briefing for ${meeting.title || 'the session'}. Summary: ${currentSummaryText || 'Summary recorded nahi hai'}. ${tasksSpokenText}. ${decisionsSpokenText}. Yeh thi meeting ki complete briefing.`
+    : `Meeting briefing for ${meeting.title || 'the session'}. Summary: ${currentSummaryText || 'No summary recorded'}. ${tasksSpokenText}. ${decisionsSpokenText}. That concludes the meeting summary.`
 
   return (
     <div className={styles.wrap}>
@@ -1524,8 +2084,60 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
         </span>
       </div>
 
+      {/* Gnani Timbre TTS Briefing Bar with Universal Language Selector */}
+      <div className={styles.briefingBar} style={{ marginTop: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          <div className={styles.briefingInfo}>
+            <Zap size={14} className={styles.briefingInfoIcon} />
+            <span>Gnani Timbre v3.0 Voice AI</span>
+          </div>
+
+          {/* Universal Language Selector: Hinglish (Default) vs English */}
+          <div className={styles.langToggle}>
+            <button
+              type="button"
+              className={`${styles.langToggleBtn} ${summaryLang === 'hinglish' ? styles.langToggleBtnActive : ''}`}
+              onClick={() => setSummaryLang('hinglish')}
+            >
+              Hinglish (Default)
+            </button>
+            <button
+              type="button"
+              className={`${styles.langToggleBtn} ${summaryLang === 'english' ? styles.langToggleBtnActive : ''}`}
+              onClick={() => setSummaryLang('english')}
+            >
+              English
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className={`${styles.briefingBtn} ${playingTTS === 'briefing' ? styles.briefingBtnPlaying : ''}`}
+          onClick={() => handleSpeak('briefing', fullBriefingText)}
+          title={`Listen to full audio briefing in ${summaryLang === 'hinglish' ? 'Hinglish' : 'English'} (Gnani Timbre v3.0)`}
+        >
+          {loadingTTS === 'briefing' ? (
+            <>
+              <Loader2 size={13} className={styles.spin} />
+              <span>Generating Voice...</span>
+            </>
+          ) : playingTTS === 'briefing' ? (
+            <>
+              <Square size={13} style={{ fill: '#fbbf24' }} />
+              <span>Stop Briefing</span>
+            </>
+          ) : (
+            <>
+              <Volume2 size={13} />
+              <span>Listen Full Briefing</span>
+            </>
+          )}
+        </button>
+      </div>
+
       <div className={styles.cardAvatars} style={{ margin: '12px 0' }}>
-        {meeting.attendees?.map((a, i) => (
+        {meeting.attendees?.map((a: string, i: number) => (
           <div key={i} className={styles.avatarWrapper}>
             <Avatar name={a} size={32} style={{ border: 'none' }} />
           </div>
@@ -1541,18 +2153,71 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
 
       {/* Summary */}
       <div className={styles.detailSection}>
-        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '15px', marginTop: '10px' }}><img src={favicon} alt="AI" style={{ height: '25px', width: '25px', objectFit: 'contain' }} /> AI Summary</div>
+        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginLeft: '15px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src={favicon} alt="AI" style={{ height: '25px', width: '25px', objectFit: 'contain' }} /> AI Summary
+            <button
+              type="button"
+              className={`${styles.summaryVoiceBtn} ${playingTTS === 'summary' ? styles.summaryVoiceBtnPlaying : ''}`}
+              onClick={() => handleSpeak('summary', currentSummaryText)}
+              title={`Listen to ${summaryLang === 'hinglish' ? 'Hinglish' : 'English'} summary (Gnani Timbre)`}
+            >
+              {loadingTTS === 'summary' ? (
+                <Loader2 size={13} className={styles.spin} />
+              ) : playingTTS === 'summary' ? (
+                <Square size={12} style={{ fill: '#fbbf24' }} />
+              ) : (
+                <Volume2 size={14} />
+              )}
+            </button>
+          </div>
+        </div>
         <div className={styles.summaryCard}>
-          <div className={styles.summaryText}>{meeting.summary}</div>
+          <div className={styles.summaryText}>
+            {isTranslating ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--text3)' }}>
+                <Loader2 size={13} className={styles.spin} /> Explaining in Hinglish...
+              </span>
+            ) : (
+              currentSummaryText
+            )}
+          </div>
           <div className={styles.topicTags}>
-            {meeting.keyTopics?.map((t, i) => <span key={i} className="tag" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text2)', border: 'none', padding: '4px 10px', textTransform: 'uppercase' }}>{t}</span>)}
+            {meeting.keyTopics?.map((t: string, i: number) => <span key={i} className="tag" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text2)', border: 'none', padding: '4px 10px', textTransform: 'uppercase' }}>{t}</span>)}
           </div>
         </div>
       </div>
 
       {/* Tasks */}
       <div className={styles.detailSection}>
-        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Pin size={18} /> Tasks ({meeting.tasksCreated?.length || 0})</div>
+        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Pin size={18} /> Tasks ({meeting.tasksCreated?.length || 0})
+          </div>
+          <button
+            type="button"
+            className={`${styles.ttsBtn} ${playingTTS === 'tasks' ? styles.ttsBtnPlaying : ''}`}
+            onClick={() => handleSpeak('tasks', tasksSpokenText)}
+            title="Listen to all tasks"
+          >
+            {loadingTTS === 'tasks' ? (
+              <>
+                <Loader2 size={11} className={styles.spin} />
+                <span>Synthesizing...</span>
+              </>
+            ) : playingTTS === 'tasks' ? (
+              <>
+                <Square size={11} style={{ fill: '#fbbf24' }} />
+                <span>Stop</span>
+              </>
+            ) : (
+              <>
+                <Volume2 size={11} />
+                <span>Listen Tasks</span>
+              </>
+            )}
+          </button>
+        </div>
         {(!meeting.tasksCreated || meeting.tasksCreated.length === 0) ? (
           <div style={{ color: 'var(--text3)', fontSize: '13px', fontStyle: 'italic', padding: '12px 14px', background: 'var(--surface)', borderRadius: '16px', border: 'none' }}>
             No tasks were extracted from this meeting.
@@ -1562,7 +2227,20 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
           return (
             <div key={i} className={styles.taskCard} style={{ cursor: 'default' }}>
               <div className={styles.taskContent}>
-                <div className={styles.taskTitle}>{t.title}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <div className={styles.taskTitle}>{t.title}</div>
+                  <button
+                    type="button"
+                    className={`${styles.ttsIconBtn} ${playingTTS === `task_${i}` ? styles.ttsIconBtnPlaying : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSpeak(`task_${i}`, `Task: ${t.title}. Assigned to ${t.assignedTo}. Status: ${liveTask.status}. ${t.assignmentReason || ''}`);
+                    }}
+                    title="Listen to this task (Gnani Timbre)"
+                  >
+                    {loadingTTS === `task_${i}` ? <Loader2 size={11} className={styles.spin} /> : playingTTS === `task_${i}` ? <Square size={11} style={{ fill: '#fbbf24' }} /> : <Volume2 size={11} />}
+                  </button>
+                </div>
                 <div className={styles.taskAssignRow} style={{ alignItems: 'center' }}>
                   <div className={styles.greyPill} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '16px', color: 'var(--text)', border: 'none' }}>
                     <Avatar name={t.assignedTo} size={16} />
@@ -1581,7 +2259,34 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
 
       {/* Decisions */}
       <div className={styles.detailSection}>
-        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Scale size={18} /> Decisions ({meeting.decisionsLogged?.length || 0})</div>
+        <div className={styles.detailTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Scale size={18} /> Decisions ({meeting.decisionsLogged?.length || 0})
+          </div>
+          <button
+            type="button"
+            className={`${styles.ttsBtn} ${playingTTS === 'decisions' ? styles.ttsBtnPlaying : ''}`}
+            onClick={() => handleSpeak('decisions', decisionsSpokenText)}
+            title="Listen to all decisions"
+          >
+            {loadingTTS === 'decisions' ? (
+              <>
+                <Loader2 size={11} className={styles.spin} />
+                <span>Synthesizing...</span>
+              </>
+            ) : playingTTS === 'decisions' ? (
+              <>
+                <Square size={11} style={{ fill: '#fbbf24' }} />
+                <span>Stop</span>
+              </>
+            ) : (
+              <>
+                <Volume2 size={11} />
+                <span>Listen Decisions</span>
+              </>
+            )}
+          </button>
+        </div>
         {(!meeting.decisionsLogged || meeting.decisionsLogged.length === 0) ? (
           <div style={{ color: 'var(--text3)', fontSize: '13px', fontStyle: 'italic', padding: '12px 14px', background: 'var(--surface)', borderRadius: '16px', border: 'none' }}>
             No decisions were logged from this meeting.
@@ -1589,7 +2294,20 @@ function DetailView({ meeting, tasks: allTasks, setView }) {
         ) : meeting.decisionsLogged.map((d, i) => (
           <div key={i} className={styles.decisionCard} style={{ cursor: 'default' }}>
             <div className={styles.decisionContent}>
-              <div className={styles.decisionText}>{d.decision}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <div className={styles.decisionText}>{d.decision}</div>
+                <button
+                  type="button"
+                  className={`${styles.ttsIconBtn} ${playingTTS === `dec_${i}` ? styles.ttsIconBtnPlaying : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSpeak(`dec_${i}`, `Decision: ${d.decision}. Reason: ${d.reason}.`);
+                  }}
+                  title="Listen to this decision (Gnani Timbre)"
+                >
+                  {loadingTTS === `dec_${i}` ? <Loader2 size={11} className={styles.spin} /> : playingTTS === `dec_${i}` ? <Square size={11} style={{ fill: '#fbbf24' }} /> : <Volume2 size={11} />}
+                </button>
+              </div>
               <div className={styles.decisionReason}>{d.reason}</div>
             </div>
           </div>

@@ -2,7 +2,11 @@
 // Routes through the backend server for secure API key handling and Neo4j integration
 
 import { supabase } from './supabase';
-const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000') + '/api'
+const BACKEND_URL = (
+  typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000')
+) + '/api'
 
 // ── Hindsight Memory ───────────────────────────────────────────────────────────
 
@@ -73,6 +77,150 @@ export async function groqChat(messages: any, systemPrompt = '', options: any = 
   } catch (err: any) {
     console.warn('[Groq] Request error:', err.message)
     return null
+  }
+}
+
+// ── Gnani AI Service (Prisma STT & Timbre TTS) ────────────────────────────────
+
+export interface GnaniTranscriptionResult {
+  success: boolean
+  transcript: string
+  model?: string
+  detected_language_code?: string
+  error?: string
+}
+
+/**
+ * Transcribe recorded audio with Gnani Prisma v3.0 via Backend
+ */
+export async function transcribeWithGnani(audioBase64: string, languageCode = 'indic-auto'): Promise<GnaniTranscriptionResult> {
+  try {
+    const res = await fetch(`${BACKEND_URL}/gnani/transcribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audio: audioBase64,
+        languageCode,
+        model: 'prisma-v3.0',
+        format: 'transcribe'
+      })
+    })
+
+    const data = await res.json()
+    if (!res.ok || !data.success) {
+      return {
+        success: false,
+        transcript: '',
+        error: data.error || `Transcription failed with status ${res.status}`
+      }
+    }
+
+    return {
+      success: true,
+      transcript: data.transcript || '',
+      model: data.model,
+      detected_language_code: data.detected_language_code
+    }
+  } catch (err: any) {
+    console.warn('[Gnani STT Client Error]:', err.message)
+    return {
+      success: false,
+      transcript: '',
+      error: err.message || 'Network error reaching transcription service'
+    }
+  }
+}
+
+let activeAudio: HTMLAudioElement | null = null
+let activeAudioUrl: string | null = null
+
+export function stopGnaniAudio() {
+  if (activeAudio) {
+    activeAudio.pause()
+    activeAudio.currentTime = 0
+    activeAudio = null
+  }
+  if (activeAudioUrl) {
+    try {
+      URL.revokeObjectURL(activeAudioUrl)
+    } catch {}
+    activeAudioUrl = null
+  }
+}
+
+/**
+ * Synthesize and play speech using Gnani Timbre v3.0 via Backend.
+ * Returns a cancel function.
+ */
+export async function playGnaniTTS(
+  text: string,
+  options?: {
+    voice?: string
+    language?: string
+    onStart?: () => void
+    onEnd?: () => void
+    onError?: (err: string) => void
+  }
+): Promise<() => void> {
+  const { voice = 'Shivani', language = 'hi-IN', onStart, onEnd, onError } = options || {}
+  if (!text || !text.trim()) {
+    onError?.('No text provided for speech')
+    return () => {}
+  }
+
+  stopGnaniAudio()
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/gnani/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text.trim(), voice, language })
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      onError?.(err)
+      return () => {}
+    }
+
+    const blob = await res.blob()
+    const audioUrl = URL.createObjectURL(blob)
+    activeAudioUrl = audioUrl
+    const audio = new Audio(audioUrl)
+    activeAudio = audio
+
+    audio.onplay = () => onStart?.()
+    audio.onended = () => {
+      if (activeAudio === audio) activeAudio = null
+      try {
+        URL.revokeObjectURL(audioUrl)
+      } catch {}
+      onEnd?.()
+    }
+    audio.onerror = (e) => {
+      console.warn('[Gnani TTS Audio Error]', e)
+      if (activeAudio === audio) activeAudio = null
+      try {
+        URL.revokeObjectURL(audioUrl)
+      } catch {}
+      onError?.('Playback error')
+    }
+
+    await audio.play()
+
+    return () => {
+      audio.pause()
+      audio.currentTime = 0
+      try {
+        URL.revokeObjectURL(audioUrl)
+      } catch {}
+      if (activeAudio === audio) activeAudio = null
+      onEnd?.()
+    }
+  } catch (err: any) {
+    console.warn('[Gnani TTS Error]:', err.message)
+    onError?.(err.message)
+    return () => {}
   }
 }
 

@@ -39,6 +39,7 @@ function generateMock(attendees, memberProfiles) {
 
   return {
     summary: `The team discussed project progress and upcoming deliverables. Key areas covered include task assignments, timeline adjustments, and technical decisions. ${names.length} team members participated.`,
+    summaryHinglish: `Meeting mein team ne project deliverables aur milestones discuss kiye. ${names.length} team members ne participate kiya aur critical tasks assign kiye gaye, timeline confirm hui aur technical decisions finalize hue.`,
     keyTopics: ['Project Progress', 'Task Assignments', 'Timeline Review'],
     tasks,
     decisions: [{
@@ -86,7 +87,8 @@ ${taskHistory}
 
 Return this exact JSON structure:
 {
-  "summary": "string — 3-4 sentence summary of what was discussed",
+  "summary": "string — 3-4 sentence professional summary of what was discussed in English",
+  "summaryHinglish": "string — 3-4 sentence natural, conversational Hinglish summary (Hindi + English code-mixed in Roman script) explaining clearly what was decided and who is doing what",
   "keyTopics": ["string", "string"],
   "tasks": [
     {
@@ -132,4 +134,19 @@ Return this exact JSON structure:
     console.warn('[MeetingAnalyzer] Parse error, using mock:', err.message)
     return generateMock(attendees, memberProfiles)
   }
+}
+
+/**
+ * On-the-fly Hinglish explainer for English meeting summaries
+ */
+export async function generateHinglishExplanation(englishSummary: string): Promise<string> {
+  if (!englishSummary || !englishSummary.trim()) return ''
+  try {
+    const prompt = `Convert and explain the following meeting summary in natural, conversational Hinglish (code-mixed Hindi and English written in Roman script) for an Indian developer team. Keep technical terms, names, and deadlines in English (e.g. 'authentication', 'Supabase', 'Friday', 'dashboard'). Output ONLY the natural Hinglish explanation text without markdown quotes:\n\n${englishSummary}`
+    const reply = await groqChat([{ role: 'user', content: prompt }])
+    if (reply && reply.trim()) return reply.trim()
+  } catch (e) {
+    console.warn('[Hinglish Explanation Error]', e)
+  }
+  return englishSummary
 }

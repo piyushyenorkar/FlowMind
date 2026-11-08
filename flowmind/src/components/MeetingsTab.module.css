@@ -297,3 +297,382 @@
 .detailTitle { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 .memoryBadge { display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--surface); border: none; border-radius: 16px; padding: 12px 14px; font-size: 13px; color: var(--text2); margin-top: 16px; }
 .meetingBadge { font-size: 10px; background: var(--accent-glow); color: var(--accent2); padding: 2px 8px; border-radius: 100px; font-weight: 600; }
+
+/* Gnani Engine Selector & Badges */
+.engineSelectorContainer {
+  padding: 0 20px 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.engineSelector {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 5px;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.engineBtn {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.engineBtn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.engineBtnActive {
+  background: var(--surface2) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.engineBadge {
+  font-size: 10px;
+  background: #f59e0b;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.engineInfoBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.engineInfoBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.engineInfoBtnGnani {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+}
+
+.engineInfoBtnGnani:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.engineInfoBtnWebSpeech {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+}
+
+.engineInfoBtnWebSpeech:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.engineStandardIcon {
+  flex-shrink: 0;
+}
+
+.engineInfoIcon {
+  flex-shrink: 0;
+  color: var(--text3);
+  transition: color 0.15s ease;
+}
+
+.engineInfoBtn:hover .engineInfoIcon {
+  color: var(--text);
+}
+
+.infoTooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 280px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateY(4px);
+  text-align: left;
+}
+
+.engineInfoBtn:hover .infoTooltip {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.infoTooltipTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.infoTooltipContent {
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+.gnaniErrorBanner {
+  margin: 0 20px 12px;
+  padding: 10px 16px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: #fca5a5;
+  animation: fadeIn 0.2s ease;
+}
+
+.fallbackSwitchBtn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.fallbackSwitchBtn:hover {
+  opacity: 0.9;
+}
+
+.transcribingPulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Gnani Timbre TTS Controls */
+.briefingBar {
+  margin-bottom: 16px;
+  padding: 14px 20px;
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: none;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: none;
+}
+
+.briefingInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.briefingInfoIcon {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.briefingBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 9999px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.briefingBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.briefingBtnPlaying {
+  background: rgba(245, 158, 11, 0.22) !important;
+  color: #fbbf24 !important;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+  animation: pulseAmber 1.8s ease-in-out infinite;
+}
+
+.summaryVoiceBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.summaryVoiceBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.summaryVoiceBtnPlaying {
+  background: rgba(245, 158, 11, 0.25) !important;
+  color: #fbbf24 !important;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+.langToggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  border-radius: 9999px;
+  padding: 3px;
+  gap: 3px;
+  align-items: center;
+}
+
+.langToggleBtn {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.langToggleBtn:hover {
+  color: var(--text);
+}
+
+.langToggleBtnActive {
+  background: var(--surface2);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.ttsBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.ttsBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.ttsBtnPlaying {
+  background: rgba(245, 158, 11, 0.22) !important;
+  color: #fbbf24 !important;
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+  animation: pulseAmber 1.8s ease-in-out infinite;
+}
+
+.ttsIconBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  border-radius: 8px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ttsIconBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+}
+
+.ttsIconBtnPlaying {
+  background: rgba(245, 158, 11, 0.25) !important;
+  color: #fbbf24 !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+@keyframes pulseAmber {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+  }
+}
