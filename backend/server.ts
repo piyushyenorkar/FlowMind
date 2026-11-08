@@ -13,6 +13,8 @@ app.use(express.json())
 const HINDSIGHT_BASE = process.env.HINDSIGHT_BASE_URL!
 const HINDSIGHT_KEY  = process.env.HINDSIGHT_API_KEY!
 const GROQ_KEYS      = (process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || '').split(',').map(k => k.trim()).filter(Boolean)
+const GROQ_DEFAULT_MODEL = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b'
+const GROQ_FALLBACK_MODELS = [GROQ_DEFAULT_MODEL, 'openai/gpt-oss-120b', 'openai/gpt-oss-20b']
 const AGORA_APP_ID   = process.env.AGORA_APP_ID!
 
 let currentGroqKeyIndex = 0
@@ -89,44 +91,58 @@ app.post('/api/groq/chat', async (req: Request, res: Response) => {
   try {
     if (GROQ_KEYS.length === 0) throw new Error('No Groq API keys configured')
 
+    const targetModel = options?.model || GROQ_DEFAULT_MODEL
+    const modelsToTry = [targetModel, ...GROQ_FALLBACK_MODELS.filter(m => m !== targetModel)]
+
     let lastError = null
 
     for (let i = 0; i < GROQ_KEYS.length; i++) {
       const keyIndex = (currentGroqKeyIndex + i) % GROQ_KEYS.length
       const apiKey = GROQ_KEYS[keyIndex]
-      
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages,
-          temperature: options?.temperature ?? 0.7,
-          max_completion_tokens: options?.maxTokens || 1500,
-        }),
-      })
 
-      if (response.ok) {
-        currentGroqKeyIndex = keyIndex // Lock in the successful key for next requests
-        const data = await response.json()
-        return res.json(data)
-      }
+      for (const model of modelsToTry) {
+        try {
+          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model,
+              messages,
+              temperature: options?.temperature ?? 0.7,
+              max_completion_tokens: options?.maxTokens || 1500,
+            }),
+          })
 
-      const errText = await response.text().catch(() => '')
-      lastError = `Groq API Error ${response.status}: ${errText}`
+          if (response.ok) {
+            currentGroqKeyIndex = keyIndex // Lock in the successful key for next requests
+            const data = await response.json()
+            return res.json(data)
+          }
 
-      if (response.status === 429) {
-        console.warn(`[Groq Chat] Key ${keyIndex + 1}/${GROQ_KEYS.length} rate limited. Retrying with next key...`)
-        continue // Try the next key
-      } else {
-        throw new Error(lastError) // Non-rate limit error, fail immediately
+          const errText = await response.text().catch(() => '')
+          lastError = `Groq API Error (${model}) ${response.status}: ${errText}`
+
+          if (response.status === 429) {
+            console.warn(`[Groq Chat] Key ${keyIndex + 1}/${GROQ_KEYS.length} rate limited. Retrying with next key...`)
+            break // Move to next key on rate limit
+          } else if (response.status === 400 || response.status === 404) {
+            console.warn(`[Groq Chat] Model ${model} returned ${response.status}. Trying fallback model...`)
+            continue // Try next candidate model
+          } else {
+            console.warn(`[Groq Chat] Model ${model} returned error ${response.status}: ${errText}`)
+            continue
+          }
+        } catch (fetchErr: any) {
+          lastError = fetchErr.message
+          continue
+        }
       }
     }
 
-    throw new Error(lastError || 'All configured Groq API keys have hit their rate limit.')
+    throw new Error(lastError || 'All configured Groq API keys and models failed.')
   } catch (err: any) {
     console.error('[Groq Chat]', err.message)
     res.status(500).json({ error: err.message })
