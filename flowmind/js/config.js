@@ -7,7 +7,7 @@ const CONFIG = {
   // ── Groq LLM (free tier) ──────────────────────────────────
   // Get your key at: https://console.groq.com
   GROQ_API_KEY: "YOUR_GROQ_API_KEY_HERE",
-  GROQ_MODEL: "llama3-70b-8192", // fast & capable
+  GROQ_MODEL: "qwen/qwen3.8-27b", // fast & capable
 
   // ── Hindsight Memory (by Vectorize) ──────────────────────
   // Get your key at: https://ui.hindsight.vectorize.io
