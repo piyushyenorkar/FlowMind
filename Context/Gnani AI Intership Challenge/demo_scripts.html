@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowMind × Gnani AI — Demo Video Scripts & Production Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: rgba(255, 255, 255, 0.82);
+      --surface-elevated: rgba(255, 255, 255, 0.95);
+      --surface-glass: rgba(255, 255, 255, 0.65);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-sub: #94a3b8;
+      --amber: #f59e0b;
+      --amber-soft: rgba(245, 158, 11, 0.12);
+      --amber-dark: #b45309;
+      --blue: #3b82f6;
+      --blue-soft: rgba(59, 130, 246, 0.1);
+      --green: #10b981;
+      --green-soft: rgba(16, 185, 129, 0.12);
+      --purple: #8b5cf6;
+      --purple-soft: rgba(139, 92, 246, 0.1);
+      --shadow-sm: 0 4px 12px rgba(15, 23, 42, 0.03), 0 1px 3px rgba(15, 23, 42, 0.02);
+      --shadow-md: 0 16px 36px -10px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+      --shadow-lg: 0 24px 60px -15px rgba(15, 23, 42, 0.08), 0 8px 24px -6px rgba(15, 23, 42, 0.04);
+      --radius-sm: 16px;
+      --radius-md: 24px;
+      --radius-lg: 32px;
+      --radius-full: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: 
+        radial-gradient(1000px circle at 15% 10%, rgba(245, 158, 11, 0.07), transparent 60%),
+        radial-gradient(1200px circle at 85% 15%, rgba(59, 130, 246, 0.06), transparent 60%),
+        radial-gradient(800px circle at 50% 80%, rgba(16, 185, 129, 0.05), transparent 70%),
+        var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 48px 24px 100px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    /* Spatial Floating Header */
+    .hero {
+      text-align: center;
+      margin-bottom: 44px;
+      position: relative;
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      background: var(--surface-elevated);
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      backdrop-filter: blur(12px);
+      transition: transform 0.2s ease;
+    }
+    .pill-badge:hover {
+      transform: translateY(-1px);
+    }
+    .pill-badge .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--amber);
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+    }
+
+    .hero-title {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -1.2px;
+      color: var(--text-main);
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 28px;
+      font-weight: 400;
+    }
+
+    /* Spatial Tab Navigation Bar */
+    .tab-bar-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 36px;
+      position: sticky;
+      top: 20px;
+      z-index: 90;
+    }
+    .tab-bar {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 6px;
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-md);
+      gap: 6px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 10px 24px;
+      border-radius: var(--radius-full);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    }
+    .tab-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--amber-soft);
+      color: var(--amber-dark);
+      font-weight: 700;
+    }
+
+    /* Spatial Glass Cards */
+    .spatial-card {
+      background: var(--surface);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 32px;
+      margin-bottom: 28px;
+      border: none;
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+    .spatial-card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .icon-amber { background: var(--amber-soft); color: var(--amber-dark); }
+    .icon-blue { background: var(--blue-soft); color: var(--blue); }
+    .icon-green { background: var(--green-soft); color: var(--green); }
+    .icon-purple { background: var(--purple-soft); color: var(--purple); }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.4px;
+    }
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Dialogue Highlight Section */
+    .dialogue-box {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: var(--radius-md);
+      padding: 26px;
+      box-shadow: var(--shadow-sm);
+      margin-top: 16px;
+    }
+
+    .dialogue-line {
+      display: flex;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+      align-items: flex-start;
+    }
+    .dialogue-line:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .dialogue-line:first-child {
+      padding-top: 0;
+    }
+
+    .speaker-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .speaker-piyush {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .speaker-debashree {
+      background: #fce7f3;
+      color: #9d174d;
+    }
+
+    .dialogue-speech {
+      font-size: 15px;
+      color: var(--text-main);
+      line-height: 1.55;
+      font-style: italic;
+    }
+    .dialogue-speech strong {
+      font-style: normal;
+      color: #0f172a;
+      background: #fef3c7;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    /* Copy Button */
+    .btn-copy {
+      background: var(--surface-elevated);
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+    .btn-copy:hover {
+      color: var(--text-main);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      transform: translateY(-1px);
+    }
+    .btn-copy:active {
+      transform: scale(0.97);
+    }
+
+    /* Timeline Storyboard Rows */
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 100px 1fr 1.2fr;
+      gap: 20px;
+      padding: 20px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.7);
+      margin-bottom: 12px;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+    .timeline-item:hover {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .time-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--amber-dark);
+      background: var(--amber-soft);
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      text-align: center;
+      display: inline-block;
+    }
+
+    .screen-action {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .screen-action strong {
+      color: var(--text-main);
+      display: block;
+      margin-bottom: 2px;
+      font-size: 14px;
+    }
+
+    .spoken-words {
+      font-size: 14px;
+      color: var(--text-main);
+      background: rgba(248, 250, 252, 0.85);
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      line-height: 1.5;
+    }
+
+    /* Caption tag on 60s script */
+    .caption-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Checklist Grid */
+    .checklist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+    .check-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+    .check-box {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--green-soft);
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .check-content h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .check-content p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Tab Switcher Logic */
+    .script-view {
+      display: block;
+    }
+    .script-view.hidden {
+      display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { padding: 24px 16px 60px; }
+      .hero-title { font-size: 30px; }
+      .timeline-item {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .spatial-card { padding: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Hero Header -->
+    <header class="hero">
+      <div class="pill-badge">
+        <span class="dot"></span>
+        Gnani AI Internship Challenge • Production Scripts
+      </div>
+      <h1 class="hero-title">FlowMind Demo <span>Video Playbook</span></h1>
+      <p class="hero-sub">
+        High-impact, synchronized video production scripts for the 3-minute challenge walkthrough and the 60-second Demo Day Drop reel.
+      </p>
+
+      <!-- Spatial Pill Tab Bar -->
+      <div class="tab-bar-container">
+        <div class="tab-bar">
+          <button type="button" class="tab-btn active" id="tabA" onclick="switchTab('A')">
+            <span>🎥 Script A (3-Min Full Walkthrough)</span>
+            <span class="tab-badge">Submission Form</span>
+          </button>
+          <button type="button" class="tab-btn" id="tabB" onclick="switchTab('B')">
+            <span>⚡ Script B (60-Sec Demo Reel)</span>
+            <span class="tab-badge">Demo Day Drop</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- SHARED HINGLISH MEETING DIALOGUE (Recorded Once!) -->
+    <section class="spatial-card" style="background: linear-gradient(135deg, rgba(254, 243, 199, 0.45) 0%, rgba(255, 255, 255, 0.85) 100%);">
+      <div class="card-header">
+        <div class="card-title-group">
+          <div class="card-icon icon-amber">🎙️</div>
+          <div>
+            <h2 class="card-title">The Shared Hinglish Standup Dialogue</h2>
+            <p class="card-subtitle">Record this 20-second dialogue once between Piyush & Debashree — it is used directly in both videos!</p>
+          </div>
+        </div>
+        <button type="button" class="btn-copy" onclick="copyDialogue()">
+          <span id="copyIcon">📋</span>
+          <span id="copyText">Copy Dialogue</span>
+        </button>
+      </div>
+
+      <div class="dialogue-box" id="dialogueContent">
+        <div class="dialogue-line">
+          <span class="speaker-pill speaker-piyush">Piyush (Host)</span>
+          <div class="dialogue-speech">
+            "Haan Debashree, sprint timeline finalize karni hai. <strong>Authentication module</strong> aur <strong>Supabase database schema</strong> main <strong>Friday</strong> tak wrap up kar dunga."
+          </div>
+        </div>
+
+        <div class="dialogue-line">
+          <span class="speaker-pill speaker-debashree">Debashree</span>
+          <div class="dialogue-speech">
+            "Perfect Piyush! <strong>Frontend dashboard</strong> ka responsive UI aur component design main <strong>Thursday evening</strong> tak finalize kar lungi."
+          </div>
+        </div>
+
+        <div class="dialogue-line">
+          <span class="speaker-pill speaker-piyush">Piyush (Host)</span>
+          <div class="dialogue-speech">
+            "Great. Aur real-time sync ke liye hum <strong>Supabase Realtime</strong> use karenge, agreed?"
+          </div>
+        </div>
+
+        <div class="dialogue-line">
+          <span class="speaker-pill speaker-debashree">Debashree</span>
+          <div class="dialogue-speech">
+            "Haan bilkul agreed. Main Figma se code sync karke design system complete kar deti hoon."
+          </div>
+        </div>
+
+        <div class="dialogue-line">
+          <span class="speaker-pill speaker-piyush">Piyush (Host)</span>
+          <div class="dialogue-speech">
+            "Done! Meeting end karte hain and let FlowMind log all tasks."
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCRIPT A VIEW (3-Minute Walkthrough) -->
+    <div id="viewA" class="script-view">
+      
+      <!-- Act 1 -->
+      <section class="spatial-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-blue">1</div>
+            <div>
+              <h3 class="card-title">Act 1: The Problem & FlowMind Overview</h3>
+              <p class="card-subtitle">0:00 – 1:00 (Hook, Problem Statement, and Member Skill Profiles)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:00 – 0:12</span></div>
+          <div class="screen-action">
+            <strong>Hook & Problem</strong>
+            Camera or title card: *"Why do team decisions made in Hinglish meetings disappear?"* Cut to an empty task board / messy chat.
+          </div>
+          <div class="spoken-words">
+            "Every Indian engineering team discusses architecture in Hinglish. But verbal standups move fast—decisions get forgotten, action items get lost in chat, and tasks go unassigned."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:12 – 0:35</span></div>
+          <div class="screen-action">
+            <strong>Solution Intro</strong>
+            Smooth pan across FlowMind's live dashboard: Overview metrics, active sprints, and the meetings section.
+          </div>
+          <div class="spoken-words">
+            "Meet FlowMind: the AI project manager that listens to your team meetings, transcribes code-mixed Hinglish using sovereign Indian AI, and automatically assigns work based on member skills."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:35 – 0:50</span></div>
+          <div class="screen-action">
+            <strong>Skill Profiles Showcase</strong>
+            Click the <strong>Team</strong> tab. Hover over member skill badges: Piyush (Backend, Supabase) and Debashree (Frontend, UI/UX).
+          </div>
+          <div class="spoken-words">
+            "Unlike traditional PM tools, FlowMind knows who is good at what. Piyush handles backend infrastructure, while Debashree specializes in UI/UX design."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:50 – 1:00</span></div>
+          <div class="screen-action">
+            <strong>Meeting Setup</strong>
+            Go to <strong>Meetings</strong> tab ➔ Click <strong>"New Meeting"</strong> ➔ Select Piyush & Debashree ➔ Point cursor to the pre-selected <strong>Gnani Prisma v3.0 (Default)</strong> engine badge.
+          </div>
+          <div class="spoken-words">
+            "Let's jump into a live voice meeting. Notice our default transcription engine: Gnani Prisma v3.0, purpose-built for Indian voice."
+          </div>
+        </div>
+      </section>
+
+      <!-- Act 2: Reusable 60s Clip -->
+      <section class="spatial-card" style="box-shadow: 0 20px 50px -10px rgba(245, 158, 11, 0.12);">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-amber">2</div>
+            <div>
+              <h3 class="card-title">Act 2: The Core Live Meeting & Prisma STT</h3>
+              <p class="card-subtitle">1:00 – 2:00 ⭐ (Exact 60-second segment exported for Script B!)</p>
+            </div>
+          </div>
+          <span class="pill-badge" style="background: var(--amber-soft); color: var(--amber-dark); margin: 0;">Export for Script B</span>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">1:00 – 1:10</span></div>
+          <div class="screen-action">
+            <strong>Start Voice Meeting</strong>
+            Host clicks <strong>"Start Meeting"</strong>. Live timer counts up. Hover on the grey <code>⚡ (i)</code> button next to Live Transcript to flash the Prisma tooltip.
+          </div>
+          <div class="spoken-words">
+            "We start the meeting. Powered by Gnani's Prisma v3.0, live voice is transcribed into code-mixed Hinglish in real time with sovereign accuracy."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">1:10 – 1:35</span></div>
+          <div class="screen-action">
+            <strong>The Standup Dialogue</strong>
+            Piyush and Debashree speak the 5-line dialogue. The Live Transcript window streams live Romanized Hinglish text with speaker tags.
+          </div>
+          <div class="spoken-words" style="background: rgba(254, 243, 199, 0.5);">
+            <em>Piyush and Debashree speak the shared Hinglish dialogue above. Prisma accurately prints 'authentication module', 'Friday tak wrap up', and 'Supabase Realtime'.</em>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">1:35 – 1:45</span></div>
+          <div class="screen-action">
+            <strong>End & Groq Analysis</strong>
+            Piyush says <em>"Done, meeting end karte hain."</em> Click <strong>"End Meeting"</strong>. Brief spinner: <em>"Analyzing meeting with Groq LLM..."</em>
+          </div>
+          <div class="spoken-words">
+            "Notice how Prisma transcribed code-mixed Hinglish words like 'authentication module' and 'Friday tak wrap up' seamlessly."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">1:45 – 2:00</span></div>
+          <div class="screen-action">
+            <strong>Review & Skill Matching</strong>
+            The Review screen loads instantly. Point to Task 1 auto-assigned to Piyush, Task 2 auto-assigned to Debashree, and the logged decision.
+          </div>
+          <div class="spoken-words">
+            "In seconds, FlowMind extracts actionable tasks, maps deadlines, and auto-assigns the tasks to the right person based on their verified skill profile!"
+          </div>
+        </div>
+      </section>
+
+      <!-- Act 3 -->
+      <section class="spatial-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-purple">3</div>
+            <div>
+              <h3 class="card-title">Act 3: Gnani Timbre TTS, Memory Graph & Wrap-up</h3>
+              <p class="card-subtitle">2:00 – 3:00 (Universal Audio Briefing, Hindsight Memory, and Neo4j Risk Prediction)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">2:00 – 2:20</span></div>
+          <div class="screen-action">
+            <strong>Gnani Timbre TTS Briefing</strong>
+            Show the top bar. Point to <code>[ Hinglish (Default) | English ]</code> toggle, click <strong>"🔊 Listen Full Briefing"</strong>. Pulsing amber glow illuminates as Timbre speaks!
+          </div>
+          <div class="spoken-words">
+            "Need an audio recap? FlowMind integrates Gnani Timbre v3.0 for sovereign text-to-speech. You can toggle between Hinglish and English universal summaries, and listen to an instant audio briefing." <em>(Let Timbre audio play for 3-4s)</em>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">2:20 – 2:38</span></div>
+          <div class="screen-action">
+            <strong>Create Tasks & Memory Commit</strong>
+            Scroll through task cards and decisions. Click <strong>"Create Tasks & Save Meeting"</strong>. Green confirmation toast appears.
+          </div>
+          <div class="spoken-words">
+            "With one click, tasks and architectural decisions are committed to Hindsight memory and our Neo4j knowledge graph."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">2:38 – 2:50</span></div>
+          <div class="screen-action">
+            <strong>Graph Bottleneck Prevention</strong>
+            Switch to Leader Overview. Show the Neo4j team relationship graph and proactive burnout/bottleneck risk metrics.
+          </div>
+          <div class="spoken-words">
+            "FlowMind now monitors the team's graph in real time, detecting bottlenecks and burnout risks before deadlines are missed."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">2:50 – 3:00</span></div>
+          <div class="screen-action">
+            <strong>Closing Slide</strong>
+            FlowMind Logo, GitHub link, Live Demo link, and Gnani AI Challenge watermark.
+          </div>
+          <div class="spoken-words">
+            "FlowMind bridges conversational Hinglish meetings with enterprise execution—powered by Gnani AI's Prisma STT and Timbre TTS. Built by Piyush and Debashree. Thank you!"
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- SCRIPT B VIEW (60-Second Demo Reel) -->
+    <div id="viewB" class="script-view hidden">
+      <section class="spatial-card" style="background: linear-gradient(135deg, rgba(239, 246, 255, 0.5) 0%, rgba(255, 255, 255, 0.9) 100%);">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon icon-blue">⚡</div>
+            <div>
+              <h3 class="card-title">Script B: Exactly 60 Seconds (Demo Day Drop Award)</h3>
+              <p class="card-subtitle">Paced second-by-second for viral social media impact on LinkedIn & X (#DemoDayDrop)</p>
+            </div>
+          </div>
+          <span class="pill-badge" style="background: var(--blue-soft); color: var(--blue); margin: 0;">Fast-Paced Reel</span>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:00 – 0:08</span></div>
+          <div class="screen-action">
+            <strong>Hook & Launch</strong>
+            Screen shows Voice Room with pill engine badge: <code>Gnani Prisma v3.0 (Default) [Hinglish]</code>. Host clicks <strong>"Start Meeting"</strong>.
+            <div class="caption-tag">CAPTION: Hinglish Meetings ➡️ Instant Action Items</div>
+          </div>
+          <div class="spoken-words">
+            "Indian teams speak in Hinglish, but standard speech AI fails. Watch FlowMind, powered by Gnani AI's sovereign Prisma STT, turn live Hinglish standups into assigned tasks in 60 seconds."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:08 – 0:32</span></div>
+          <div class="screen-action">
+            <strong>Live Hinglish Meeting</strong>
+            Cut to live meeting room. Piyush and Debashree speak the shared 5-line dialogue. Live transcript box renders real-time romanized text.
+            <div class="caption-tag">CAPTION: Powered by Gnani Prisma v3.0 (14M+ hrs Indian speech)</div>
+          </div>
+          <div class="spoken-words" style="background: rgba(254, 243, 199, 0.45);">
+            <strong>Piyush:</strong> "Debashree, authentication module aur database schema main Friday tak wrap up kar dunga."<br>
+            <strong>Debashree:</strong> "Frontend dashboard ka responsive UI main Thursday tak finalize kar lungi."<br>
+            <strong>Piyush:</strong> "Real-time sync ke liye Supabase use karenge, agreed?"<br>
+            <strong>Debashree:</strong> "Agreed! Main Figma se sync kar leti hoon."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:32 – 0:42</span></div>
+          <div class="screen-action">
+            <strong>Instant Extraction & Review</strong>
+            Click <strong>"End Meeting"</strong>. Fast 0.5s transition to Review screen. Point cursor to Task 1 (Piyush) and Task 2 (Debashree).
+            <div class="caption-tag">CAPTION: Zero Manual Notes • Auto-Assigned by Skill</div>
+          </div>
+          <div class="spoken-words">
+            "Prisma transcribes code-mixed speech with 100% precision. FlowMind instantly extracts deliverables and matches them to member skill profiles."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:42 – 0:52</span></div>
+          <div class="screen-action">
+            <strong>Timbre TTS Audio Briefing</strong>
+            Click <strong>"🔊 Listen Full Briefing"</strong> on the top bar. Amber pulse glows as Timbre's Indic voice plays audio summary.
+            <div class="caption-tag">CAPTION: Gnani Timbre v3.0 Voice Briefings</div>
+          </div>
+          <div class="spoken-words">
+            "And with Gnani Timbre v3.0, you get universal audio briefings in natural Hinglish cadence."
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div><span class="time-badge">0:52 – 1:00</span></div>
+          <div class="screen-action">
+            <strong>Commit to Graph & Outro</strong>
+            Click <strong>"Create Tasks"</strong>. Quick cut to Kanban board with new cards + Neo4j workload graph. Final logo splash.
+            <div class="caption-tag">CAPTION: FlowMind • #GreatIndianAIInternshipChallenge</div>
+          </div>
+          <div class="spoken-words">
+            "Decisions never get lost again. FlowMind, built on Gnani AI Sovereign Stack."
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- PRE-RECORDING CHECKLIST -->
+    <section class="spatial-card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <div class="card-icon icon-green">📋</div>
+          <div>
+            <h3 class="card-title">Production Recording Checklist</h3>
+            <p class="card-subtitle">Complete these 6 checks before you hit record to ensure demo-day perfection.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="checklist-grid">
+        <div class="check-item">
+          <div class="check-box">✓</div>
+          <div class="check-content">
+            <h4>1080p / 1440p Clean Canvas</h4>
+            <p>Set display resolution to 1920x1080 at 100% scale. Fullscreen browser (F11) to eliminate taskbars.</p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-box">✓</div>
+          <div class="check-content">
+            <h4>Microphone Distance</h4>
+            <p>Keep USB microphone 4–6 inches from your mouth, slightly off-axis to avoid harsh plosives.</p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-box">✓</div>
+          <div class="check-content">
+            <h4>Notification Silence</h4>
+            <p>Mute WhatsApp, Slack, and Discord desktop apps. Close unrelated browser tabs and bookmarks bar.</p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-box">✓</div>
+          <div class="check-content">
+            <h4>Natural Dialogue Delivery</h4>
+            <p>Speak the Hinglish lines at a natural conversational pace. Do not rush or over-enunciate technical terms.</p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-box">✓</div>
+          <div class="check-content">
+            <h4>Zero Audio Storage</h4>
+            <p>FlowMind streams memory buffers directly to Gnani APIs—zero raw audio files are stored or logged on disk.</p>
+          </div>
+        </div>
+
+        <div class="check-item">
+          <div class="check-box">✓</div>
+          <div class="check-content">
+            <h4>Background Music Levels</h4>
+            <p>If adding music in post-production, keep background track volume under -20dB so dialogue stays crystal clear.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      const tabA = document.getElementById('tabA');
+      const tabB = document.getElementById('tabB');
+      const viewA = document.getElementById('viewA');
+      const viewB = document.getElementById('viewB');
+
+      if (tab === 'A') {
+        tabA.classList.add('active');
+        tabB.classList.remove('active');
+        viewA.classList.remove('hidden');
+        viewB.classList.add('hidden');
+      } else {
+        tabB.classList.add('active');
+        tabA.classList.remove('active');
+        viewB.classList.remove('hidden');
+        viewA.classList.add('hidden');
+      }
+    }
+
+    function copyDialogue() {
+      const dialogueText = `Piyush: "Haan Debashree, sprint timeline finalize karni hai. Authentication module aur Supabase database schema main Friday tak wrap up kar dunga."\n\nDebashree: "Perfect Piyush! Frontend dashboard ka responsive UI aur component design main Thursday evening tak finalize kar lungi."\n\nPiyush: "Great. Aur real-time sync ke liye hum Supabase Realtime use karenge, agreed?"\n\nDebashree: "Haan bilkul agreed. Main Figma se code sync karke design system complete kar deti hoon."\n\nPiyush: "Done! Meeting end karte hain and let FlowMind log all tasks."`;
+      
+      navigator.clipboard.writeText(dialogueText).then(() => {
+        const btnText = document.getElementById('copyText');
+        const btnIcon = document.getElementById('copyIcon');
+        btnText.innerText = 'Copied to Clipboard!';
+        btnIcon.innerText = '✅';
+        setTimeout(() => {
+          btnText.innerText = 'Copy Dialogue';
+          btnIcon.innerText = '📋';
+        }, 2200);
+      });
+    }
+  </script>
+</body>
+</html>
+

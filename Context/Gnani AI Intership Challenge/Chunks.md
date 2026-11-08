@@ -51,7 +51,7 @@ Script A: 2-3 minutes (for the submission form). Structure: the problem (hook in
 
 Script B: exactly 60 seconds (for the social post, Demo Day Drop award). It shows ONLY the meeting feature: a quick hook, then the Hinglish meeting being spoken, transcribed by Prisma, and turned into assigned tasks. Fast pacing, with a clear title or caption overlay.
 
-Important: both scripts must use the SAME Hinglish meeting dialogue for the meeting segment, so I only have to record one meeting and can reuse it. Write that Hinglish dialogue (4-6 short lines between 2-3 team members, with realistic work decisions and action items, e.g. deadlines and who does what). Use natural, casual Hinglish in Roman script. Use a realistic work meeting (team names, deadlines, tasks), but do not mention any real phone numbers, account numbers, Aadhaar, PAN, or personal sensitive details.
+Important: both scripts must use the SAME Hinglish meeting dialogue for the meeting segment, so I only have to record one meeting and can reuse it. Write that Hinglish dialogue (4-6 short lines between 2 team members piyush and debashree, with realistic work decisions and action items, e.g. deadlines and who does what). Use natural, casual Hinglish in Roman script. Use a realistic work meeting (team names, deadlines, tasks), but do not mention any real phone numbers, account numbers, Aadhaar, PAN, or personal sensitive details.
 
 Also give a recording checklist: quiet room, mic placement, screen resolution, and what to avoid.
 
