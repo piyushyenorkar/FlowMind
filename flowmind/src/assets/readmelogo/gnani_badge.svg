@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 40" width="44" height="40" role="img">
+  <title>Gnani AI</title>
+  <!-- Card Background matching other Tech Stack badges -->
+  <rect width="44" height="40" rx="8" fill="#1c1f2e"/>
+  
+  <!-- Subtle accent border -->
+  <rect x="0.5" y="0.5" width="43" height="39" rx="7.5" fill="none" stroke="rgba(245, 158, 11, 0.25)" stroke-width="1"/>
+
+  <!-- Sovereign Voice AI & Lightning Waveform (Gnani AI) -->
+  <g transform="translate(6, 6)">
+    <!-- Voice Soundwave Bars -->
+    <rect x="2" y="11" width="3" height="6" rx="1.5" fill="#f59e0b" opacity="0.75"/>
+    <rect x="7" y="7" width="3" height="14" rx="1.5" fill="#fbbf24"/>
+    
+    <!-- Central Lightning Prism -->
+    <path d="M18.5 2L11 15h6l-2 11 9.5-14h-6.5l2-10z" fill="url(#gnaniGold)" filter="url(#glow)"/>
+    
+    <!-- Right Voice Soundwave Bars -->
+    <rect x="22" y="7" width="3" height="14" rx="1.5" fill="#fbbf24"/>
+    <rect x="27" y="11" width="3" height="6" rx="1.5" fill="#f59e0b" opacity="0.75"/>
+  </g>
+
+  <!-- Gradient and Glow definitions -->
+  <defs>
+    <linearGradient id="gnaniGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#f59e0b" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+</svg>
+
