@@ -12,6 +12,7 @@
     <a href="https://supabase.com"><img src="https://img.shields.io/badge/Supabase-2.108-3ECF8E?logo=supabase&logoColor=white" alt="Supabase"></a>
     <a href="https://neo4j.com"><img src="https://img.shields.io/badge/Neo4j-6.2-008CC1?logo=neo4j&logoColor=white" alt="Neo4j"></a>
     <a href="https://groq.com"><img src="https://img.shields.io/badge/Groq-llama--3.3--70b-F55036" alt="Groq"></a>
+    <a href="https://gnani.ai"><img src="https://img.shields.io/badge/Gnani_AI-Prisma_STT_%26_Timbre_TTS-F59E0B" alt="Gnani AI"></a>
     <a href="https://agora.io"><img src="https://img.shields.io/badge/Agora-4.24-099DFD" alt="Agora"></a>
     <br/>
     <a href="https://flowwithmind.vercel.app"><img src="https://img.shields.io/badge/Deployed-Vercel-000000?logo=vercel&logoColor=white" alt="Deployed on Vercel"></a>
@@ -42,7 +43,10 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
     <td align="left"><img src="https://img.icons8.com/fluency/48/microphone.png" width="20" align="absmiddle"/> <b>Live Voice Meetings</b> — Agora SDK WebRTC voice rooms for real-time team collaboration</td>
   </tr>
   <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/audio-wave.png" width="20" align="absmiddle"/> <b>Real-time Transcription</b> — Web Speech API with auto-reconnect capability</td>
+    <td align="left"><img src="https://img.icons8.com/fluency/48/audio-wave.png" width="20" align="absmiddle"/> <b>Sovereign Speech-to-Text (STT)</b> — Gnani Prisma v3.0 STT for live code-mixed Hinglish transcription with zero audio stored on server</td>
+  </tr>
+  <tr>
+    <td align="left"><img src="https://img.icons8.com/fluency/48/speaker.png" width="20" align="absmiddle"/> <b>Voice AI Briefings (TTS)</b> — Gnani Timbre v3.0 Indic TTS (voice: <code>Shivani</code>, language: <code>hi-IN</code>) delivering universal Hinglish and English audio summaries</td>
   </tr>
   <tr>
     <td align="left"><img src="https://img.icons8.com/fluency/48/artificial-intelligence.png" width="20" align="absmiddle"/> <b>AI Meeting Analysis</b> — Groq LLM automatically extracts tasks & decisions from transcripts</td>
@@ -54,7 +58,7 @@ Every team has experienced it: a productive meeting ends, everyone feels aligned
     <td align="left"><img src="https://img.icons8.com/fluency/48/network.png" width="20" align="absmiddle"/> <b>Neo4j Knowledge Graph</b> — Maps team relationships, tracks workloads, and detects bottlenecks</td>
   </tr>
   <tr>
-    <td align="left"><img src="https://img.icons8.com/fluency/48/combo-chart.png" width="20" align="absmiddle"/> <b>AI Insights Dashboard</b> — Graph-powered bottleneck & risk detection</td>
+    <td align="left"><img src="https://img.icons8.com/fluency/48/combo-chart.png" width="20" align="absmiddle"/> <b>AI Insights Dashboard</b> — Graph-powered bottleneck & risk detection with Hindsight memory</td>
   </tr>
   <tr>
     <td align="left"><img src="https://img.icons8.com/fluency/48/synchronize.png" width="20" align="absmiddle"/> <b>Real-time Sync</b> — Supabase Realtime for instant updates across all members</td>
@@ -77,12 +81,13 @@ flowchart TD
     classDef box fill:#222,stroke:#444,stroke-width:2px,color:#fff;
     classDef accent fill:#3178C6,stroke:#222,stroke-width:2px,color:#fff;
     classDef db fill:#008CC1,stroke:#222,stroke-width:2px,color:#fff;
+    classDef gnani fill:#B45309,stroke:#F59E0B,stroke-width:2px,color:#fff;
     
     Title["FLOWMIND FRONTEND (React + TS + Vite)"]:::accent
 
     subgraph Frontend [" "]
         L["Leader Overview"]:::box
-        M["Meetings Tab"]:::box
+        M["Meetings Tab\n(Gnani STT / TTS)"]:::box
         T["Tasks Tab"]:::box
         D["Decisions Tab"]:::box
         C["Chat Tab"]:::box
@@ -100,16 +105,18 @@ flowchart TD
     Title ~~~ T
 
     Supa[("☁️ SUPABASE\nPostgreSQL + Realtime\n(13 Tables, WebSockets)")]:::db
-    Exp["☁️ EXPRESS BACKEND\nNode.js server.ts\n(/api/groq, /api/neo4j)"]:::box
+    Exp["☁️ EXPRESS BACKEND\nNode.js server.ts\n(/api/gnani, /api/groq, /api/neo4j)"]:::box
     Agora(("📞 AGORA.IO\nWebRTC\n(Voice Channels, Token)")):::box
 
     S_cli ==> Supa
     A_cli ==> Exp
     U_cli ==> Agora
 
-    Groq["🧠 GROQ API\nLlama-3.3-70b\n(Meeting Analysis)"]:::box
+    Gnani["⚡ GNANI AI SOVEREIGN STACK\nPrisma v3.0 (STT: indic-auto)\nTimbre v3.0 (TTS: Shivani hi-IN)"]:::gnani
+    Groq["🧠 GROQ API\nQwen / Llama-3.3-70b\n(Meeting Analysis & Skills)"]:::box
     Neo4j[("🕸️ NEO4J AURA\nGraph DB\n(Team-Member-Task)")]:::db
 
+    Exp ==> Gnani
     Exp ==> Groq
     Exp ==> Neo4j
 ```
@@ -122,37 +129,45 @@ flowchart TD
 
 <table>
   <tr>
-    <td align="center" width="25%">
+    <td align="center" width="20%">
       <img src="https://skillicons.dev/icons?i=react,ts,vite" /><br/>
       <b>Frontend</b><br/>React 18 + TS + Vite
     </td>
-    <td align="center" width="25%">
+    <td align="center" width="20%">
       <img src="https://skillicons.dev/icons?i=supabase,postgres" /><br/>
       <b>Database</b><br/>Supabase (Realtime)
     </td>
-    <td align="center" width="25%">
+    <td align="center" width="20%">
+      <img src="https://img.icons8.com/fluency/48/voice-recognition.png" height="40" /><br/>
+      <b>Sovereign Speech AI</b><br/>Gnani Prisma (STT) & Timbre (TTS)
+    </td>
+    <td align="center" width="20%">
       <img src="flowmind/src/assets/readmelogo/neo4j_badge.png" height="40" /><br/>
       <b>Graph Database</b><br/>Neo4j Aura
     </td>
-    <td align="center" width="25%">
+    <td align="center" width="20%">
       <img src="https://skillicons.dev/icons?i=express,nodejs" /><br/>
       <b>Backend</b><br/>Express.js + Node.js
     </td>
   </tr>
   <tr>
-    <td align="center" width="25%">
+    <td align="center" width="20%">
       <img src="flowmind/src/assets/readmelogo/groq_badge.png" height="40" /><br/>
-      <b>Artificial Intelligence</b><br/>Groq Fast Inference
+      <b>Fast LLM Inference</b><br/>Groq (Skill Assignment)
     </td>
-    <td align="center" width="25%">
+    <td align="center" width="20%">
       <img src="flowmind/src/assets/readmelogo/agora_badge.png" height="40" /><br/>
       <b>Voice & WebRTC</b><br/>Agora.io SDK
     </td>
-    <td align="center" width="25%">
+    <td align="center" width="20%">
+      <img src="https://img.icons8.com/fluency/48/brain.png" height="40" /><br/>
+      <b>Memory Layer</b><br/>Hindsight Memory API
+    </td>
+    <td align="center" width="20%">
       <img src="https://skillicons.dev/icons?i=vercel" height="40" /><br/>
       <b>Frontend Hosting</b><br/>Vercel
     </td>
-    <td align="center" width="25%">
+    <td align="center" width="20%">
       <img src="flowmind/src/assets/readmelogo/render_badge.svg" height="40" /><br/>
       <b>Backend Hosting</b><br/>Render
     </td>
@@ -170,6 +185,7 @@ flowchart TD
 ### Prerequisites
 
 <img src="https://skillicons.dev/icons?i=nodejs" height="30" align="center" /> <b>Node.js 18+</b> &nbsp;&nbsp;|&nbsp;&nbsp;
+<img src="https://img.icons8.com/fluency/48/voice-recognition.png" height="30" align="center" /> <b>Gnani AI API</b> &nbsp;&nbsp;|&nbsp;&nbsp;
 <img src="https://skillicons.dev/icons?i=supabase" height="30" align="center" /> <b>Supabase</b> &nbsp;&nbsp;|&nbsp;&nbsp;
 <img src="flowmind/src/assets/readmelogo/neo4j_badge.png" height="30" align="center" /> <b>Neo4j Aura</b> &nbsp;&nbsp;|&nbsp;&nbsp;
 <img src="flowmind/src/assets/readmelogo/groq_badge.png" height="30" align="center" /> <b>Groq API</b> &nbsp;&nbsp;|&nbsp;&nbsp;
@@ -203,9 +219,15 @@ VITE_AGORA_APP_ID=your-agora-app-id
 
 **Backend** (`backend/.env`):
 ```env
+# Gnani AI Sovereign Stack (Prisma STT & Timbre TTS)
+GNANI_API_KEY=your-gnani-api-key
+
+# LLM Inference & Long-Term Memory
 GROQ_API_KEYS=key1,key2
 HINDSIGHT_BASE_URL=https://your-hindsight-url
 HINDSIGHT_API_KEY=your-hindsight-key
+
+# Graph Database & Realtime Voice
 NEO4J_URI=neo4j+s://xxxxx.databases.neo4j.io
 NEO4J_USERNAME=neo4j
 NEO4J_PASSWORD=your-password
@@ -232,11 +254,18 @@ npm run dev
 
 <div align="center">
 
-## <img src="https://img.icons8.com/fluency/48/group.png" width="32" height="32" align="center" /> Team
+## <img src="https://img.icons8.com/fluency/48/group.png" width="32" height="32" align="center" /> Team & Challenge Submission
 
-Built for **HackHazards '26** by **Team Starcy**:
-- Piyush (Leader)
-- Debashree
+Built with ❤️ by **Team Starcy** for **The Great Indian AI Internship Challenge by Gnani AI** ⚡
+
+- **Piyush Rajendra Yenorkar** (Lead) — Gnani Prisma STT & Timbre Voice AI integration, backend routes, Groq LLM extraction & skill assignment, Hindsight memory, Neo4j graph intelligence.
+- **Debashree Mal** — UI/UX design & frontend development for Voice Meetings, engine selector, audio briefing controls, end-to-end Hinglish meeting testing.
+
+<p>
+  <img src="https://img.shields.io/badge/Challenge-Great_Indian_AI_Internship-F59E0B?style=flat-square" alt="Challenge"/>
+  <img src="https://img.shields.io/badge/Powered_By-Gnani_AI_Sovereign_Stack-10B981?style=flat-square" alt="Gnani AI"/>
+  <img src="https://img.shields.io/badge/Track-Mixed_Vibes_%26_Two--Person_Team-8B5CF6?style=flat-square" alt="Tracks"/>
+</p>
 
 <br/>
 <img src="flowmind/src/assets/favicon.png" height="70" width="70" align="center" alt="Flowmind Favicon" />
