@@ -138,7 +138,7 @@ flowchart TD
       <b>Database</b><br/>Supabase (Realtime)
     </td>
     <td align="center" width="20%">
-      <img src="https://img.icons8.com/fluency/48/voice-recognition.png" height="40" /><br/>
+      <img src="flowmind/src/assets/readmelogo/gnani_badge.png" height="40" /><br/>
       <b>Sovereign Speech AI</b><br/>Gnani Prisma (STT) & Timbre (TTS)
     </td>
     <td align="center" width="20%">
@@ -185,7 +185,7 @@ flowchart TD
 ### Prerequisites
 
 <img src="https://skillicons.dev/icons?i=nodejs" height="30" align="center" /> <b>Node.js 18+</b> &nbsp;&nbsp;|&nbsp;&nbsp;
-<img src="https://img.icons8.com/fluency/48/voice-recognition.png" height="30" align="center" /> <b>Gnani AI API</b> &nbsp;&nbsp;|&nbsp;&nbsp;
+<img src="flowmind/src/assets/readmelogo/gnani_badge.png" height="30" align="center" /> <b>Gnani AI API</b> &nbsp;&nbsp;|&nbsp;&nbsp;
 <img src="https://skillicons.dev/icons?i=supabase" height="30" align="center" /> <b>Supabase</b> &nbsp;&nbsp;|&nbsp;&nbsp;
 <img src="flowmind/src/assets/readmelogo/neo4j_badge.png" height="30" align="center" /> <b>Neo4j Aura</b> &nbsp;&nbsp;|&nbsp;&nbsp;
 <img src="flowmind/src/assets/readmelogo/groq_badge.png" height="30" align="center" /> <b>Groq API</b> &nbsp;&nbsp;|&nbsp;&nbsp;
