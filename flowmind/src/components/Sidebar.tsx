@@ -13,15 +13,11 @@ import {
   Bot,
   Users, 
   MessagesSquare, 
-  Github, 
-  Globe, 
+  FolderGit2, 
   LogOut,
   ChevronRight,
   Crown,
   User,
-  Edit2,
-  X,
-  Save,
   Plus
 } from 'lucide-react'
 
@@ -33,6 +29,7 @@ const LEADER_ITEMS = [
   { id: 'chat', icon: Bot, label: 'AI Assistant' },
   { id: 'members', icon: Users, label: 'Team Members' },
   { id: 'groupchat', icon: MessagesSquare, label: 'Group Chat' },
+  { id: 'project', icon: FolderGit2, label: 'Project' },
 ]
 
 const MEMBER_ITEMS = [
@@ -43,14 +40,12 @@ const MEMBER_ITEMS = [
   { id: 'chat', icon: Bot, label: 'AI Assistant' },
   { id: 'members', icon: Users, label: 'Team Members' },
   { id: 'groupchat', icon: MessagesSquare, label: 'Group Chat' },
+  { id: 'project', icon: FolderGit2, label: 'Project' },
 ]
 
 export default function Sidebar({ activeTab, setActiveTab }) {
-  const { team, currentUser, role, navigate, updateTeamLinks, updateTeamLogo } = useApp()
+  const { team, currentUser, role, navigate, updateTeamLogo } = useApp()
   const [showSwitcher, setShowSwitcher] = useState(false)
-  const [showLinksModal, setShowLinksModal] = useState(false)
-  const [editingLinks, setEditingLinks] = useState(false)
-  const [linksForm, setLinksForm] = useState({ github: '', deploy: '' })
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -79,16 +74,6 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       alert('Failed to upload logo: ' + err.message)
       setUploadingLogo(false)
     }
-  }
-
-  const handleEditLinks = () => {
-    setLinksForm({ github: team?.githubLink || '', deploy: team?.deployLink || '' })
-    setEditingLinks(true)
-  }
-
-  const handleSaveLinks = () => {
-    updateTeamLinks({ githubLink: linksForm.github, deployLink: linksForm.deploy })
-    setEditingLinks(false)
   }
 
   const items = role === 'leader' ? LEADER_ITEMS : MEMBER_ITEMS
@@ -151,98 +136,9 @@ export default function Sidebar({ activeTab, setActiveTab }) {
               </button>
             )
           })}
-          <button 
-            className={styles.navItem} 
-            style={{ marginTop: 'auto' }} 
-            onClick={() => setShowLinksModal(true)}
-          >
-            <div className={styles.iconWrapper}>
-              <Globe size={18} className={styles.navIcon} strokeWidth={2} />
-            </div>
-            <div className={styles.nameBox} style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                <span className={styles.navLabel} style={{ fontWeight: 600 }}>Project Links</span>
-              </div>
-              <Edit2 size={14} style={{ color: 'var(--text3)', opacity: 0.7 }} />
-            </div>
-          </button>
         </nav>
 
       </aside>
-
-      {showLinksModal && (
-        <div className={styles.modalOverlay} onClick={() => { setShowLinksModal(false); setEditingLinks(false); }}>
-          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '18px', fontWeight: 800, fontFamily: 'var(--font-display)', color: 'var(--text)' }}>Project Links</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {role === 'leader' && (
-                  editingLinks ? (
-                    <button className="btn-ghost" style={{ padding: '6px' }} onClick={handleSaveLinks} title="Save Changes">
-                      <Save size={18} />
-                    </button>
-                  ) : (
-                    <button className="btn-ghost" style={{ padding: '6px' }} onClick={handleEditLinks} title="Edit Links">
-                      <Edit2 size={18} />
-                    </button>
-                  )
-                )}
-                <button className="btn-ghost" style={{ padding: '6px' }} onClick={() => { setShowLinksModal(false); setEditingLinks(false); }}>
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-            
-            {editingLinks ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '4px', display: 'block' }}>GitHub URL</label>
-                  <input
-                    className="input"
-                    placeholder="Input Github URL"
-                    value={linksForm.github}
-                    onChange={e => setLinksForm(prev => ({ ...prev, github: e.target.value }))}
-                    style={{ borderRadius: '16px' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '4px', display: 'block' }}>Deployment URL</label>
-                  <input
-                    className="input"
-                    placeholder="Input Deployment URL"
-                    value={linksForm.deploy}
-                    onChange={e => setLinksForm(prev => ({ ...prev, deploy: e.target.value }))}
-                    style={{ borderRadius: '16px' }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div className={styles.linkRow} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px' }}>
-                  <Github size={18} className={styles.linkIcon} />
-                  {team?.githubLink ? (
-                    <a href={team.githubLink} target="_blank" rel="noreferrer" className={styles.linkAnchor}>
-                      View GitHub Repository
-                    </a>
-                  ) : (
-                    <span className={styles.linkEmpty}>No GitHub link added</span>
-                  )}
-                </div>
-                <div className={styles.linkRow} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px' }}>
-                  <Globe size={18} className={styles.linkIcon} />
-                  {team?.deployLink ? (
-                    <a href={team.deployLink} target="_blank" rel="noreferrer" className={styles.linkAnchor}>
-                      View Live Deployment
-                    </a>
-                  ) : (
-                    <span className={styles.linkEmpty}>No deployment link added</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {showSwitcher && <TeamSwitcher onClose={() => setShowSwitcher(false)} />}
     </>
