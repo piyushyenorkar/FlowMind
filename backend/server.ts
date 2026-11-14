@@ -3,6 +3,7 @@ import 'dotenv/config'
 import express, { Request, Response } from 'express'
 import cors from 'cors'
 import { mergeTeam, mergeMember, mergeTask, queryTeamGraph, closeDriver } from './services/neo4j'
+import { getGitHubActivity } from './services/github'
 import agoraToken from 'agora-token'
 const { RtcTokenBuilder, RtcRole } = agoraToken
 
@@ -353,6 +354,23 @@ app.get('/api/agora/token', (req: Request, res: Response) => {
     channel: channelName,
     uid: Number(uid),
   })
+})
+
+// ── GitHub Routes ─────────────────────────────────────────────────────────────
+
+app.post('/api/github/activity', async (req: Request, res: Response) => {
+  const { repoUrl, token } = req.body
+  if (!repoUrl || !repoUrl.trim()) {
+    res.status(400).json({ success: false, error: 'Repository URL or slug is required' })
+    return
+  }
+  try {
+    const activity = await getGitHubActivity(repoUrl.trim(), token)
+    res.json(activity)
+  } catch (err: any) {
+    console.error('[GitHub API Route Error]:', err.message)
+    res.status(500).json({ success: false, error: err.message })
+  }
 })
 
 // ── Start ───────────────────────────────────────────────────────────────────────
