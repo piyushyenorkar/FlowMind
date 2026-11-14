@@ -159,48 +159,52 @@ export default function ContactUs() {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text2, #a1a1aa)', marginBottom: '6px' }}>Your Name</label>
+                  <label className="label">Your Name</label>
                   <input
                     type="text"
-                    className={styles.formInput}
+                    className="input"
                     placeholder="e.g. Alex Morgan"
                     value={name}
                     onChange={e => setName(e.target.value)}
+                    style={{ borderRadius: '16px' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text2, #a1a1aa)', marginBottom: '6px' }}>Your Email *</label>
+                  <label className="label">Your Email *</label>
                   <input
                     type="email"
                     required
-                    className={styles.formInput}
+                    className="input"
                     placeholder="alex@company.com"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
+                    style={{ borderRadius: '16px' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text2, #a1a1aa)', marginBottom: '6px' }}>Subject</label>
+                <label className="label">Subject</label>
                 <input
                   type="text"
-                  className={styles.formInput}
+                  className="input"
                   placeholder="e.g. Question about Google OAuth or Team Setup"
                   value={subject}
                   onChange={e => setSubject(e.target.value)}
+                  style={{ borderRadius: '16px' }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text2, #a1a1aa)', marginBottom: '6px' }}>Message *</label>
+                <label className="label">Message *</label>
                 <textarea
                   rows={4}
                   required
-                  className={styles.formTextarea}
+                  className="textarea"
                   placeholder="Tell us what you need help with..."
                   value={message}
                   onChange={e => setMessage(e.target.value)}
+                  style={{ borderRadius: '16px', minHeight: '100px', resize: 'vertical' }}
                 />
               </div>
 
@@ -242,7 +246,7 @@ export default function ContactUs() {
 
               {sent && (
                 <div className={styles.calloutBox} style={{ color: 'var(--accent, #14b8a6)', marginTop: '12px' }}>
-                  ✓ Message sent directly! Thank you for reaching out—we have received your email and will respond shortly.
+                  ✓ Message sent directly! Thank you for reaching out we have received your email and will respond shortly.
                 </div>
               )}
               {errorMsg && (
