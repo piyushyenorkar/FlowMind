@@ -289,13 +289,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [state.team?.code])
 
   // ── LEADER: Create team ──────────────────────────────────────────────
-  const createTeam = useCallback(async (projectName: string, description: string, deadline: string, leaderName: string) => {
+  const createTeam = useCallback(async (projectName: string, description: string, deadline: string, leaderName: string, githubLink?: string, deployLink?: string) => {
     const team = {
       code: generateCode(),
       projectName,
       description,
       deadline,
       leaderName,
+      githubLink: githubLink?.trim() || '',
+      deployLink: deployLink?.trim() || '',
       createdAt: new Date().toISOString(),
     }
     const leader = { id: `leader_${team.code}`, name: leaderName, role: 'Leader', isLeader: true }
@@ -307,6 +309,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       description: team.description,
       deadline: team.deadline,
       leader_name: team.leaderName,
+      github_link: githubLink?.trim() || null,
+      deploy_link: deployLink?.trim() || null,
       created_at: team.createdAt
     }])
 
@@ -815,8 +819,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const updatedTeam = { ...prev.team, ...links }
 
       supabase.from('teams').update({
-        github_link: updatedTeam.githubLink,
-        deploy_link: updatedTeam.deployLink
+        github_link: updatedTeam.githubLink?.trim() || null,
+        deploy_link: updatedTeam.deployLink?.trim() || null
       }).eq('code', prev.team.code).then()
 
       return {
