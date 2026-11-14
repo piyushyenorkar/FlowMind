@@ -119,6 +119,17 @@ export default function Landing() {
         </div>
       </main>
 
+      <footer className={styles.footer}>
+        <span>© 2026 FlowMind</span>
+        <div className={styles.footerLinks}>
+          <button className={styles.footerLink} onClick={() => navigate('privacy')}>Privacy Policy</button>
+          <span>•</span>
+          <button className={styles.footerLink} onClick={() => navigate('terms')}>Terms of Service</button>
+          <span>•</span>
+          <button className={styles.footerLink} onClick={() => navigate('contact')}>Contact Us</button>
+        </div>
+      </footer>
+
       {showSwitcher && <TeamSwitcher onClose={() => setShowSwitcher(false)} />}
     </div>
   )

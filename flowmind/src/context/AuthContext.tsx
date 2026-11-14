@@ -11,19 +11,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const syncUser = async (sessionUser: any) => {
       const email = sessionUser.email;
-      const name = sessionUser.user_metadata?.name || 'User';
+      const name = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || sessionUser.email?.split('@')[0] || 'User';
+      const photoUrl = sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture || null;
       const { data } = await supabase.from('users').select('*').eq('email', email).single()
 
       if (!data) {
-        // User not in public.users (likely due to previous RLS issue), upsert them!
+        // User not in public.users, upsert them!
         const newUser = {
           name,
           email,
           password_hash: 'managed_by_supabase_auth',
+          photo_url: photoUrl,
           created_at: new Date().toISOString()
         }
         await supabase.from('users').upsert([newUser])
       } else {
+        if (photoUrl && !data.photo_url) {
+          await supabase.from('users').update({ photo_url: photoUrl }).eq('email', email)
+        }
         console.log('Fetched user from DB:', data)
       }
 
@@ -32,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         createdAt: data?.created_at || new Date().toISOString(),
         profileData: data?.profile_data || {},
-        photoUrl: data?.photo_url || null,
+        photoUrl: data?.photo_url || photoUrl || null,
         teams: []
       }
     }
@@ -98,6 +103,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signout = useCallback(async () => {
     await supabase.auth.signOut()
     setUser(null)
+  }, [])
+
+  const signInWithGoogle = useCallback(async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
+    })
+    if (error) return { error: error.message }
+    return { success: true, data }
   }, [])
 
   // ── Team Persistence ──────────────────────────────────────────────────
@@ -402,7 +422,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, loading,
-      signup, signin, signout,
+      signup, signin, signout, signInWithGoogle,
       saveTeam, getMyTeams, isTeamMember,
       saveUniversalTeam, getUniversalTeams, getMyUniversalTeams, getAcceptedRoles,
       applyToTeam, getMyApplications, getReceivedApplications,

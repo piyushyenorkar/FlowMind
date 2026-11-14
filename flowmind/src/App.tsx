@@ -9,6 +9,9 @@ import LeaderDashboard from './pages/LeaderDashboard'
 import MemberDashboard from './pages/MemberDashboard'
 import AuthPage from './pages/AuthPage'
 import UserDashboard from './pages/UserDashboard'
+import PrivacyPolicy from './legalPages/PrivacyPolicy'
+import TermsOfService from './legalPages/TermsOfService'
+import ContactUs from './legalPages/ContactUs'
 import SplashIntro from './components/SplashIntro'
 
 function Router() {
@@ -20,6 +23,11 @@ function Router() {
   if (loading) return null
 
   const renderPage = () => {
+    // Public legal and contact pages (accessible to all, including Google verification crawlers)
+    if (page === 'privacy') return <PrivacyPolicy />
+    if (page === 'terms') return <TermsOfService />
+    if (page === 'contact') return <ContactUs />
+
     // If not authenticated, show auth page modal over landing (unless already on landing)
     if (!user && page !== 'landing' && page !== 'auth') {
       return (

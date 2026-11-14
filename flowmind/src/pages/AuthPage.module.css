@@ -121,8 +121,67 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   text-align: left;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text3);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 2px 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+
+.divider span {
+  padding: 0 10px;
+}
+
+.googleBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.googleBtn:hover {
+  background: var(--surface2);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.googleBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.googleIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .submit {
@@ -237,6 +296,28 @@
 }
 
 .toggleLink:hover {
+  text-decoration: underline;
+}
+
+.legalNote {
+  font-size: 11px;
+  color: var(--text3, #71717a);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+.legalLink {
+  color: var(--accent, #14b8a6);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.legalLink:hover {
   text-decoration: underline;
 }
 

@@ -16,5 +16,6 @@ dist/
 .DS_Store
 Thumbs.db
 
-# IDE
-.vscode/
+# Secrets & Google Credentials
+client_secret*.json
+*.json.secret

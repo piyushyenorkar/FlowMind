@@ -131,11 +131,11 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
         </div>
 
         {/* Insights & Project Activity Split */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, minHeight: 0, minWidth: 0 }}>
           {/* Neo4j Insights Button */}
           <div 
             className={styles.card} 
-            style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', cursor: 'pointer', minHeight: 0, minWidth: 0, margin: 0, position: 'relative' }}
+            style={{ flex: 1, padding: '14px 18px', display: 'flex', flexDirection: 'column', cursor: 'pointer', minHeight: 0, minWidth: 0, margin: 0, position: 'relative' }}
             onClick={() => setShowInsightsModal(true)}
           >
             <div className={styles.cardHeader} style={{ marginBottom: '4px' }}>
@@ -157,7 +157,7 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
           {/* GitHub Project Activity (Unified, consistent single view) */}
           <div 
             className={styles.card} 
-            style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', cursor: 'pointer', minHeight: 0, minWidth: 0, margin: 0, position: 'relative' }}
+            style={{ flex: 1, padding: '14px 18px', display: 'flex', flexDirection: 'column', cursor: 'pointer', minHeight: 0, minWidth: 0, margin: 0, position: 'relative' }}
             onClick={() => setActiveTab('project')}
             title="Click to view Project & Repository in the center pane"
           >
