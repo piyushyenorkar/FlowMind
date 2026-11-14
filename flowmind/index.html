@@ -3,14 +3,293 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Google Site Verification -->
     <meta name="google-site-verification" content="7mymVZuMiLmLbbIoQ6e1Eorih5jZmVs5yXIHdYdoQBQ" />
-    <title>FlowMind — The PM That Never Forgets</title>
-    <link rel="icon" type="image/png" href="/src/assets/favicon.png" />
+
+    <!-- Primary SEO Meta Tags -->
+    <title>FlowMind — The PM That Never Forgets | Built by Team Starcy</title>
+    <meta name="title" content="FlowMind — The PM That Never Forgets | Built by Team Starcy" />
+    <meta name="description" content="FlowMind is your personal AI group project manager built by Team Starcy (Piyush Rajendra Yenorkar & Debashree Mal). Featuring live Agora voice meetings, sovereign Hinglish STT/TTS by Gnani AI, Groq Llama 3.3 70B task extraction, and Neo4j knowledge graph bottleneck intelligence." />
+    <meta name="keywords" content="FlowMind, Team Starcy, Piyush Yenorkar, Piyush Rajendra Yenorkar, Debashree Mal, The PM That Never Forgets, AI Project Manager, Gnani AI, The Great Indian AI Internship Challenge, Neo4j Knowledge Graph, Groq Llama 3.3, Agora voice meetings, Hinglish speech to text, sovereign AI, sprint briefings, task assignment, bottleneck detection, flowwithmind" />
+    <meta name="author" content="Piyush Rajendra Yenorkar, Debashree Mal, Team Starcy" />
+    <meta name="creator" content="Team Starcy" />
+    <meta name="publisher" content="Team Starcy" />
+    <meta name="application-name" content="FlowMind" />
+    <meta name="theme-color" content="#14b8a6" />
+    <link rel="canonical" href="https://flowwithmind.vercel.app/" />
+
+    <!-- Robots & Crawler Directives -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+    <!-- Geographic & Regional Targeting (GEO) -->
+    <meta name="geo.region" content="IN-MH" />
+    <meta name="geo.placename" content="Maharashtra, India" />
+    <meta name="geo.position" content="19.076090;72.877426" />
+    <meta name="ICBM" content="19.076090, 72.877426" />
+
+    <!-- Open Graph / Facebook / LinkedIn / Discord -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://flowwithmind.vercel.app/" />
+    <meta property="og:site_name" content="FlowMind" />
+    <meta property="og:title" content="FlowMind — The PM That Never Forgets | Built by Team Starcy" />
+    <meta property="og:description" content="Your Personal AI Group Project Manager. Live Agora voice meetings, sovereign Hinglish STT/TTS by Gnani AI, Groq Llama 3.3 70B task extraction, and Neo4j graph bottleneck prediction. Built by Piyush Rajendra Yenorkar and Debashree Mal (Team Starcy)." />
+    <meta property="og:image" content="https://flowwithmind.vercel.app/flowmind.png" />
+    <meta property="og:image:secure_url" content="https://flowwithmind.vercel.app/flowmind.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="FlowMind — The PM That Never Forgets by Team Starcy" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@flowmind" />
+    <meta name="twitter:creator" content="@piyushyenorkar" />
+    <meta name="twitter:title" content="FlowMind — The PM That Never Forgets | Built by Team Starcy" />
+    <meta name="twitter:description" content="AI Group Project Manager by Team Starcy (Piyush Yenorkar & Debashree Mal). Voice meetings, Hinglish STT, Groq Llama 3.3 task extraction & Neo4j graph intelligence." />
+    <meta name="twitter:image" content="https://flowwithmind.vercel.app/flowmind.png" />
+    <meta name="twitter:image:alt" content="FlowMind Logo and Architecture" />
+
+    <!-- Favicon & PWA Icons -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Structured Data (JSON-LD) for Google AI Overviews, Search Graph, and LLMs -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://flowwithmind.vercel.app/#website",
+          "name": "FlowMind",
+          "alternateName": "FlowMind AI",
+          "url": "https://flowwithmind.vercel.app",
+          "description": "FlowMind is an AI group project manager that listens to team voice meetings, extracts deliverables, assigns tasks by skill, and detects bottlenecks using Neo4j knowledge graphs.",
+          "inLanguage": "en-US",
+          "publisher": {
+            "@id": "https://flowwithmind.vercel.app/#team-starcy"
+          }
+        },
+        {
+          "@type": ["SoftwareApplication", "WebApplication"],
+          "@id": "https://flowwithmind.vercel.app/#app",
+          "name": "FlowMind",
+          "alternateName": ["Flow Mind", "The PM That Never Forgets", "FlowMind AI PM"],
+          "applicationCategory": "ProjectManagementApplication",
+          "operatingSystem": "All modern web browsers (Chrome, Firefox, Safari, Edge)",
+          "url": "https://flowwithmind.vercel.app",
+          "image": "https://flowwithmind.vercel.app/flowmind.png",
+          "description": "FlowMind is your personal AI group project manager. Built by Team Starcy (Piyush Rajendra Yenorkar and Debashree Mal) for The Great Indian AI Internship Challenge by Gnani AI. Featuring live Agora voice meetings, Gnani AI sovereign Hinglish Prisma STT & Timbre TTS, Groq Llama 3.3 70B task and decision extraction, and Neo4j graph-powered bottleneck intelligence.",
+          "creator": {
+            "@id": "https://flowwithmind.vercel.app/#team-starcy"
+          },
+          "author": [
+            {
+              "@id": "https://flowwithmind.vercel.app/#piyush"
+            },
+            {
+              "@id": "https://flowwithmind.vercel.app/#debashree"
+            }
+          ],
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Live WebRTC voice meetings powered by Agora",
+            "Sovereign Hinglish Speech-to-Text transcription with Gnani AI Prisma v3.0",
+            "Spoken audio sprint briefings via Gnani AI Timbre v3.0 Indic TTS",
+            "Automated task and decision extraction from voice transcripts using Groq Llama 3.3 70B",
+            "Skill-matched smart task auto-assignment",
+            "Neo4j Aura Knowledge Graph bottleneck and dependency detection",
+            "Supabase Realtime synchronized team dashboards",
+            "Secure Google OAuth 2.0 authentication"
+          ]
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://flowwithmind.vercel.app/#team-starcy",
+          "name": "Team Starcy",
+          "alternateName": "Starcy",
+          "url": "https://flowwithmind.vercel.app",
+          "logo": "https://flowwithmind.vercel.app/flowmind.png",
+          "description": "Team Starcy is an engineering and AI innovation team founded by Piyush Rajendra Yenorkar and Debashree Mal, creators of FlowMind for The Great Indian AI Internship Challenge by Gnani AI.",
+          "founder": [
+            {
+              "@id": "https://flowwithmind.vercel.app/#piyush"
+            },
+            {
+              "@id": "https://flowwithmind.vercel.app/#debashree"
+            }
+          ],
+          "member": [
+            {
+              "@id": "https://flowwithmind.vercel.app/#piyush"
+            },
+            {
+              "@id": "https://flowwithmind.vercel.app/#debashree"
+            }
+          ],
+          "award": "Built for The Great Indian AI Internship Challenge by Gnani AI"
+        },
+        {
+          "@type": "Person",
+          "@id": "https://flowwithmind.vercel.app/#piyush",
+          "name": "Piyush Rajendra Yenorkar",
+          "alternateName": "Piyush Yenorkar",
+          "jobTitle": "Lead Full-Stack & AI Engineer",
+          "url": "https://github.com/piyushyenorkar",
+          "sameAs": [
+            "https://github.com/piyushyenorkar",
+            "https://github.com/piyushyenorkar/FlowMind"
+          ],
+          "worksFor": {
+            "@id": "https://flowwithmind.vercel.app/#team-starcy"
+          },
+          "knowsAbout": [
+            "Artificial Intelligence",
+            "Large Language Models",
+            "Full-Stack Web Development",
+            "React",
+            "TypeScript",
+            "Node.js",
+            "Neo4j",
+            "Knowledge Graphs",
+            "Speech Recognition",
+            "WebRTC"
+          ]
+        },
+        {
+          "@type": "Person",
+          "@id": "https://flowwithmind.vercel.app/#debashree",
+          "name": "Debashree Mal",
+          "jobTitle": "Co-founder, UI/UX Designer & Frontend Engineer",
+          "worksFor": {
+            "@id": "https://flowwithmind.vercel.app/#team-starcy"
+          },
+          "knowsAbout": [
+            "UI/UX Design",
+            "Frontend Engineering",
+            "Design Systems",
+            "React",
+            "TypeScript",
+            "User Experience Architecture"
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://flowwithmind.vercel.app/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is FlowMind?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "FlowMind is 'The PM That Never Forgets' — an AI-powered project manager that transforms team voice meetings into structured execution. It combines live Agora voice meetings, Gnani AI sovereign Hinglish Speech-to-Text (STT) and Indic Text-to-Speech (TTS), Groq Llama 3.3 70B automated task & decision extraction, and a Neo4j knowledge graph to predict project bottlenecks."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Who built FlowMind?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "FlowMind was built by Team Starcy, founded by Piyush Rajendra Yenorkar (Lead Full-Stack & AI Engineer) and Debashree Mal (Co-founder, UI/UX Designer & Frontend Engineer)."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is Team Starcy?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Team Starcy is the innovation team behind FlowMind, created by Piyush Rajendra Yenorkar and Debashree Mal for The Great Indian AI Internship Challenge organized by Gnani AI."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What AI models and technologies power FlowMind?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "FlowMind is powered by Meta Llama 3.3 70B Versatile via Groq LPUs for task extraction, Gnani AI Prisma v3.0 STT for Hinglish transcription, Gnani AI Timbre v3.0 TTS for spoken briefings, Neo4j Aura Graph Database for bottleneck prediction, Agora WebRTC for voice meetings, and Supabase for real-time collaboration."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What challenge was FlowMind built for?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "FlowMind was built for The Great Indian AI Internship Challenge organized by Gnani AI, specifically addressing the Mixed Vibes and Two-Person Team tracks."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does FlowMind predict project bottlenecks?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "FlowMind models team members, skill proficiencies, task dependencies, and project sprints as nodes and relationships in a Neo4j knowledge graph. Graph queries detect overloaded developers and critical path delays before sprints fail."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
+    <!-- Fallback semantic content for search crawlers & LLM scrapers (rendered when JS is disabled or during initial crawl) -->
+    <noscript>
+      <header>
+        <h1>FlowMind — The PM That Never Forgets</h1>
+        <p>Your Personal AI Group Project Manager built by <strong>Team Starcy</strong> (<strong>Piyush Rajendra Yenorkar</strong> and <strong>Debashree Mal</strong>).</p>
+      </header>
+      <main>
+        <section>
+          <h2>About FlowMind</h2>
+          <p>
+            FlowMind is an AI-powered project management platform built for <em>The Great Indian AI Internship Challenge</em> by <strong>Gnani AI</strong>.
+            It ambiently listens to live voice meetings via Agora WebRTC, transcribes spoken English and Hinglish using Gnani AI Prisma v3.0 STT, extracts actionable tasks and key decisions using Groq Llama 3.3 70B, auto-assigns tasks based on member skill profiles, and leverages a Neo4j Aura knowledge graph to detect dependency bottlenecks before they cause delays.
+          </p>
+        </section>
+        <section>
+          <h2>Created by Team Starcy</h2>
+          <ul>
+            <li><strong>Piyush Rajendra Yenorkar</strong> — Lead Full-Stack & AI Engineer</li>
+            <li><strong>Debashree Mal</strong> — Co-founder, UI/UX Designer & Frontend Engineer</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Key Features</h2>
+          <ul>
+            <li>Live Voice Meetings powered by Agora WebRTC</li>
+            <li>Sovereign Hinglish Speech-to-Text via Gnani AI Prisma v3.0 STT</li>
+            <li>Spoken Audio Sprint Briefings via Gnani AI Timbre v3.0 TTS</li>
+            <li>Automated Task & Decision Extraction via Groq Llama 3.3 70B</li>
+            <li>Skill-Based Intelligent Task Assignment</li>
+            <li>Neo4j Graph Database Bottleneck Detection</li>
+            <li>Real-Time Team Synchronization via Supabase</li>
+          </ul>
+        </section>
+        <nav>
+          <a href="/">Home</a> |
+          <a href="/contact">Contact Us</a> |
+          <a href="/privacy">Privacy Policy</a> |
+          <a href="/terms">Terms of Service</a> |
+          <a href="https://github.com/piyushyenorkar/FlowMind">GitHub Repository</a>
+        </nav>
+      </main>
+    </noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

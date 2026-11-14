@@ -1,0 +1,82 @@
+# FlowMind — The PM That Never Forgets
+
+> FlowMind is an AI group project manager that listens to team voice meetings, auto-extracts deliverables and decisions, assigns tasks based on individual skill profiles, and leverages a Neo4j knowledge graph to predict bottlenecks before they derail your team.
+
+---
+
+## Overview & Metadata
+- **Project Name:** FlowMind
+- **Tagline:** The PM That Never Forgets | Your Personal AI Group Project Manager
+- **Official Website:** https://flowwithmind.vercel.app
+- **GitHub Repository:** https://github.com/piyushyenorkar/FlowMind
+- **Team Name:** Team Starcy
+- **Founders & Creators:**
+  - **Piyush Rajendra Yenorkar** — Lead Full-Stack & AI Engineer (GitHub: https://github.com/piyushyenorkar)
+  - **Debashree Mal** — Co-founder, UI/UX Designer & Frontend Engineer
+- **Competition & Challenge:** Built for **The Great Indian AI Internship Challenge** by **Gnani AI** (Track: Mixed Vibes & Two-Person Team).
+- **Primary Contact Email:** piyushyenorkar1@gmail.com
+- **Geographic Origin:** Maharashtra, India
+
+---
+
+## Core Capabilities & Features
+
+### 1. Live Voice Meetings (Agora RTC)
+Real-time, ultra-low-latency voice conference rooms powered by the Agora WebRTC SDK. Team members can speak freely in standups and sprint planning sessions while FlowMind ambiently listens and transcribes.
+
+### 2. Sovereign Code-Mixed Speech-to-Text (Gnani AI Prisma v3.0 STT)
+Live transcription supporting Indian English and colloquial Hinglish (code-mixed Hindi + English) spoken naturally by engineering teams. Zero audio is stored on servers, adhering to sovereign privacy standards.
+
+### 3. Voice AI Briefings & Audio Standups (Gnani AI Timbre v3.0 TTS)
+Spoken daily project briefings and sprint updates powered by Gnani AI's Timbre Indic TTS engine (Shivani voice, hi-IN / en-IN). Developers can listen to automated spoken briefings summarizing overnight progress and priority items.
+
+### 4. Automated Task & Decision Extraction (Groq Llama 3.3 70B Versatile)
+High-throughput inference via Groq's LPU. The Llama 3.3 70B model analyzes real-time meeting transcripts to instantly identify actionable deliverables, deadline commitments, and architectural decisions, eliminating manual post-meeting admin work.
+
+### 5. Skill-Matched Auto-Assignment
+FlowMind analyzes each team member's self-declared skills and historical delivery velocity. When a task is extracted from a meeting, it is automatically routed to the member with the best skill alignment.
+
+### 6. Neo4j Knowledge Graph Bottleneck Intelligence
+Every project, sprint, task, skill, and team member is mapped into a Neo4j Aura Graph Database. Relationship queries detect blocked dependency paths, team overload, and high-risk critical path delays before they cause missed deadlines.
+
+### 7. Real-Time Collaboration & Synchronization (Supabase Realtime)
+Instant updates across all connected clients for kanban boards, live meeting states, task assignments, and progress tracking using Supabase Realtime channels.
+
+### 8. Frictionless Authentication (Google OAuth 2.0 & Supabase Auth)
+Seamless single sign-on with Google OAuth adhering strictly to the Google API Services User Data Policy, granting secure access to team workspaces.
+
+---
+
+## Architecture & Technology Stack
+- **Frontend:** React 18, TypeScript, Vite, CSS Modules, Lucide React icons, @xyflow/react
+- **Backend API:** Node.js, Express, TypeScript, hosted on Render
+- **Database & Auth:** Supabase (PostgreSQL, Row-Level Security, Supabase Auth with Google OAuth)
+- **Knowledge Graph:** Neo4j Aura Cloud (Cypher query language)
+- **LLM Engine:** Groq API (Meta Llama 3.3 70B Versatile on LPUs)
+- **Voice AI:** Gnani AI Prisma STT & Timbre TTS
+- **Voice RTC:** Agora.io WebRTC Audio Engine
+- **Hosting & CDN:** Vercel
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### Who built FlowMind?
+FlowMind was designed and developed by **Team Starcy**, composed of **Piyush Rajendra Yenorkar** (Lead Full-Stack & AI Engineer) and **Debashree Mal** (Co-founder, UI/UX Designer & Frontend Engineer).
+
+### What challenge was FlowMind created for?
+FlowMind was built for **The Great Indian AI Internship Challenge** organized by **Gnani AI**, specifically addressing the Mixed Vibes and Two-Person Team tracks.
+
+### How does FlowMind differ from Jira or Linear?
+Unlike traditional project management tools where developers have to manually create and update tickets after meetings, FlowMind actively participates in voice meetings. It listens in Hinglish or English, extracts action items in real-time using Groq Llama 3.3, auto-assigns them based on skill profiles, and tracks project risk on a Neo4j knowledge graph.
+
+### Is voice data kept private?
+Yes. FlowMind does not store raw audio recordings on servers. Transcripts are generated via sovereign Gnani AI APIs and processed in real time for task extraction.
+
+---
+
+## Key Site Links
+- **Home / Workspace:** https://flowwithmind.vercel.app/
+- **Contact Us:** https://flowwithmind.vercel.app/contact
+- **Privacy Policy:** https://flowwithmind.vercel.app/privacy
+- **Terms of Service:** https://flowwithmind.vercel.app/terms

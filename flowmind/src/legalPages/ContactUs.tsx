@@ -138,6 +138,30 @@ export default function ContactUs() {
             </div>
           </div>
 
+          {/* THE TEAM / CREATORS */}
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Built by Team Starcy</h2>
+            <p className={styles.paragraph}>
+              FlowMind was created by <strong>Team Starcy</strong> for <em>The Great Indian AI Internship Challenge</em> by <strong>Gnani AI</strong>.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginTop: '12px' }}>
+              <div style={{ background: 'var(--bg3, #18181b)', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--border, #27272a)' }}>
+                <div style={{ fontWeight: 600, color: 'var(--fg, #fafafa)', fontSize: '15px' }}>Piyush Rajendra Yenorkar</div>
+                <div style={{ fontSize: '12.5px', color: 'var(--accent, #14b8a6)', marginTop: '2px' }}>Lead Full-Stack &amp; AI Engineer</div>
+                <div style={{ fontSize: '12px', color: 'var(--fg-muted, #a1a1aa)', marginTop: '6px', lineHeight: 1.5 }}>
+                  System architecture, Groq Llama 3.3 LLM extraction pipeline, Agora voice RTC, Neo4j knowledge graph &amp; Supabase backend.
+                </div>
+              </div>
+              <div style={{ background: 'var(--bg3, #18181b)', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--border, #27272a)' }}>
+                <div style={{ fontWeight: 600, color: 'var(--fg, #fafafa)', fontSize: '15px' }}>Debashree Mal</div>
+                <div style={{ fontSize: '12.5px', color: 'var(--accent, #14b8a6)', marginTop: '2px' }}>Co-founder, UI/UX Designer &amp; Frontend Engineer</div>
+                <div style={{ fontSize: '12px', color: 'var(--fg-muted, #a1a1aa)', marginTop: '6px', lineHeight: 1.5 }}>
+                  Design systems, product workflows, interactive user flows, and responsive web aesthetics.
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* WHAT WE CAN HELP WITH */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>What Can We Help You With?</h2>
@@ -259,7 +283,7 @@ export default function ContactUs() {
         </main>
 
         <footer className={styles.footerLinks}>
-          <span>© 2026 FlowMind. All rights reserved.</span>
+          <span>© 2026 FlowMind • Built by Team Starcy</span>
           <button className={styles.link} style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => navigate('privacy')}>
             Privacy Policy
           </button>

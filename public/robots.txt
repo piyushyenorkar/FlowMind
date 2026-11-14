@@ -1,0 +1,57 @@
+# FlowMind — The PM That Never Forgets
+# Built by Team Starcy (Piyush Rajendra Yenorkar & Debashree Mal)
+# Web Application: https://flowwithmind.vercel.app
+
+User-agent: *
+Allow: /
+
+# Google Search & Google AI (Gemini, Google-Extended, AI Overviews)
+User-agent: Googlebot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Microsoft Bing & Copilot
+User-agent: Bingbot
+Allow: /
+
+# Apple Search & Apple Intelligence
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# OpenAI & ChatGPT Search
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Perplexity AI Search
+User-agent: PerplexityBot
+Allow: /
+
+# Anthropic Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Common Crawl & General AI
+User-agent: CCBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+Sitemap: https://flowwithmind.vercel.app/sitemap.xml
