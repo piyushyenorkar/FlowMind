@@ -306,64 +306,79 @@ export async function generateInsights(teamCode: string, tasks: any[], decisions
   // Step 2: Fetch Graph Data (Neo4j)
   const graphData = await fetchGraphInsights(teamCode)
 
-  // Step 3: Build structured data
-  const taskData = tasks.map(t => ({
-    title: t.title, assignedTo: t.assignedTo, status: t.status, deadline: t.deadline || 'not set', estimatedHours: t.estimatedHours || 0, createdAt: t.createdAt,
+  // Step 3: Build structured data (select most relevant recent tasks & decisions)
+  const taskData = (tasks || []).map(t => ({
+    title: t.title, assignedTo: t.assignedTo || t.assigned_to, status: t.status, deadline: t.deadline || 'not set', estimatedHours: t.estimatedHours || t.estimated_hours || 0, createdAt: t.createdAt || t.created_at,
   }))
-  const decisionData = decisions.map(d => ({
-    decision: d.decision, reason: d.reason, impact: d.impact, involvedPeople: d.involvedPeople,
+  const decisionData = (decisions || []).map(d => ({
+    decision: d.decision, reason: d.reason, impact: d.impact, involvedPeople: d.involvedPeople || d.involved_people,
   }))
-  const memberData = members.map(m => ({
-    name: m.name, role: m.role, isLeader: m.isLeader,
+  const memberData = (members || []).map(m => ({
+    name: m.name, role: m.role, isLeader: m.isLeader ?? m.is_leader,
   }))
 
   const systemPrompt = `You are FlowMind AI — a project intelligence engine. You analyze REAL team data stored in FlowMind Memory and Neo4j Graph Database to surface actionable insights.
 
-CRITICAL: Your analysis must be SPECIFIC to this team. Use actual task names, member names, deadlines, and memory context. Do NOT generate generic insights.
+CRITICAL: Your analysis must be SPECIFIC to this team. Use actual task names, member names, deadlines, and memory context. Do NOT generate generic insights. Keep each item concise (1-2 sentences).
 
 TEAM DATA:
 • ${tasks.length} tasks: ${tasks.filter(t => t.status === 'done').length} done, ${tasks.filter(t => t.status === 'in-progress').length} in-progress, ${tasks.filter(t => t.status === 'todo').length} todo
 • ${decisions.length} decisions logged
-• ${members.length} team members: ${members.map(m => m.name).join(', ')}
+• ${members.length} team members: ${members.map(m => m.name).slice(0, 12).join(', ')}
 
 NEO4J GRAPH INSIGHTS (Bottlenecks & Workload):
 ${JSON.stringify(graphData)}
 
-TASKS:
-${JSON.stringify(taskData.slice(0, 50))}
-DECISIONS:
-${JSON.stringify(decisionData)}
+TASKS (Active & Recent):
+${JSON.stringify(taskData.slice(-25))}
+DECISIONS (Recent):
+${JSON.stringify(decisionData.slice(-10))}
 MEMBERS:
-${JSON.stringify(memberData)}
+${JSON.stringify(memberData.slice(0, 15))}
 
 FLOWMIND MEMORY (past events, conversations, patterns):
 ${memoryContext.substring(0, 2000)}
 
 RULES:
 1. Reference ACTUAL task names and member names from the data above
-2. Calculate risk scores based on deadline proximity, workload, and memory patterns
+2. Calculate risk scores (0-100) based on deadline proximity, workload, and memory patterns
 3. Identify patterns from the FlowMind Memory — recurring issues, communication gaps, workload imbalances
-4. For bottlenecks, heavily rely on the Neo4j Graph Insights. If someone is overloaded or tasks are chaining, point it out explicitly ("Task A is delayed, which is connected to Member Raj, who is also assigned to Task B, creating a bottleneck").
-5. Recommendation must be a specific, actionable paragraph referencing real data
+4. For bottlenecks, heavily rely on the Neo4j Graph Insights. If someone is overloaded or tasks are chaining, point it out explicitly.
+5. Recommendation must be a specific, actionable paragraph (2-3 sentences) referencing real data
 
-Respond with ONLY valid JSON, no markdown, no explanation:
+Respond with ONLY valid JSON, no markdown fences, no explanatory text:
 {
-  "risks": [{"member": "real name", "task": "real task title", "risk": 0-100, "reason": "specific explanation from data"}],
-  "patterns": [{"icon": "emoji", "title": "Pattern Name", "detail": "specific detail from memory"}],
-  "bottlenecks": [{"task": "real task title", "person": "real name", "waiting": days_number, "graph_insight": "Detailed explanation using Graph data"}],
-  "recommendation": "Specific actionable recommendation paragraph"
+  "risks": [{"member": "real name", "task": "real task title", "risk": 0-100, "reason": "concise explanation"}],
+  "patterns": [{"icon": "emoji", "title": "Pattern Name", "detail": "concise detail"}],
+  "bottlenecks": [{"task": "real task title", "person": "real name", "waiting": 2, "graph_insight": "concise graph insight"}],
+  "recommendation": "Specific actionable recommendation paragraph referencing real team deliverables."
 }
-Provide 2-4 items per category.`
+Provide exactly 2 items for risks, 2 for patterns, and 2 for bottlenecks.`
 
   try {
-    const reply = await groqChat([{ role: 'user', content: 'Analyze this team data and FlowMind Memory.' }], systemPrompt, { maxTokens: 1000 })
+    const reply = await groqChat([{ role: 'user', content: 'Analyze this team data and FlowMind Memory.' }], systemPrompt, { maxTokens: 2500 })
     if (!reply) return null
 
-    const cleaned = reply.replace(/```json|```/g, '').trim()
+    // Clean out think tags, code blocks, or leading/trailing commentary
+    const cleaned = reply
+      .replace(/<think>[\s\S]*?<\/think>/gi, '')
+      .replace(/```json|```/g, '')
+      .trim()
+
     const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0])
-      if (parsed.risks && parsed.patterns) return parsed
+      try {
+        const parsed = JSON.parse(jsonMatch[0])
+        if (parsed.risks || parsed.bottlenecks || parsed.recommendation) {
+          // Normalize bottlenecks if empty or malformed
+          if (!Array.isArray(parsed.bottlenecks)) parsed.bottlenecks = []
+          if (!Array.isArray(parsed.risks)) parsed.risks = []
+          if (!Array.isArray(parsed.patterns)) parsed.patterns = []
+          return parsed
+        }
+      } catch (innerErr) {
+        console.warn('[Insights] Inner parse error:', innerErr)
+      }
     }
     return JSON.parse(cleaned)
   } catch (err: any) {
@@ -373,29 +388,62 @@ Provide 2-4 items per category.`
 }
 
 /**
- * Send a chat message using recalled Hindsight memories + Groq
+ * Send a chat message using recalled Hindsight memories + Groq + live GitHub context
  */
 export async function sendChatMessage(teamCode: string, userMessage: string, context: any, conversationHistory: any[]) {
   const recalled = await recallMemory(teamCode, userMessage)
   const memoryContext = recalled ? JSON.stringify(recalled).substring(0, 2000) : 'No specific memories found.'
 
-  const systemPrompt = `You are FlowMind AI, an intelligent project assistant with access to FlowMind Memory.
-Team context:
-- ${context.tasks?.length || 0} tasks (${context.tasks?.filter((t: any) => t.status === 'done')?.length || 0} done)
-- ${context.decisions?.length || 0} decisions logged
-- ${context.members?.length || 0} team members active
-- Recent activity: ${context.memoryFeed?.slice(0, 5).map((m: any) => m.text).join('; ') || 'None'}
+  let repoContext = 'No repository connected.'
+  if (context.githubActivity && context.githubActivity.success) {
+    const gh = context.githubActivity
+    const recentCommitsList = (gh.commits || []).slice(0, 15).map((c: any) => 
+      `- [${c.shortSha}] "${c.message.replace(/\s+/g, ' ').trim()}" by ${c.author?.name || c.author?.username || 'Unknown'} (${c.date})`
+    ).join('\n')
+
+    const prsList = (gh.pullRequests || []).slice(0, 5).map((p: any) =>
+      `- PR #${p.number}: "${p.title}" [${p.state}${p.isMerged ? ' - merged' : ''}] by ${p.author}`
+    ).join('\n')
+
+    const contributorsList = (gh.contributors || []).slice(0, 5).map((ct: any) =>
+      `${ct.name || ct.username} (${ct.commitCount} commits)`
+    ).join(', ')
+
+    repoContext = `Repository: ${gh.owner}/${gh.repoName} (Branch: ${gh.defaultBranch || 'main'})
+Stats: ${gh.stats?.commitsFetched || gh.commits?.length || 0} commits, ${gh.stats?.openPrCount || 0} open PRs, ${gh.stats?.stars || 0} stars
+Top Contributors: ${contributorsList || 'None'}
+Recent Commits (Live):
+${recentCommitsList || 'No recent commits recorded.'}
+${prsList ? `\nRecent Pull Requests:\n${prsList}` : ''}`
+  } else if (context.repo) {
+    repoContext = `Repository: ${context.repo} (connected, but activity details could not be loaded; check GitHub access token).`
+  }
+
+  const systemPrompt = `You are FlowMind AI, an intelligent project assistant with direct access to FlowMind Memory, active team tasks, decisions, and live Git repository activity.
+
+Live Git Repository Data:
+${repoContext}
+
+Team Context:
+- Tasks: ${context.tasks?.length || 0} tasks (${context.tasks?.filter((t: any) => t.status === 'done')?.length || 0} done)
+- Decisions: ${context.decisions?.length || 0} logged
+- Members: ${context.members?.length || 0} active
+- Memory Activity: ${context.memoryFeed?.slice(0, 5).map((m: any) => m.text).join('; ') || 'None'}
 
 FlowMind Memory Recall: ${memoryContext}
-Tasks: ${JSON.stringify(context.tasks?.map((t: any) => ({ title: t.title, assignedTo: t.assignedTo, status: t.status })) || [])}
-Decisions: ${JSON.stringify(context.decisions?.map((d: any) => ({ decision: d.decision, impact: d.impact })) || [])}
+Tasks Details: ${JSON.stringify(context.tasks?.map((t: any) => ({ title: t.title, assignedTo: t.assignedTo, status: t.status })) || [])}
+Decisions Details: ${JSON.stringify(context.decisions?.map((d: any) => ({ decision: d.decision, impact: d.impact })) || [])}
 
 Rules:
-- Be concise but helpful
-- Reference specific tasks, decisions, and team members by name when relevant
-- Use **bold** for emphasis
-- When you provide crucial insights, warnings, or very important information, you MUST proactively highlight it by starting the line with "> Note:" or "> Important:".
-- Base your answers on the actual data and FlowMind Memories provided`
+1. ABSOLUTELY NO EMOJIS: Never use any emojis anywhere in your response (no 📅, 📊, ⚠️, 🔄, 📌, 💡, 🚀, etc.). FlowMind is a minimalist dark tech platform. Emojis clash with the interface and are strictly forbidden.
+2. LIVE REPOSITORY ACCESS: You HAVE direct real-time access to the connected repository commits, branches, and PRs provided in "Live Git Repository Data" above. When asked about repository updates, commits, code changes, or git progress, ALWAYS provide the exact recent commits with commit hash (\`shortSha\`), author, relative time, and commit message. NEVER claim that you do not have direct access to git logs or repository history.
+3. CONCISE & PROFESSIONAL: Be concise, clear, and engineering-focused. Use clean standard markdown formatting:
+   - Section headers: Use **bold section headers** or '### Header' (without any emojis).
+   - Bullets: Use clean standard dashes '- ' for lists.
+   - Tasks: Write task titles plainly as normal text (e.g. "- In-Progress: Login work, UI Helper API, Build API"). DO NOT wrap everyday task names in backticks.
+   - Code & Commits: Only use backticks for actual git commit hashes (e.g. \`c26704f\`), branch names (\`main\`), or CLI commands.
+   - Notes & Highlights: Start callout lines with '> Note:' or '> Important:' or '> Recommendation:'.
+4. Reference team members, tasks, and commits by name and specifics.`
 
   const messages = conversationHistory
     .filter(m => m.role && m.text)
@@ -405,7 +453,10 @@ Rules:
   messages.push({ role: 'user', content: userMessage })
 
   const reply = await groqChat(messages, systemPrompt)
-  return reply || "I've searched FlowMind Memory for context on your question."
+  let cleanReply = reply || "I've checked FlowMind records for your question."
+  // Strip any accidental emojis that might have slipped through from the LLM
+  cleanReply = cleanReply.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '').trim()
+  return cleanReply
 }
 
 // ── AI Chat Sessions ───────────────────────────────────────────────────────────
@@ -447,3 +498,118 @@ export async function saveAiChatMessage(sessionId: string, role: string, text: s
     await supabase.from('ai_chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', sessionId)
   }
 }
+
+// ── GitHub Activity Service ───────────────────────────────────────────────────
+
+export interface GitHubCommitItem {
+  sha: string
+  shortSha: string
+  author: {
+    name: string
+    username?: string
+    avatarUrl?: string
+  }
+  message: string
+  date: string
+  url: string
+}
+
+export interface GitHubPullRequestItem {
+  id: number
+  number: number
+  title: string
+  state: 'open' | 'closed'
+  isMerged: boolean
+  author: string
+  authorAvatar?: string
+  url: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GitHubContributorItem {
+  name: string
+  username?: string
+  avatarUrl?: string
+  commitCount: number
+}
+
+export interface GitHubActivityResult {
+  success: boolean
+  repo: string
+  owner: string
+  repoName: string
+  defaultBranch: string
+  description?: string
+  stats: {
+    commitsFetched: number
+    openPrCount: number
+    closedPrCount: number
+    stars: number
+    forks: number
+  }
+  latestCommit?: GitHubCommitItem
+  commits: GitHubCommitItem[]
+  pullRequests: GitHubPullRequestItem[]
+  contributors: GitHubContributorItem[]
+  error?: string
+}
+
+export async function fetchGitHubActivity(repoUrl: string, token?: string): Promise<GitHubActivityResult> {
+  if (!repoUrl || !repoUrl.trim()) {
+    return {
+      success: false,
+      repo: '',
+      owner: '',
+      repoName: '',
+      defaultBranch: 'main',
+      stats: { commitsFetched: 0, openPrCount: 0, closedPrCount: 0, stars: 0, forks: 0 },
+      commits: [],
+      pullRequests: [],
+      contributors: [],
+      error: 'No repository specified.'
+    }
+  }
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/github/activity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        repoUrl: repoUrl.trim(), 
+        token: token?.trim() || undefined
+      }),
+    })
+    if (!res.ok) {
+      const errData = await res.json().catch(() => null)
+      return {
+        success: false,
+        repo: repoUrl,
+        owner: '',
+        repoName: '',
+        defaultBranch: 'main',
+        stats: { commitsFetched: 0, openPrCount: 0, closedPrCount: 0, stars: 0, forks: 0 },
+        commits: [],
+        pullRequests: [],
+        contributors: [],
+        error: errData?.error || `GitHub request failed (${res.status})`
+      }
+    }
+    return await res.json()
+  } catch (err: any) {
+    console.warn('[GitHub Activity API Error]:', err.message)
+    return {
+      success: false,
+      repo: repoUrl,
+      owner: '',
+      repoName: '',
+      defaultBranch: 'main',
+      stats: { commitsFetched: 0, openPrCount: 0, closedPrCount: 0, stars: 0, forks: 0 },
+      commits: [],
+      pullRequests: [],
+      contributors: [],
+      error: err.message || 'Network error reaching backend'
+    }
+  }
+}
+
