@@ -83,6 +83,7 @@ export default function LeaderSetup({ onClose, defaultUniversal }: { onClose?: (
   const [form, setForm] = useState({
     projectName: '', description: '', deadline: '', leaderName: user?.name || '',
     purpose: '', rolesNeeded: '', maxMembers: '', city: '', state: '',
+    githubLink: '', deployLink: ''
   })
 
   const statesList = Object.keys(LOCATION_DATA)
@@ -97,7 +98,7 @@ export default function LeaderSetup({ onClose, defaultUniversal }: { onClose?: (
     setLoading(true)
 
     try {
-      const team = await createTeam(form.projectName, form.description, form.deadline, form.leaderName)
+      const team = await createTeam(form.projectName, form.description, form.deadline, form.leaderName, form.githubLink, form.deployLink)
       if (team?.code) {
         const res1 = await saveTeam(team.code, form.projectName, 'leader', isUniversal ? 'universal' : 'code')
         if (res1?.error) {
@@ -193,6 +194,11 @@ export default function LeaderSetup({ onClose, defaultUniversal }: { onClose?: (
         <div className={styles.field}>
           <label className="label">Project Description</label>
           <textarea className="textarea" placeholder="What are you building? (optional)" value={form.description} onChange={e => set('description', e.target.value)} />
+        </div>
+
+        <div className={styles.field}>
+          <label className="label">GitHub Repository URL (Optional)</label>
+          <input className="input" placeholder="https://github.com/owner/repository (optional)" value={form.githubLink} onChange={e => set('githubLink', e.target.value)} />
         </div>
 
 

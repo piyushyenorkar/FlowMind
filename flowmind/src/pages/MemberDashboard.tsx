@@ -12,6 +12,7 @@ import TeamMembers from '../components/TeamMembers'
 import GroupChat from '../components/GroupChat'
 import FacepileChat from '../components/FacepileChat'
 import DirectChat from '../components/DirectChat'
+import ProjectTab from '../components/ProjectTab'
 import { useApp } from '../context/AppContext'
 import styles from './Dashboard.module.css'
 
@@ -23,6 +24,7 @@ const TAB_TITLES = {
   decisions: 'Decisions',
   members: 'Team Members',
   groupchat: 'Group Chat',
+  project: 'Project & Repository',
 }
 
 export default function MemberDashboard() {
@@ -71,6 +73,7 @@ export default function MemberDashboard() {
           {activeTab === 'decisions' && <DecisionsTab />}
           {activeTab === 'members' && <TeamMembers />}
           {activeTab === 'groupchat' && <GroupChat />}
+          {activeTab === 'project' && <ProjectTab />}
         </div>
       </main>
 

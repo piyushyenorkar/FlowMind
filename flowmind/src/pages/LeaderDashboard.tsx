@@ -12,6 +12,7 @@ import TeamMembers from '../components/TeamMembers'
 import GroupChat from '../components/GroupChat'
 import DirectChat from '../components/DirectChat'
 import FacepileChat from '../components/FacepileChat'
+import ProjectTab from '../components/ProjectTab'
 import { useApp } from '../context/AppContext'
 import { supabase } from '../services/supabase'
 import styles from './Dashboard.module.css'
@@ -24,6 +25,7 @@ const TAB_TITLES = {
   chat: 'AI Assistant',
   members: 'Team Members',
   groupchat: 'Group Chat',
+  project: 'Project & Repository',
 }
 
 export default function LeaderDashboard() {
@@ -154,6 +156,7 @@ export default function LeaderDashboard() {
           {activeTab === 'chat' && <ChatTab />}
           {activeTab === 'members' && <TeamMembers />}
           {activeTab === 'groupchat' && <GroupChat />}
+          {activeTab === 'project' && <ProjectTab />}
         </div>
       </main>
 
