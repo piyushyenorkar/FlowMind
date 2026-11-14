@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import styles from './LeaderOverview.module.css'
-import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, Bot, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network, RefreshCw } from 'lucide-react'
+import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, Bot, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network, RefreshCw, FolderGit2, GitBranch, GitCommit } from 'lucide-react'
 import TeamMembers from './TeamMembers'
 import Avatar from './Avatar'
 import flowmindLogo from '../assets/flowmind.png'
 import neo4jLogo from '../assets/neo4j.png'
-import { generateInsights } from '../services/api'
+import { generateInsights, fetchGitHubActivity, GitHubActivityResult } from '../services/api'
 import MethodologyCanvas from './MethodologyCanvas.tsx'
 
 export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, setShowMethodologyCanvas }: { setActiveTab: any, showMethodologyCanvas?: boolean, setShowMethodologyCanvas?: any }) {
   const { team, tasks, decisions, members, memoryFeed, memberProfiles, role } = useApp()
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [showInsightsModal, setShowInsightsModal] = useState(false)
+  const [githubActivity, setGithubActivity] = useState<GitHubActivityResult | null>(null)
   const [insights, setInsights] = useState<any>(null)
   const [loadingInsights, setLoadingInsights] = useState(false)
+
+  useEffect(() => {
+    if (!team?.githubLink || !team.githubLink.trim()) {
+      setGithubActivity(null)
+      return
+    }
+    const token = localStorage.getItem('flowmind_gh_token_' + team.code) || localStorage.getItem('flowmind_github_token') || ''
+    fetchGitHubActivity(team.githubLink.trim(), token).then(data => {
+      if (data) setGithubActivity(data)
+    })
+  }, [team?.githubLink, team?.code])
 
   const handleRegenerateInsights = () => {
     if (!team?.code) return
@@ -41,6 +53,15 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
   const healthScore = tasks.length === 0 ? 100 : Math.round((done / tasks.length) * 60 + (inProgress / tasks.length) * 30 + 10)
 
   const healthColor = healthScore >= 70 ? 'var(--green)' : healthScore >= 40 ? 'var(--yellow)' : 'var(--red)'
+
+  const repoName = (() => {
+    if (githubActivity?.repoName) return githubActivity.repoName
+    if (!team?.githubLink) return 'Repository'
+    const cleaned = team.githubLink.trim().replace(/\/+$/, '')
+    const parts = cleaned.split('/')
+    const lastPart = parts[parts.length - 1]?.replace(/\.git$/i, '')
+    return lastPart || 'Repository'
+  })()
 
   if (showMethodologyCanvas) {
     return (
@@ -109,12 +130,12 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
           </div>
         </div>
 
-        {/* Insights & Deadline Split */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0 }}>
+        {/* Insights & Project Activity Split */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, minHeight: 0, minWidth: 0 }}>
           {/* Neo4j Insights Button */}
           <div 
             className={styles.card} 
-            style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', cursor: 'pointer', minHeight: 0 }}
+            style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', cursor: 'pointer', minHeight: 0, minWidth: 0, margin: 0, position: 'relative' }}
             onClick={() => setShowInsightsModal(true)}
           >
             <div className={styles.cardHeader} style={{ marginBottom: '4px' }}>
@@ -133,23 +154,36 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
             </div>
           </div>
 
-          {/* Deadline */}
-          <div className={`${styles.card} ${styles.deadlineCard}`} style={{ flex: 1, padding: '16px', margin: 0, minHeight: 0 }}>
-            <div className={styles.cardHeader} style={{ marginBottom: '12px' }}>
+          {/* GitHub Project Activity (Unified, consistent single view) */}
+          <div 
+            className={styles.card} 
+            style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', cursor: 'pointer', minHeight: 0, minWidth: 0, margin: 0, position: 'relative' }}
+            onClick={() => setActiveTab('project')}
+            title="Click to view Project & Repository in the center pane"
+          >
+            <div className={styles.cardHeader} style={{ marginBottom: '4px' }}>
               <div className={styles.cardIconWrapper} style={{ background: 'transparent', color: 'var(--text)' }}>
-                <Clock size={18} />
+                <FolderGit2 size={18} />
               </div>
-              <div className={styles.cardTitle}>Deadline</div>
-              {team?.deadline && (
-                <div className={styles.deadlineDays} style={{ marginLeft: 'auto', fontSize: '10px', background: 'rgba(255, 255, 255, 0.05)', padding: '2px 6px', borderRadius: '10px' }}>
-                  {Math.max(0, Math.ceil((new Date(team.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} days left
+              <div className={styles.cardTitle}>{team?.githubLink ? 'Project Activity' : 'Repository'}</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 'auto', marginBottom: 'auto' }}>
+              {team?.githubLink ? (
+                <div style={{ fontSize: '12px', color: 'var(--text2)', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <GitBranch size={13} color="var(--accent)" />
+                  <span style={{ fontWeight: 500 }}>{repoName}</span>
+                </div>
+              ) : (
+                <div style={{ fontSize: '12px', color: 'var(--text3)', background: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <FolderGit2 size={13} />
+                  <span>Connect Repo</span>
                 </div>
               )}
             </div>
-            <div className={styles.deadlineContent} style={{ marginTop: 'auto', marginBottom: '10px', textAlign: 'center' }}>
-              <div className={styles.deadlineDate} style={{ marginBottom: '4px' }}>
-                {team?.deadline ? new Date(team.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not set'}
-              </div>
+
+            <div style={{ position: 'absolute', bottom: '12px', right: '12px', color: 'var(--text3)', opacity: 0.7 }}>
+              <ChevronRight size={16} />
             </div>
           </div>
         </div>
@@ -257,8 +291,32 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
               </div>
               
               {!insights && !loadingInsights && (
-                <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  Insights are not available right now.
+                <div style={{ color: 'var(--text3)', textAlign: 'center', padding: '40px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                  <div style={{ fontSize: '14px' }}>
+                    {tasks.length === 0 
+                      ? 'No tasks found yet. Create or assign tasks to generate graph insights.' 
+                      : 'Insights are currently unavailable.'}
+                  </div>
+                  {tasks.length > 0 && (
+                    <button 
+                      onClick={handleRegenerateInsights}
+                      style={{ 
+                        background: 'var(--surface2)', 
+                        border: '1px solid var(--border)', 
+                        color: 'var(--text)', 
+                        padding: '8px 20px', 
+                        borderRadius: '9999px', 
+                        cursor: 'pointer', 
+                        fontSize: '13px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <RefreshCw size={14} />
+                      Retry Analysis
+                    </button>
+                  )}
                 </div>
               )}
 

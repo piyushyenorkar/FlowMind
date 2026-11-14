@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Brain, MessageSquare, ChevronUp, ChevronDown, Reply, X, Edit2, Trash2 } from 'lucide-react'
+import { Brain, MessageSquare, ChevronUp, ChevronDown, Reply, X, Edit2, Trash2, Info } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { retainMemory, recallMemory, groqChat } from '../services/api'
 import { supabase } from '../services/supabase'
@@ -16,65 +16,160 @@ function getMemberColor(name: string) {
   return `hsl(${hue}, 80%, 70%)`;
 }
 
+function getScrollParent(node: HTMLElement | null): HTMLElement | null {
+  if (!node) return null
+  let parent = node.parentElement
+  while (parent) {
+    const { overflowY } = window.getComputedStyle(parent)
+    if (overflowY === 'auto' || overflowY === 'scroll') {
+      return parent
+    }
+    parent = parent.parentElement
+  }
+  return document.documentElement
+}
+
 const cachedGroupMessages: Record<string, any[]> = {}
 const cachedGroupReads: Record<string, Record<string, string>> = {}
 
+const KNOWN_HEADERS: Record<string, string> = {
+  'key points': 'Key Points',
+  'key point': 'Key Points',
+  'decisions': 'Decisions',
+  'decision': 'Decisions',
+  'action items': 'Action Items',
+  'action item': 'Action Items',
+  'unresolved questions': 'Unresolved Questions',
+  'unresolved question': 'Unresolved Questions',
+}
+
 const AISummaryFormatter = ({ text }: { text: string }) => {
-  if (!text.includes('**')) {
-    return <span className={styles.msgText}>{text}</span>
-  }
+  if (!text) return null
 
-  const lines = text.split('\n')
-  const elements = []
-  
-  let currentSection: string[] = []
-  let sectionTitle = ''
+  // 1. Normalize: match headers like **Key points**, * **Key points:**, etc.
+  // Consumes any colons and asterisks so trailing colons don't become rogue ":" bullet lines.
+  const normalizedText = text
+    .replace(/(?:\s|^)\*?\s*\*\*(Key [pP]oints?|Decisions?|Action [iI]tems?|Unresolved [qQ]uestions?)[^*]*\*\*[:\s]*/gi, '\n\n__SEC__$1\n')
+    .replace(/(?:\s|^)\*?\s*###?\s*(Key [pP]oints?|Decisions?|Action [iI]tems?|Unresolved [qQ]uestions?)[:\s]*/gi, '\n\n__SEC__$1\n')
+    // Convert sub-bullet titles like `* **Greeting & Check-in:**` into indented list items
+    .replace(/(?:\s|^)\*\s*\*\*([^*]+):\*\*\s*/g, '\n- **$1:** ')
 
-  const renderSection = (title: string, items: string[], idx: number) => {
-    return (
-      <div key={idx} className={styles.aiSummaryBox}>
-        <div className={styles.aiSummaryHeading}>
-          <div className={styles.aiSummaryBullet} />
-          {title.replace(/\*\*/g, '').replace(':', '').replace(/^\*\s*/, '')}
-        </div>
-        <ul className={styles.aiSummaryList}>
-          {items.map((item, i) => (
-            <li key={i}>{item.replace(/^\s*\*\s*/, '').replace(/\*\*/g, '')}</li>
-          ))}
-        </ul>
-      </div>
-    )
-  }
+  const rawLines = normalizedText.split('\n').map(l => l.trim()).filter(Boolean)
+  const sections: { title: string; items: string[] }[] = []
+  let intro = ''
+  let currentTitle = ''
+  let currentItems: string[] = []
+  let trailingNote = ''
+  let trailingNoteTitle = ''
 
-  let introText: string[] = []
-  let isParsingSection = false
+  for (const line of rawLines) {
+    // If a line is just punctuation like ':', '-', or '•', skip it completely
+    const stripped = line.replace(/^[-*•\d.:\s]+$/, '').trim()
+    if (!stripped) continue
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-    if (!line) continue
-
-    if (line.startsWith('* **') || line.startsWith('**')) {
-      if (sectionTitle) {
-        elements.push(renderSection(sectionTitle, currentSection, i))
+    if (line.startsWith('__SEC__')) {
+      if (currentTitle) {
+        sections.push({ title: currentTitle, items: currentItems })
       }
-      sectionTitle = line
-      currentSection = []
-      isParsingSection = true
-    } else if (isParsingSection) {
-       currentSection.push(line)
+      const rawKey = line.replace(/^__SEC__/, '').replace(/[:*#]/g, '').trim().toLowerCase()
+      currentTitle = KNOWN_HEADERS[rawKey] || (rawKey.charAt(0).toUpperCase() + rawKey.slice(1))
+      currentItems = []
     } else {
-       introText.push(line)
+      const lower = line.replace(/^[#*\s-]+/, '').replace(/[*:]/g, '').trim().toLowerCase()
+      const matchedHeader = Object.keys(KNOWN_HEADERS).find(h => lower === h || lower.startsWith(h + ' ') || lower.startsWith(h + ':'))
+
+      if (matchedHeader) {
+        if (currentTitle) {
+          sections.push({ title: currentTitle, items: currentItems })
+        }
+        currentTitle = KNOWN_HEADERS[matchedHeader]
+        currentItems = []
+        const afterText = line.replace(new RegExp(`^[#*\\s-]*\\*?\\*?${matchedHeader}\\*?\\*?[:\\s]*`, 'i'), '').trim()
+        if (afterText && afterText !== ':') {
+          currentItems.push(afterText)
+        }
+      } else if (currentTitle) {
+        // Detect if line is a trailing explanatory note (e.g. "Context of Previous Summary..." or "Note: ...")
+        const isNoteLine = /^(context( of previous summary)?|note|disclaimer|important notice)[:\s]/i.test(line) ||
+                           /^(context of previous summary)/i.test(line)
+        if (isNoteLine && sections.length >= 2) {
+          sections.push({ title: currentTitle, items: currentItems })
+          currentTitle = ''
+          currentItems = []
+
+          const colonIdx = line.indexOf(':')
+          if (colonIdx > 0 && colonIdx < 40) {
+            trailingNoteTitle = line.slice(0, colonIdx).replace(/[*#]/g, '').trim()
+            trailingNote = line.slice(colonIdx + 1).replace(/^[:\s]+/, '').trim()
+          } else {
+            trailingNoteTitle = 'Context Note'
+            trailingNote = line.replace(/^(context of previous summary|note|context)[:\s]*/i, '').trim()
+          }
+        } else {
+          // Normal bullet item (strip leading dashes, bullets, and colons)
+          const cleanItem = line.replace(/^[-*•\d.]+\s*/, '').replace(/^[:\s]+/, '').trim()
+          if (cleanItem && cleanItem !== ':') {
+            currentItems.push(cleanItem)
+          }
+        }
+      } else if (trailingNote) {
+        trailingNote += ' ' + line
+      } else {
+        intro = intro ? `${intro} ${line}` : line
+      }
     }
   }
 
-  if (sectionTitle) {
-    elements.push(renderSection(sectionTitle, currentSection, lines.length))
+  if (currentTitle) {
+    sections.push({ title: currentTitle, items: currentItems })
+  }
+
+  if (sections.length === 0 && !trailingNote) {
+    return <span className={styles.msgText} style={{ whiteSpace: 'pre-wrap' }}>{text}</span>
   }
 
   return (
     <div className={styles.aiSummaryContainer}>
-      {introText.length > 0 && <div className={styles.aiSummaryIntro}>{introText.join(' ')}</div>}
-      {elements}
+      {intro && <div className={styles.aiSummaryIntro}>{intro}</div>}
+      {sections.map((sec, idx) => (
+        <div key={idx} className={styles.aiSummaryBox}>
+          <div className={styles.aiSummaryHeading}>
+            <div className={styles.aiSummaryBullet} />
+            <span>{sec.title}</span>
+          </div>
+          <ul className={styles.aiSummaryList}>
+            {sec.items.length > 0 ? (
+              sec.items.map((item, i) => {
+                const parts = item.split(/(\*\*[^*]+\*\*)/g)
+                return (
+                  <li key={i}>
+                    {parts.map((part, pIdx) => {
+                      if (part.startsWith('**') && part.endsWith('**')) {
+                        return <strong key={pIdx} style={{ color: 'var(--text)' }}>{part.slice(2, -2)}</strong>
+                      }
+                      return part
+                    })}
+                  </li>
+                )
+              })
+            ) : (
+              <li style={{ color: 'var(--text3)' }}>No items to display</li>
+            )}
+          </ul>
+        </div>
+      ))}
+
+      {trailingNote && (
+        <div className={styles.aiSummaryNote}>
+          <div className={styles.aiSummaryNoteTitle}>
+            <Info size={13} />
+            <span>{trailingNoteTitle || 'Context Note'}</span>
+          </div>
+          <div className={styles.aiSummaryNoteText}>
+            {trailingNote}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -93,7 +188,92 @@ export default function GroupChat() {
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null)
   const [summarizing, setSummarizing] = useState(false)
   const [showSummarize, setShowSummarize] = useState(false)
-  const bottomRef = useRef<any>(null)
+  
+  // Scrolling and navigation
+  const groupWrapRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const [showScrollBottom, setShowScrollBottom] = useState(false)
+  const [newBelowCount, setNewBelowCount] = useState(0)
+  const prevMsgCountRef = useRef(messages.length)
+  const isAtBottomRef = useRef(true)
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior, block: 'end' })
+    } else {
+      const container = getScrollParent(groupWrapRef.current)
+      if (container) {
+        container.scrollTo({ top: container.scrollHeight, behavior })
+      }
+    }
+    setShowScrollBottom(false)
+    setNewBelowCount(0)
+    isAtBottomRef.current = true
+  }
+
+  // Smooth entrance: starts from above and smoothly glides down to recent messages like DirectChat
+  const initialScrollDoneRef = useRef(false)
+
+  useEffect(() => {
+    initialScrollDoneRef.current = false
+    const container = getScrollParent(groupWrapRef.current)
+    if (container) {
+      container.scrollTop = 0
+    }
+  }, [teamCode])
+
+  useEffect(() => {
+    if (!isLoading && messages.length > 0 && !initialScrollDoneRef.current) {
+      initialScrollDoneRef.current = true
+      const t1 = setTimeout(() => {
+        scrollToBottom('smooth')
+      }, 80)
+      const t2 = setTimeout(() => {
+        scrollToBottom('smooth')
+      }, 450)
+      return () => {
+        clearTimeout(t1)
+        clearTimeout(t2)
+      }
+    }
+  }, [isLoading, messages.length, teamCode])
+
+  // Track scroll position of the parent container to toggle down chevron button
+  useEffect(() => {
+    const container = getScrollParent(groupWrapRef.current)
+    if (!container) return
+
+    const handleScroll = () => {
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+      const isAway = distanceFromBottom > 150
+      setShowScrollBottom(isAway)
+      isAtBottomRef.current = !isAway
+      if (!isAway) {
+        setNewBelowCount(0)
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    const checkTimer = setTimeout(handleScroll, 120)
+
+    return () => {
+      clearTimeout(checkTimer)
+      container.removeEventListener('scroll', handleScroll)
+    }
+  }, [messages.length, isLoading])
+
+  // Handle incoming messages: stay at bottom if already there, or increment newBelowCount if scrolled up
+  useEffect(() => {
+    if (messages.length > prevMsgCountRef.current) {
+      const diff = messages.length - prevMsgCountRef.current
+      if (isAtBottomRef.current) {
+        scrollToBottom('smooth')
+      } else {
+        setNewBelowCount(prev => prev + diff)
+      }
+    }
+    prevMsgCountRef.current = messages.length
+  }, [messages.length])
 
   const handleScrollToMsg = (id: string) => {
     const el = document.getElementById(`msg-${id}`)
@@ -187,11 +367,6 @@ export default function GroupChat() {
     }
   }, [messages, teamCode, currentUser])
 
-  // Auto-scroll
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length])
-
   const handleSend = async () => {
     if (!text.trim()) return
     if (editingMsg) {
@@ -227,6 +402,8 @@ export default function GroupChat() {
       return newMsgs
     })
 
+    setTimeout(() => scrollToBottom('smooth'), 10)
+
     // Store in FlowMind Memory
     retainMemory(
       teamCode,
@@ -253,15 +430,27 @@ export default function GroupChat() {
         ? JSON.stringify(recalled).substring(0, 2000)
         : 'No additional memories available.'
 
-      const systemPrompt = `You are FlowMind AI. Summarize the following team group chat conversation. Include:
-1. **Key points** discussed
-2. **Decisions** made (if any)
-3. **Action items** (if any)
-4. **Unresolved questions** (if any)
+      const systemPrompt = `You are FlowMind AI. Summarize the following team group chat conversation.
+Format your output cleanly using the following exact structure with separate lines for every section and bullet:
+
+Here is a summary of the group chat conversation:
+
+**Key points**
+- [First key point discussed]
+- [Second key point discussed]
+
+**Decisions**
+- [Decisions made, or "No specific decisions were made in the conversation."]
+
+**Action items**
+- [Action items and assignments, or "No specific action items were assigned."]
+
+**Unresolved questions**
+- [Unresolved questions or pending discussions, or "None."]
 
 Hindsight memory context: ${memoryContext}
 
-Be concise but comprehensive. Use bullet points.`
+CRITICAL: Do NOT output everything in a continuous paragraph. Put blank lines between sections and place each item on its own line starting with "- ". Do NOT add unrequested meta-commentary, previous context disclaimers, or historical comparisons at the end (e.g. do NOT write "Context of Previous Summary..."). Only output the 4 sections.`
 
       const reply = await groqChat(
         [{ role: 'user', content: `Summarize this group chat:\n\n${chatLog}` }],
@@ -288,7 +477,7 @@ Be concise but comprehensive. Use bullet points.`
       retainMemory(
         teamCode,
         `Group chat summary generated: ${summaryText}`,
-        { type: 'chat_summary', chatType: 'group', messageCount: recentMsgs.length }
+        { type: 'chat_summary', chatType: 'group', messageCount: String(recentMsgs.length) }
       )
     } catch (err) {
       console.warn('[GroupChat] Summarize error:', err)
@@ -339,7 +528,7 @@ Be concise but comprehensive. Use bullet points.`
   console.log('readReceiptsByIndex:', readReceiptsByIndex)
 
   return (
-    <div className={styles.groupWrap}>
+    <div ref={groupWrapRef} className={styles.groupWrap}>
       {/* Messages */}
       {isLoading ? (
         <div className={styles.empty} style={{ flexDirection: 'column', gap: '16px' }}>
@@ -512,6 +701,24 @@ Be concise but comprehensive. Use bullet points.`
       )}
 
       <div className={styles.groupFooter}>
+        {/* Floating scroll to bottom chevron button */}
+        {showScrollBottom && (
+          <button
+            type="button"
+            className={styles.scrollToBottomBtn}
+            onClick={() => scrollToBottom('smooth')}
+            title="Scroll to recent messages"
+            aria-label="Scroll to recent messages"
+          >
+            <ChevronDown size={20} strokeWidth={2.5} />
+            {newBelowCount > 0 && (
+              <span className={styles.scrollBadge}>
+                {newBelowCount > 99 ? '99+' : newBelowCount}
+              </span>
+            )}
+          </button>
+        )}
+
         {/* Summarize button bar */}
         {messages.length >= 3 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '8px' }}>
