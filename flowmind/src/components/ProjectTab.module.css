@@ -1226,13 +1226,75 @@
 }
 
 .errorBox {
-  padding: 16px 20px;
+  padding: 18px 22px;
   text-align: left;
-  background: rgba(244, 63, 94, 0.1);
-  border-radius: 14px;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: 16px;
   color: #f87171;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
   font-size: 13px;
+}
+
+.errorTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+.errorActionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  border-top: 1px solid rgba(244, 63, 94, 0.12);
+}
+
+.errorTipText {
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.4;
+  flex: 1;
+  min-width: 240px;
+}
+
+.errorConfigureBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.errorConfigureBtn:hover {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.memberTokenDialog {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+  z-index: 1001;
+  animation: fadeIn 0.18s ease forwards;
+  text-align: left;
 }

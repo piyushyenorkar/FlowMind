@@ -22,7 +22,7 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
       setGithubActivity(null)
       return
     }
-    const token = localStorage.getItem('flowmind_gh_token_' + team.code) || localStorage.getItem('flowmind_github_token') || ''
+    const token = team?.githubToken || localStorage.getItem('flowmind_gh_token_' + team.code) || localStorage.getItem('flowmind_github_token') || ''
     fetchGitHubActivity(team.githubLink.trim(), token).then(data => {
       if (data) setGithubActivity(data)
     })

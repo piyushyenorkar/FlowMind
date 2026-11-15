@@ -16,6 +16,11 @@ export interface Team {
   deadline: string;
   leaderName: string;
   createdAt: string;
+  githubLink?: string;
+  githubToken?: string;
+  deployLink?: string;
+  logoUrl?: string;
+  groupChatName?: string;
 }
 
 export interface TeamMember {

@@ -151,8 +151,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
     }
 
+    // Fetch team details to keep githubLink, githubToken, deployLink, logoUrl in sync
+    const { data: teamData } = await supabase.from('teams').select('*').eq('code', teamCode).single()
+
     setState((prev: any) => ({
-      ...prev, members, tasks, decisions, memoryFeed, meetings, aiChatSessions: sessionsData || [], activeAiSessionId: null, memberProfiles
+      ...prev,
+      team: prev.team && teamData ? {
+        ...prev.team,
+        projectName: teamData.project_name || prev.team.projectName,
+        groupChatName: teamData.group_chat_name || prev.team.groupChatName,
+        description: teamData.description || prev.team.description,
+        deadline: teamData.deadline || prev.team.deadline,
+        leaderName: teamData.leader_name || prev.team.leaderName,
+        githubLink: teamData.github_link || '',
+        githubToken: teamData.github_token || '',
+        deployLink: teamData.deploy_link || '',
+        logoUrl: teamData.logo_url || prev.team.logoUrl,
+      } : prev.team,
+      members, tasks, decisions, memoryFeed, meetings, aiChatSessions: sessionsData || [], activeAiSessionId: null, memberProfiles
     }))
   }, [])
 
@@ -206,6 +222,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                 ...prev.team, 
                 projectName: payload.new.project_name, 
                 groupChatName: payload.new.group_chat_name,
+                description: payload.new.description,
+                deadline: payload.new.deadline,
+                githubLink: payload.new.github_link || '',
+                githubToken: payload.new.github_token || '',
+                deployLink: payload.new.deploy_link || '',
                 logoUrl: payload.new.logo_url
               }
             }
@@ -289,7 +310,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [state.team?.code])
 
   // ── LEADER: Create team ──────────────────────────────────────────────
-  const createTeam = useCallback(async (projectName: string, description: string, deadline: string, leaderName: string, githubLink?: string, deployLink?: string) => {
+  const createTeam = useCallback(async (projectName: string, description: string, deadline: string, leaderName: string, githubLink?: string, deployLink?: string, githubToken?: string) => {
     const team = {
       code: generateCode(),
       projectName,
@@ -297,6 +318,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deadline,
       leaderName,
       githubLink: githubLink?.trim() || '',
+      githubToken: githubToken?.trim() || '',
       deployLink: deployLink?.trim() || '',
       createdAt: new Date().toISOString(),
     }
@@ -310,6 +332,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deadline: team.deadline,
       leader_name: team.leaderName,
       github_link: githubLink?.trim() || null,
+      github_token: githubToken?.trim() || null,
       deploy_link: deployLink?.trim() || null,
       created_at: team.createdAt
     }])
@@ -398,9 +421,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deadline: teamData.deadline,
       leaderName: teamData.leader_name,
       githubLink: teamData.github_link || '',
+      githubToken: teamData.github_token || '',
       deployLink: teamData.deploy_link || '',
       logoUrl: teamData.logo_url || ''
-    } : { code, projectName: 'Team Project', groupChatName: '', description: '', deadline: '', leaderName: '', githubLink: '', deployLink: '', logoUrl: '' }
+    } : { code, projectName: 'Team Project', groupChatName: '', description: '', deadline: '', leaderName: '', githubLink: '', githubToken: '', deployLink: '', logoUrl: '' }
 
     window.history.pushState({}, '', '/member-dashboard')
     setState((prev: any) => ({
@@ -444,9 +468,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deadline: teamData.deadline,
       leaderName: teamData.leader_name,
       githubLink: teamData.github_link || '',
+      githubToken: teamData.github_token || '',
       deployLink: teamData.deploy_link || '',
       logoUrl: teamData.logo_url || ''
-    } : { code, projectName, groupChatName: '', description: '', deadline: '', leaderName, githubLink: '', deployLink: '', logoUrl: '' }
+    } : { code, projectName, groupChatName: '', description: '', deadline: '', leaderName, githubLink: '', githubToken: '', deployLink: '', logoUrl: '' }
 
     const leader = { id: 'leader', name: leaderName, role: 'Leader', isLeader: true }
 
@@ -818,10 +843,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!prev.team) return prev
       const updatedTeam = { ...prev.team, ...links }
 
-      supabase.from('teams').update({
+      const updatePayload: any = {
         github_link: updatedTeam.githubLink?.trim() || null,
         deploy_link: updatedTeam.deployLink?.trim() || null
-      }).eq('code', prev.team.code).then()
+      }
+      if (links.githubToken !== undefined) {
+        updatePayload.github_token = links.githubToken?.trim() || null
+      }
+
+      supabase.from('teams').update(updatePayload).eq('code', prev.team.code).then()
 
       return {
         ...prev,

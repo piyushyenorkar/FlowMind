@@ -61,7 +61,7 @@ export default function ChatTab({
       setGithubActivity(null)
       return
     }
-    const token = localStorage.getItem('flowmind_gh_token_' + team.code) || localStorage.getItem('flowmind_github_token') || ''
+    const token = team?.githubToken || localStorage.getItem('flowmind_gh_token_' + team.code) || localStorage.getItem('flowmind_github_token') || ''
     fetchGitHubActivity(team.githubLink.trim(), token).then(data => {
       if (data && data.success) {
         setGithubActivity(data)
@@ -139,7 +139,7 @@ export default function ChatTab({
       // Ensure we have GitHub repository data ready
       let currentGh = githubActivity
       if ((!currentGh || !currentGh.success) && team?.githubLink?.trim()) {
-        const token = localStorage.getItem('flowmind_gh_token_' + team.code) || localStorage.getItem('flowmind_github_token') || ''
+        const token = team?.githubToken || localStorage.getItem('flowmind_gh_token_' + team.code) || localStorage.getItem('flowmind_github_token') || ''
         try {
           const fresh = await fetchGitHubActivity(team.githubLink.trim(), token)
           if (fresh && fresh.success) {
