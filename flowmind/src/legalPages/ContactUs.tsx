@@ -140,7 +140,7 @@ export default function ContactUs() {
 
           {/* THE TEAM / CREATORS */}
           <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Meet the Team</h2>
+            <h2 className={styles.sectionTitle}>Built by Team Starcy</h2>
             <p className={styles.paragraph}>
               FlowMind was created by <strong>Team Starcy</strong> for <em>The Great Indian AI Internship Challenge</em> by <strong>Gnani AI</strong>.
             </p>
@@ -283,7 +283,7 @@ export default function ContactUs() {
         </main>
 
         <footer className={styles.footerLinks}>
-          <span>© 2026 FlowMind. All rights reserved.</span>
+          <span>© 2026 FlowMind • Built by Team Starcy</span>
           <button className={styles.link} style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => navigate('privacy')}>
             Privacy Policy
           </button>
