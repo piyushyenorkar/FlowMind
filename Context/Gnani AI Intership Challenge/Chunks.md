@@ -36,7 +36,7 @@ Use our actual README and codebase as the source of truth. Do not invent feature
 4. How it works: the flow from meeting audio to Prisma transcript to Groq analysis to assigned tasks to memory-based failure prediction.
 5. Gnani AI models used: Prisma speech-to-text (say specifically how it is used and why it suits Hinglish).
 6. Tech stack.
-7. Team and contributions: Team of two, Piyush Rajendra Yenorkar and Debashree Mal. FlowMind was co-built by both of us earlier at a hackathon. For this challenge:
+7. Team and contributions: Team of two, Piyush Yenorkar and Debashree Mal. FlowMind was co-built by both of us earlier at a hackathon. For this challenge:
 - Piyush: Gnani Prisma integration, backend transcription route, Groq-based decision and task extraction, skill-based task assignment, Hindsight memory storage, overall architecture.
 - Debashree: UI/UX design and frontend development for the Voice Meetings screen (engine selector, recording controls, live transcript view, and the decisions and tasks panels), plus testing the Hinglish meeting flow end to end and helping prepare the demo and documentation.
 8. What is built now vs what is next. Be honest: FlowMind existed before, and the Gnani-powered Voice Meetings is the new work for this challenge.

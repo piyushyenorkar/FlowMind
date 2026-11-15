@@ -146,7 +146,7 @@ export default function ContactUs() {
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginTop: '12px' }}>
               <div style={{ background: 'var(--bg3, #18181b)', padding: '16px 20px', borderRadius: '16px', border: '1px solid var(--border, #27272a)' }}>
-                <div style={{ fontWeight: 600, color: 'var(--fg, #fafafa)', fontSize: '15px' }}>Piyush Rajendra Yenorkar</div>
+                <div style={{ fontWeight: 600, color: 'var(--fg, #fafafa)', fontSize: '15px' }}>Piyush Yenorkar</div>
                 <div style={{ fontSize: '12.5px', color: 'var(--accent, #14b8a6)', marginTop: '2px' }}>Lead Full-Stack &amp; AI Engineer</div>
                 <div style={{ fontSize: '12px', color: 'var(--fg-muted, #a1a1aa)', marginTop: '6px', lineHeight: 1.5 }}>
                   System architecture, Groq Llama 3.3 LLM extraction pipeline, Agora voice RTC, Neo4j knowledge graph &amp; Supabase backend.

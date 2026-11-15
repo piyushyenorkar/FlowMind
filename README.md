@@ -258,7 +258,7 @@ npm run dev
 
 Built with ❤️ by **Team Starcy** for **The Great Indian AI Internship Challenge by Gnani AI** ⚡
 
-- **Piyush Rajendra Yenorkar** (Lead) — Gnani Prisma STT & Timbre Voice AI integration, backend routes, Groq LLM extraction & skill assignment, Hindsight memory, Neo4j graph intelligence.
+- **Piyush Yenorkar** (Lead) — Gnani Prisma STT & Timbre Voice AI integration, backend routes, Groq LLM extraction & skill assignment, Hindsight memory, Neo4j graph intelligence.
 - **Debashree Mal** — UI/UX design & frontend development for Voice Meetings, engine selector, audio briefing controls, end-to-end Hinglish meeting testing.
 
 <p>

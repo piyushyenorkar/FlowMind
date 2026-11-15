@@ -719,7 +719,7 @@ Terms
 
 
 
-Hi Piyush Rajendra Yenorkar,
+Hi Piyush Yenorkar,
 
 Thank you for registering for the Great Indian AI Internship Challenge. You are in, and the next step is to start building on Gnani AI's own Speech and LLM models.
 

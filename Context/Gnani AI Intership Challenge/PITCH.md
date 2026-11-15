@@ -28,7 +28,7 @@ FlowMind is an AI project manager with a Voice Meetings feature. It listens dire
 - **Data & Realtime**: Supabase (PostgreSQL & Realtime), Neo4j Knowledge Graph.
 
 ### 7. Team and Contributions
-Team of two: **Piyush Rajendra Yenorkar** and **Debashree Mal**. FlowMind was co-built at a hackathon; for this challenge:
+Team of two: **Piyush Yenorkar** and **Debashree Mal**. FlowMind was co-built at a hackathon; for this challenge:
 - **Piyush**: Gnani Prisma STT and Timbre TTS backend integration, audio buffering pipeline, Groq task/decision extraction, skill-based assignment, Hindsight memory sync, UI/UX design and overall architecture.
 - **Debashree**: UI/UX design and frontend development for Voice Meetings (engine selector, universal language bar, audio briefing controls, review cards), end-to-end Hinglish testing, and documentation.
 
@@ -53,4 +53,4 @@ Team of two: **Piyush Rajendra Yenorkar** and **Debashree Mal**. FlowMind was co
 
 **Tech Stack**: React 18, TypeScript, Vite, Node/Express, Supabase, Neo4j, Groq LLM, Hindsight Memory API.
 
-**Team**: Piyush Rajendra Yenorkar (Backend, Gnani STT/TTS pipeline, LLM task extraction, memory graph) & Debashree Mal (UI/UX design, Voice Meetings frontend, testing). FlowMind is an existing project; the Gnani-powered Voice Meetings feature was built specifically for this challenge.
+**Team**: Piyush Yenorkar (Backend, Gnani STT/TTS pipeline, LLM task extraction, memory graph) & Debashree Mal (UI/UX design, Voice Meetings frontend, testing). FlowMind is an existing project; the Gnani-powered Voice Meetings feature was built specifically for this challenge.

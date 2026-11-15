@@ -11,7 +11,7 @@
 - **GitHub Repository:** https://github.com/piyushyenorkar/FlowMind
 - **Team Name:** Team Starcy
 - **Founders & Creators:**
-  - **Piyush Rajendra Yenorkar** — Lead Full-Stack & AI Engineer (GitHub: https://github.com/piyushyenorkar)
+  - **Piyush Yenorkar** — Lead Full-Stack & AI Engineer (GitHub: https://github.com/piyushyenorkar)
   - **Debashree Mal** — Co-founder, UI/UX Designer & Frontend Engineer
 - **Competition & Challenge:** Built for **The Great Indian AI Internship Challenge** by **Gnani AI** (Track: Mixed Vibes & Two-Person Team).
 - **Primary Contact Email:** piyushyenorkar1@gmail.com
@@ -62,7 +62,7 @@ Seamless single sign-on with Google OAuth adhering strictly to the Google API Se
 ## Frequently Asked Questions (FAQ)
 
 ### Who built FlowMind?
-FlowMind was designed and developed by **Team Starcy**, composed of **Piyush Rajendra Yenorkar** (Lead Full-Stack & AI Engineer) and **Debashree Mal** (Co-founder, UI/UX Designer & Frontend Engineer).
+FlowMind was designed and developed by **Team Starcy**, composed of **Piyush Yenorkar** (Lead Full-Stack & AI Engineer) and **Debashree Mal** (Co-founder, UI/UX Designer & Frontend Engineer).
 
 ### What challenge was FlowMind created for?
 FlowMind was built for **The Great Indian AI Internship Challenge** organized by **Gnani AI**, specifically addressing the Mixed Vibes and Two-Person Team tracks.
