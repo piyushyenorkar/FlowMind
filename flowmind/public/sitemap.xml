@@ -7,9 +7,9 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://flowwithmind.vercel.app/flowmind.png</image:loc>
+      <image:loc>https://flowwithmind.vercel.app/og-image.jpg</image:loc>
       <image:title>FlowMind — The PM That Never Forgets</image:title>
-      <image:caption>AI project manager built by Team Starcy (Piyush Yenorkar and Debashree Mal)</image:caption>
+      <image:caption>FlowMind — Your Personal AI Group Project Manager</image:caption>
     </image:image>
   </url>
   <url>

@@ -119,7 +119,7 @@ export default function TermsOfService() {
         </main>
 
         <footer className={styles.footerLinks}>
-          <span>© 2026 FlowMind • Built by Team Starcy</span>
+          <span>© 2026 FlowMind. All rights reserved.</span>
           <button className={styles.link} style={{ background: 'none', border: 'none', padding: 0 }} onClick={() => navigate('privacy')}>
             Privacy Policy
           </button>

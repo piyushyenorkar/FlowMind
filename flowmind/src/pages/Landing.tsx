@@ -120,7 +120,7 @@ export default function Landing() {
       </main>
 
       <footer className={styles.footer}>
-        <span>© 2026 FlowMind • Built by Team Starcy (Piyush &amp; Debashree)</span>
+        <span>© 2026 FlowMind. All rights reserved.</span>
         <div className={styles.footerLinks}>
           <button className={styles.footerLink} onClick={() => navigate('privacy')}>Privacy Policy</button>
           <span>•</span>

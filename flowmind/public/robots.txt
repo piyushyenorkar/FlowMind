@@ -1,5 +1,5 @@
 # FlowMind - The PM That Never Forgets
-# Built by Team Starcy (Piyush Yenorkar & Debashree Mal)
+# Your Personal AI Group Project Manager
 # Website: https://flowwithmind.vercel.app
 
 User-agent: *

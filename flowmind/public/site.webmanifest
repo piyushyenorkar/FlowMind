@@ -1,7 +1,7 @@
 {
   "name": "FlowMind — The PM That Never Forgets",
   "short_name": "FlowMind",
-  "description": "The AI project manager that learns your team, tracks meetings, and predicts bottlenecks using Neo4j knowledge graphs. Built by Team Starcy (Piyush Yenorkar & Debashree Mal).",
+  "description": "Your Personal AI Group Project Manager. Automatically capture meeting notes, track deliverables, log decisions, and keep your entire team in sync.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f11",
