@@ -405,7 +405,7 @@ export default function TasksTab() {
                     title={isExpanded ? 'Collapse to horizontal view' : 'Expand to vertical 3-column view'}
                     aria-label={`Toggle ${STATUS_LABELS[status as keyof typeof STATUS_LABELS]} expansion`}
                   >
-                    <ChevronDown size={14} className={`${styles.chevronIcon} ${isExpanded ? styles.chevronIconRotated : ''}`} />
+                    <ChevronDown size={12} className={`${styles.chevronIcon} ${isExpanded ? styles.chevronIconRotated : ''}`} />
                   </button>
                 </div>
               </div>
