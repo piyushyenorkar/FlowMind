@@ -20,13 +20,15 @@
 .memberFilterChip {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 14px;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  box-sizing: border-box;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 50px;
   color: var(--text2);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -165,6 +167,13 @@
   box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.15) !important;
 }
 
+.columnExpanded {
+  padding: 24px 4px 16px 24px !important;
+}
+.columnExpanded .colHeader {
+  padding-right: 20px;
+}
+
 .colHeader { 
   display: flex; 
   align-items: center; 
@@ -199,31 +208,33 @@
 }
 
 .colExpandBtn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); 
+  border: 1px solid var(--border); 
+  color: var(--text2); 
+  font-size: 11px; 
+  padding: 2px 7px; 
+  border-radius: 100px; 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 0;
+  height: 20px;
+  box-sizing: border-box;
 }
 
 .colExpandBtn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface2);
   color: var(--text);
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .colExpandBtnActive {
-  background: rgba(255, 255, 255, 0.16);
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.35);
+  background: var(--surface);
+  color: var(--text2);
+  border-color: var(--border);
 }
 
 .chevronIcon {
@@ -253,25 +264,24 @@
   max-height: 520px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 4px 18px 12px 0;
-  margin: 0 -22px -12px 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  padding-right: 18px;
+  padding-bottom: 8px;
+  padding-top: 4px;
+  margin: 0;
 }
 
 .colCardsExpanded::-webkit-scrollbar {
-  width: 2px;
+  width: 2px !important;
 }
 .colCardsExpanded::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 8px 0;
+  background: transparent !important;
 }
 .colCardsExpanded::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-radius: 4px !important;
 }
 .colCardsExpanded::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .colCardsExpanded .taskCard {

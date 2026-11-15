@@ -275,7 +275,9 @@ export default function TasksTab() {
           className={`${styles.memberFilterChip} ${selectedMember === 'all' ? styles.memberFilterChipActive : ''}`}
           onClick={() => setSelectedMember('all')}
         >
-          <Users size={13} />
+          <div style={{ width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Users size={14} />
+          </div>
           <span>All</span>
           <span className={styles.memberChipBadge}>{tasks.length}</span>
         </button>
@@ -380,7 +382,7 @@ export default function TasksTab() {
             <div 
               key={status} 
               data-column-status={status}
-              className={`${styles.column} ${dragOverCol === status ? styles.columnDragOver : ''}`}
+              className={`${styles.column} ${dragOverCol === status ? styles.columnDragOver : ''} ${isExpanded ? styles.columnExpanded : ''}`}
               onDragOver={(e) => handleDragOver(e, status)}
               onDragEnter={(e) => handleDragEnter(e, status)}
               onDragLeave={(e) => handleDragLeave(e, status)}
