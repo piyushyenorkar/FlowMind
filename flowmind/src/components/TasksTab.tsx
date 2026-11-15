@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useApp } from '../context/AppContext'
 import Avatar from './Avatar'
 import styles from './TasksTab.module.css'
-import { Plus, X, ListTodo, User, Calendar, Clock, Check } from 'lucide-react'
+import { Plus, X, ListTodo, User, Calendar, Clock, Check, ChevronDown, Users } from 'lucide-react'
 
 const STATUS_OPTIONS = ['todo', 'in-progress', 'done']
 const STATUS_LABELS = { 'todo': 'To Do', 'in-progress': 'In Progress', 'done': 'Done' }
@@ -15,6 +15,39 @@ export default function TasksTab() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [showAssignDropdown, setShowAssignDropdown] = useState(false)
   const [filter, setFilter] = useState('all')
+  const [selectedMember, setSelectedMember] = useState('all')
+  const [expandedCols, setExpandedCols] = useState<Record<string, boolean>>({})
+
+  const toggleExpand = (status: string) => {
+    setExpandedCols(prev => ({
+      ...prev,
+      [status]: !prev[status]
+    }))
+  }
+
+  // Deduplicate and gather all team members (from team members list + task assignees)
+  const memberList = React.useMemo(() => {
+    const map = new Map<string, { name: string; isLeader?: boolean }>()
+    if (Array.isArray(members)) {
+      members.forEach((m: any) => {
+        if (m?.name && !map.has(m.name.toLowerCase())) {
+          map.set(m.name.toLowerCase(), { name: m.name, isLeader: !!m.isLeader })
+        }
+      })
+    }
+    tasks.forEach(t => {
+      if (t.assignedTo && !map.has(t.assignedTo.toLowerCase())) {
+        map.set(t.assignedTo.toLowerCase(), { name: t.assignedTo, isLeader: false })
+      }
+    })
+    return Array.from(map.values())
+  }, [members, tasks])
+
+  // Filter tasks based on selected team member
+  const displayedTasks = React.useMemo(() => {
+    if (selectedMember === 'all') return tasks
+    return tasks.filter(t => t.assignedTo?.trim().toLowerCase() === selectedMember.trim().toLowerCase())
+  }, [tasks, selectedMember])
 
   // Drag and drop state
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
@@ -225,7 +258,7 @@ export default function TasksTab() {
             <button key={f} className={`${styles.segmentBtn} ${filter === f ? styles.active : ''}`} onClick={() => setFilter(f)} style={{ width: FILTER_WIDTHS[f as keyof typeof FILTER_WIDTHS] + 'px', flex: `0 0 ${FILTER_WIDTHS[f as keyof typeof FILTER_WIDTHS]}px` }}>
               {f === 'all' ? 'All' : STATUS_LABELS[f]}
               <span className={styles.filterCount}>
-                {f === 'all' ? tasks.length : tasks.filter(t => t.status === f).length}
+                {f === 'all' ? displayedTasks.length : displayedTasks.filter(t => t.status === f).length}
               </span>
             </button>
           ))}
@@ -233,6 +266,35 @@ export default function TasksTab() {
         <button className={styles.newTaskBtn} onClick={(e) => setAnchorEl(anchorEl ? null : e.currentTarget)}>
           {anchorEl ? <><X size={14} style={{ marginRight: '6px' }} /> Cancel</> : <><Plus size={14} style={{ marginRight: '6px' }} /> New Task</>}
         </button>
+      </div>
+
+      {/* Member Filter Bar */}
+      <div className={styles.memberFilterBar}>
+        <button
+          type="button"
+          className={`${styles.memberFilterChip} ${selectedMember === 'all' ? styles.memberFilterChipActive : ''}`}
+          onClick={() => setSelectedMember('all')}
+        >
+          <Users size={13} />
+          <span>All</span>
+          <span className={styles.memberChipBadge}>{tasks.length}</span>
+        </button>
+        {memberList.map(m => {
+          const isSelected = selectedMember.toLowerCase() === m.name.toLowerCase()
+          const memberTaskCount = tasks.filter(t => t.assignedTo?.trim().toLowerCase() === m.name.trim().toLowerCase()).length
+          return (
+            <button
+              key={m.name}
+              type="button"
+              className={`${styles.memberFilterChip} ${isSelected ? styles.memberFilterChipActive : ''}`}
+              onClick={() => setSelectedMember(isSelected ? 'all' : m.name)}
+            >
+              <Avatar name={m.name} size={18} />
+              <span>{m.name}</span>
+              <span className={styles.memberChipBadge}>{memberTaskCount}</span>
+            </button>
+          )
+        })}
       </div>
 
       {anchorEl && createPortal(
@@ -311,46 +373,66 @@ export default function TasksTab() {
 
       {/* Kanban columns */}
       <div className={styles.kanban}>
-        {(filter === 'all' ? STATUS_OPTIONS : [filter]).map(status => (
-          <div 
-            key={status} 
-            data-column-status={status}
-            className={`${styles.column} ${dragOverCol === status ? styles.columnDragOver : ''}`}
-            onDragOver={(e) => handleDragOver(e, status)}
-            onDragEnter={(e) => handleDragEnter(e, status)}
-            onDragLeave={(e) => handleDragLeave(e, status)}
-            onDrop={(e) => handleDrop(e, status)}
-          >
-            <div className={styles.colHeader}>
-              <span className={styles.colDot} data-status={status} />
-              <span className={styles.colTitle}>{STATUS_LABELS[status as keyof typeof STATUS_LABELS]}</span>
-              <span className={styles.colCount}>{tasks.filter(t => t.status === status).length}</span>
-            </div>
+        {(filter === 'all' ? STATUS_OPTIONS : [filter]).map(status => {
+          const colTasks = displayedTasks.filter(t => t.status === status)
+          const isExpanded = !!expandedCols[status]
+          return (
             <div 
-              className={styles.colCards}
+              key={status} 
+              data-column-status={status}
+              className={`${styles.column} ${dragOverCol === status ? styles.columnDragOver : ''}`}
               onDragOver={(e) => handleDragOver(e, status)}
+              onDragEnter={(e) => handleDragEnter(e, status)}
+              onDragLeave={(e) => handleDragLeave(e, status)}
               onDrop={(e) => handleDrop(e, status)}
             >
-              {tasks.filter(t => t.status === status).map(task => (
-                <TaskCard 
-                  key={task.id} 
-                  task={task} 
-                  onStatusChange={updateTaskStatus} 
-                  isDragging={draggedTaskId === task.id}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                />
-              ))}
-              {tasks.filter(t => t.status === status).length === 0 && (
-                <div className={`${styles.empty} ${dragOverCol === status ? styles.emptyDragOver : ''}`}>
-                  {dragOverCol === status ? 'Drop task here' : 'No tasks here'}
+              <div className={styles.colHeader}>
+                <div className={styles.colHeaderLeft}>
+                  <span className={styles.colDot} data-status={status} />
+                  <span className={styles.colTitle}>{STATUS_LABELS[status as keyof typeof STATUS_LABELS]}</span>
                 </div>
-              )}
+                <div className={styles.colHeaderRight}>
+                  <span className={styles.colCount}>{colTasks.length}</span>
+                  <button
+                    type="button"
+                    className={`${styles.colExpandBtn} ${isExpanded ? styles.colExpandBtnActive : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      toggleExpand(status)
+                    }}
+                    title={isExpanded ? 'Collapse to horizontal view' : 'Expand to vertical 3-column view'}
+                    aria-label={`Toggle ${STATUS_LABELS[status as keyof typeof STATUS_LABELS]} expansion`}
+                  >
+                    <ChevronDown size={14} className={`${styles.chevronIcon} ${isExpanded ? styles.chevronIconRotated : ''}`} />
+                  </button>
+                </div>
+              </div>
+              <div 
+                className={`${styles.colCards} ${isExpanded ? styles.colCardsExpanded : ''}`}
+                onDragOver={(e) => handleDragOver(e, status)}
+                onDrop={(e) => handleDrop(e, status)}
+              >
+                {colTasks.map(task => (
+                  <TaskCard 
+                    key={task.id} 
+                    task={task} 
+                    onStatusChange={updateTaskStatus} 
+                    isDragging={draggedTaskId === task.id}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                  />
+                ))}
+                {colTasks.length === 0 && (
+                  <div className={`${styles.empty} ${dragOverCol === status ? styles.emptyDragOver : ''}`}>
+                    {dragOverCol === status ? 'Drop task here' : selectedMember !== 'all' ? `No tasks for ${selectedMember}` : 'No tasks here'}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
