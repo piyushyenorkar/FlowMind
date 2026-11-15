@@ -168,10 +168,10 @@
 }
 
 .columnExpanded {
-  padding: 24px 8px 16px 8px !important;
+  padding: 24px 0 16px 0 !important;
 }
 .columnExpanded .colHeader {
-  padding: 0 16px;
+  padding: 0 24px;
 }
 
 .colHeader { 
@@ -264,25 +264,8 @@
   max-height: 520px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 6px 16px 16px 16px;
+  padding: 6px 24px 16px 24px;
   margin: 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
-}
-
-.colCardsExpanded::-webkit-scrollbar {
-  width: 4px;
-}
-.colCardsExpanded::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 8px 0;
-}
-.colCardsExpanded::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.28);
-  border-radius: 4px;
-}
-.colCardsExpanded::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.45);
 }
 
 .colCardsExpanded .taskCard {
