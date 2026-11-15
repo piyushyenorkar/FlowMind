@@ -81,10 +81,11 @@ export default function ProjectTab() {
 
   // Floating Edit Popover State
   const [showEditPopover, setShowEditPopover] = useState(false)
-  const editButtonRef = useRef<HTMLButtonElement>(null)
+  const actionButtonRef = useRef<HTMLButtonElement>(null)
   const [popoverCoords, setPopoverCoords] = useState<{ top: number; right: number }>({ top: 0, right: 0 })
   const [showEditToken, setShowEditToken] = useState(false)
   const [showEditTokenInfo, setShowEditTokenInfo] = useState(false)
+  const [showMemberTokenInfo, setShowMemberTokenInfo] = useState(false)
   const [linksForm, setLinksForm] = useState({
     github: team?.githubLink || '',
     token: '',
@@ -131,39 +132,48 @@ export default function ProjectTab() {
     }
   }, [team?.githubLink, team?.code, team?.githubToken])
 
+  const updatePosition = () => {
+    if (actionButtonRef.current) {
+      const rect = actionButtonRef.current.getBoundingClientRect()
+      setPopoverCoords({
+        top: rect.bottom + 10,
+        right: Math.max(16, window.innerWidth - rect.right),
+      })
+    }
+  }
+
   const handleToggleEditPopover = () => {
     if (!showEditPopover) {
-      if (editButtonRef.current) {
-        const rect = editButtonRef.current.getBoundingClientRect()
-        setPopoverCoords({
-          top: rect.bottom + 10,
-          right: Math.max(16, window.innerWidth - rect.right),
-        })
-      }
+      setShowMemberTokenModal(false)
+      updatePosition()
       handleStartEdit()
     } else {
       setShowEditPopover(false)
     }
   }
 
-  useEffect(() => {
-    if (!showEditPopover) return
-    const updatePosition = () => {
-      if (editButtonRef.current) {
-        const rect = editButtonRef.current.getBoundingClientRect()
-        setPopoverCoords({
-          top: rect.bottom + 10,
-          right: Math.max(16, window.innerWidth - rect.right),
-        })
-      }
+  const handleToggleMemberTokenModal = () => {
+    if (!showMemberTokenModal) {
+      setShowEditPopover(false)
+      updatePosition()
+      setMemberTokenInput(getSavedToken())
+      setMemberTokenError(null)
+      setShowMemberTokenModal(true)
+    } else {
+      setShowMemberTokenModal(false)
     }
+  }
+
+  useEffect(() => {
+    if (!showEditPopover && !showMemberTokenModal) return
+    updatePosition()
     window.addEventListener('resize', updatePosition)
     window.addEventListener('scroll', updatePosition, true)
     return () => {
       window.removeEventListener('resize', updatePosition)
       window.removeEventListener('scroll', updatePosition, true)
     }
-  }, [showEditPopover])
+  }, [showEditPopover, showMemberTokenModal])
 
   // Connect New Repository
   const handleConnectRepo = async (e: React.FormEvent) => {
@@ -275,6 +285,7 @@ export default function ProjectTab() {
 
   // Member Token Configuration Handlers
   const handleOpenMemberTokenModal = () => {
+    updatePosition()
     setMemberTokenInput(getSavedToken())
     setMemberTokenError(null)
     setShowMemberTokenModal(true)
@@ -567,7 +578,7 @@ export default function ProjectTab() {
         {role === 'leader' ? (
           <div className={styles.editPopoverWrapper}>
             <button 
-              ref={editButtonRef}
+              ref={actionButtonRef}
               type="button"
               className={styles.heroEditBtn}
               onClick={handleToggleEditPopover}
@@ -580,9 +591,10 @@ export default function ProjectTab() {
         ) : (
           <div className={styles.editPopoverWrapper}>
             <button 
+              ref={actionButtonRef}
               type="button"
               className={styles.heroEditBtn}
-              onClick={handleOpenMemberTokenModal}
+              onClick={handleToggleMemberTokenModal}
               title="Configure GitHub Personal Access Token"
             >
               <Key size={12} />
@@ -859,50 +871,77 @@ export default function ProjectTab() {
         document.body
       )}
 
-      {/* ── Member Token Modal ────────────────────────────────────── */}
-      {showMemberTokenModal && createPortal(
-        <div className={styles.modalOverlay} onClick={() => setShowMemberTokenModal(false)}>
+      {/* ── Member Token Popover Window (Portaled to document.body) ── */}
+      {showMemberTokenModal && typeof document !== 'undefined' && createPortal(
+        <div 
+          className={styles.modalOverlay} 
+          onClick={() => setShowMemberTokenModal(false)}
+        >
           <div 
-            className={styles.memberTokenDialog} 
-            onClick={e => e.stopPropagation()}
+            className={styles.floatingEditWindow}
             style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '440px',
-              maxWidth: 'calc(100vw - 32px)',
+              top: `${popoverCoords.top}px`,
+              right: `${popoverCoords.right}px`,
             }}
+            onClick={e => e.stopPropagation()}
           >
             <div className={styles.floatingHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Key size={16} color="var(--accent)" />
-                <h3 className={styles.floatingTitle}>Configure GitHub Access Token</h3>
-              </div>
+              <div className={styles.floatingTitle}>Configure GitHub Token</div>
               <button 
-                type="button"
-                className={styles.closePopBtn}
+                type="button" 
+                className={styles.floatingCloseBtn}
                 onClick={() => setShowMemberTokenModal(false)}
-                aria-label="Close dialog"
+                aria-label="Close"
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
 
-            <p style={{ fontSize: '13px', color: 'var(--text2)', margin: '10px 0 16px', lineHeight: 1.5 }}>
-              Private repositories require authentication. Enter a GitHub Personal Access Token with <code style={{ color: 'var(--accent)', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px' }}>repo</code> scope to view live commits and project activity.
-            </p>
-
             {memberTokenError && (
-              <div className={styles.editErrorBanner} style={{ marginBottom: '14px' }}>
-                <AlertTriangle size={14} />
-                <span>{memberTokenError}</span>
+              <div className={styles.errorBox} style={{ marginBottom: '14px', padding: '10px 14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, fontSize: '12px' }}>
+                  <AlertTriangle size={14} /> Error
+                </div>
+                <div style={{ fontSize: '11.5px', marginTop: '2px' }}>{memberTokenError}</div>
               </div>
             )}
 
-            <form onSubmit={handleSaveMemberToken}>
+            <form onSubmit={handleSaveMemberToken} className={styles.floatingForm}>
               <div className={styles.floatingFieldGroup}>
-                <label className={styles.fieldLabel}>Personal Access Token (classic or fine-grained)</label>
+                <div className={styles.labelRow}>
+                  <label className={styles.fieldLabel} style={{ marginBottom: 0 }}>GitHub Access Token</label>
+                  <div 
+                    className={styles.infoWrapper}
+                    onMouseEnter={() => setShowMemberTokenInfo(true)}
+                    onMouseLeave={() => setShowMemberTokenInfo(false)}
+                  >
+                    <button 
+                      type="button" 
+                      className={styles.infoIconBtn}
+                      onClick={() => setShowMemberTokenInfo(!showMemberTokenInfo)}
+                      aria-label="GitHub Token Details"
+                      title="Token info"
+                    >
+                      <Info size={11} />
+                    </button>
+                    {showMemberTokenInfo && (
+                      <div className={styles.infoTooltip}>
+                        <div style={{ marginBottom: '6px' }}>
+                          Required for private repositories. Enter a token with repo scope.
+                        </div>
+                        <a 
+                          href="https://github.com/settings/tokens/new?scopes=repo&description=FlowMind%20Project%20Sync" 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className={styles.tokenInlineLink}
+                        >
+                          Generate token on GitHub <ExternalLink size={10} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className={styles.inputWithIconWrapper}>
                   <input
                     className={styles.inputField}
@@ -918,50 +957,54 @@ export default function ProjectTab() {
                     onClick={() => setShowMemberTokenSecret(!showMemberTokenSecret)} 
                     className={styles.insideInputBtn}
                     aria-label={showMemberTokenSecret ? "Hide token" : "Show token"}
+                    title={showMemberTokenSecret ? "Hide token" : "Show token"}
                   >
                     {showMemberTokenSecret ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              <div style={{ marginTop: '8px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--text2)', cursor: 'pointer', margin: 0 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={shareTokenWithTeam} 
+                    onChange={e => setShareTokenWithTeam(e.target.checked)} 
+                    style={{ accentColor: 'var(--accent)', cursor: 'pointer', width: '13px', height: '13px' }}
+                  />
+                  <span>Share with team</span>
+                </label>
+
                 <a 
                   href="https://github.com/settings/tokens/new?scopes=repo&description=FlowMind%20Project%20Sync" 
                   target="_blank" 
                   rel="noreferrer" 
                   className={styles.tokenInlineLink}
+                  style={{ fontSize: '11.5px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
                 >
-                  Generate token on GitHub <ExternalLink size={10} />
+                  Generate token <ExternalLink size={9} />
                 </a>
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', color: 'var(--text2)', cursor: 'pointer', marginBottom: '20px' }}>
-                <input 
-                  type="checkbox" 
-                  checked={shareTokenWithTeam} 
-                  onChange={e => setShareTokenWithTeam(e.target.checked)} 
-                  style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
-                />
-                <span>Share token with team project (saves to database)</span>
-              </label>
-
-              <div className={styles.floatingActions} style={{ justifyContent: 'flex-end' }}>
-                <button 
-                  type="button" 
-                  className={styles.cancelPopBtn} 
-                  onClick={() => setShowMemberTokenModal(false)} 
-                  disabled={savingMemberToken}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className={styles.savePopBtn} 
-                  disabled={savingMemberToken}
-                >
-                  {savingMemberToken ? <RefreshCw size={12} className={styles.spin} /> : <Save size={13} />}
-                  <span>{savingMemberToken ? 'Verifying...' : 'Save Token'}</span>
-                </button>
+              <div className={styles.floatingActions} style={{ justifyContent: 'flex-end', marginTop: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button 
+                    type="button" 
+                    className={styles.cancelPopBtn} 
+                    onClick={() => setShowMemberTokenModal(false)} 
+                    disabled={savingMemberToken}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className={styles.savePopBtn} 
+                    disabled={savingMemberToken}
+                  >
+                    {savingMemberToken ? <RefreshCw size={12} className={styles.spin} /> : <Save size={13} />}
+                    <span>Save</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -1035,7 +1078,16 @@ export default function ProjectTab() {
               <button
                 type="button"
                 className={styles.errorConfigureBtn}
-                onClick={role === 'leader' ? handleToggleEditPopover : handleOpenMemberTokenModal}
+                onClick={() => {
+                  if (actionButtonRef.current) {
+                    actionButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  }
+                  if (role === 'leader') {
+                    handleToggleEditPopover()
+                  } else {
+                    handleOpenMemberTokenModal()
+                  }
+                }}
               >
                 <Key size={13} />
                 <span>{role === 'leader' ? 'Configure Links & Token' : 'Configure GitHub Token'}</span>
