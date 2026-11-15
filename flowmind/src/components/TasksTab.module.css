@@ -93,12 +93,12 @@
   border-radius: var(--radius-lg); 
   padding: 24px; 
   box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.15);
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .columnDragOver {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: var(--accent) !important;
   box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.15) !important;
 }
 
@@ -124,7 +124,12 @@
 }
 .colCards::-webkit-scrollbar { display: none; }
 .empty { text-align: center; color: var(--text3); font-size: 12px; padding: 20px; border: 1px dashed var(--border); border-radius: 8px; flex: 1; width: 100%; transition: all 0.2s; }
-.emptyDragOver { border-color: rgba(255, 255, 255, 0.16) !important; color: var(--text2) !important; background: rgba(255, 255, 255, 0.03) !important; }
+.emptyDragOver { 
+  border-color: var(--accent) !important; 
+  color: var(--text) !important; 
+  background: rgba(255, 255, 255, 0.07) !important; 
+  box-shadow: none !important;
+}
 
 .taskCard {
   background: rgba(255, 255, 255, 0.03);
@@ -145,9 +150,10 @@
 .taskCard:hover { transform: translateY(-2px); box-shadow: 25px 25px 30px rgba(0, 0, 0, 0.2); background: var(--surface2); }
 .taskCard:active { cursor: grabbing; }
 .taskCardDragging {
-  opacity: 0.35;
+  opacity: 0.45;
   transform: scale(0.98) !important;
-  border: 1px solid var(--border) !important;
+  border: 1px solid var(--accent) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   box-shadow: none !important;
 }
 .popoverOverlay {
