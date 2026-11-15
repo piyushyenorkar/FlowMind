@@ -201,30 +201,39 @@
   border: 1px solid var(--border); 
   color: var(--text2); 
   font-size: 11px; 
-  padding: 2px 7px; 
+  font-weight: 500;
+  height: 24px;
+  min-width: 24px;
+  padding: 0 8px; 
   border-radius: 100px; 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  line-height: 1;
 }
 
 .colExpandBtn {
   background: transparent;
   border: 1px solid var(--border); 
   color: var(--text2); 
-  font-size: 11px; 
-  padding: 2px 6px; 
+  height: 24px;
+  min-width: 24px;
+  padding: 0 8px; 
   border-radius: 100px; 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  height: 20px;
   box-sizing: border-box;
+  line-height: 1;
 }
 
 .colExpandBtn:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .colExpandBtnActive {
