@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import styles from './LeaderOverview.module.css'
-import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, Bot, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network, RefreshCw, FolderGit2, GitBranch, GitCommit } from 'lucide-react'
+import { Activity, Users, Clock, CheckCircle2, CircleDashed, ListTodo, Scale, Sparkles, Bot, Plus, ChevronRight, X, AlertTriangle, Lightbulb, Network, RefreshCw, FolderGit2, GitBranch, GitCommit, CheckSquare } from 'lucide-react'
 import TeamMembers from './TeamMembers'
 import Avatar from './Avatar'
 import flowmindLogo from '../assets/flowmind.png'
@@ -228,7 +228,10 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
       {tasks.length > 0 && (
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
-            <div className={styles.sectionTitle}>Recent Tasks</div>
+            <div className={styles.sectionTitle}>
+              <CheckSquare size={19} color="var(--accent, #14b8a6)" strokeWidth={2.2} />
+              Recent Tasks
+            </div>
             <button className="btn-ghost" onClick={() => setActiveTab(role === 'leader' ? 'tasks' : 'mytasks')} style={{ fontSize: '13px' }}>View All</button>
           </div>
           <div className={styles.taskList}>

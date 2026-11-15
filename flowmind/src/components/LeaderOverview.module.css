@@ -267,6 +267,9 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Quick Actions */
