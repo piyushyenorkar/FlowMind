@@ -225,15 +225,15 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
 
       {/* Insights are now in a modal */}
       {/* Recent tasks */}
-      {tasks.length > 0 && (
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionTitle}>
-              <CheckSquare size={19} color="var(--accent, #14b8a6)" strokeWidth={2.2} />
-              Recent Tasks
-            </div>
-            <button className="btn-ghost" onClick={() => setActiveTab(role === 'leader' ? 'tasks' : 'mytasks')} style={{ fontSize: '13px' }}>View All</button>
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div className={styles.sectionTitle}>
+            <CheckSquare size={19} color="var(--accent, #14b8a6)" strokeWidth={2.2} />
+            Recent Tasks
           </div>
+          <button className="btn-ghost" onClick={() => setActiveTab(role === 'leader' ? 'tasks' : 'mytasks')} style={{ fontSize: '13px' }}>View All</button>
+        </div>
+        {tasks.length > 0 ? (
           <div className={styles.taskList}>
             {[...tasks].reverse().sort((a, b) => {
               if (a.status === 'done' && b.status !== 'done') return 1;
@@ -250,8 +250,24 @@ export default function LeaderOverview({ setActiveTab, showMethodologyCanvas, se
               </div>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className={styles.emptyTasks}>
+            <div className={styles.emptyTasksTitle}>No tasks created yet</div>
+            <div className={styles.emptyTasksSub}>
+              Tasks assigned to team members will appear here for quick access.
+            </div>
+            {role === 'leader' && (
+              <button 
+                type="button" 
+                className={styles.createTaskBtn}
+                onClick={() => setActiveTab('tasks')}
+              >
+                Create First Task
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Team Members Modal */}
       {showMembersModal && (
