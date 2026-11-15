@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useApp } from '../context/AppContext'
 import Avatar from './Avatar'
@@ -15,6 +15,78 @@ export default function TasksTab() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [showAssignDropdown, setShowAssignDropdown] = useState(false)
   const [filter, setFilter] = useState('all')
+
+  // Drag and drop state
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null)
+
+  const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    e.dataTransfer.setData('text/plain', taskId)
+    e.dataTransfer.effectAllowed = 'move'
+    setDraggedTaskId(taskId)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedTaskId(null)
+    setDragOverCol(null)
+  }
+
+  const handleDragOver = (e: React.DragEvent, status: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (dragOverCol !== status) {
+      setDragOverCol(status)
+    }
+  }
+
+  const handleDragEnter = (e: React.DragEvent, status: string) => {
+    e.preventDefault()
+    setDragOverCol(status)
+  }
+
+  const handleDragLeave = (e: React.DragEvent, status: string) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return
+    if (dragOverCol === status) {
+      setDragOverCol(null)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent, targetStatus: string) => {
+    e.preventDefault()
+    const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId
+    if (taskId) {
+      const task = tasks.find(t => t.id === taskId)
+      if (task && task.status !== targetStatus) {
+        updateTaskStatus(taskId, targetStatus)
+      }
+    }
+    setDraggedTaskId(null)
+    setDragOverCol(null)
+  }
+
+  // Touch drag handlers (supports touchscreens & mobile)
+  const handleTouchMove = (taskId: string, clientX: number, clientY: number) => {
+    setDraggedTaskId(taskId)
+    const el = document.elementFromPoint(clientX, clientY)
+    const colEl = el?.closest('[data-column-status]') as HTMLElement | null
+    const colStatus = colEl?.getAttribute('data-column-status')
+    if (colStatus && colStatus !== dragOverCol) {
+      setDragOverCol(colStatus)
+    } else if (!colStatus && dragOverCol) {
+      setDragOverCol(null)
+    }
+  }
+
+  const handleTouchEnd = (taskId: string) => {
+    if (dragOverCol) {
+      const task = tasks.find(t => t.id === taskId)
+      if (task && task.status !== dragOverCol) {
+        updateTaskStatus(taskId, dragOverCol)
+      }
+    }
+    setDraggedTaskId(null)
+    setDragOverCol(null)
+  }
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
 
@@ -127,18 +199,41 @@ export default function TasksTab() {
       {/* Kanban columns */}
       <div className={styles.kanban}>
         {(filter === 'all' ? STATUS_OPTIONS : [filter]).map(status => (
-          <div key={status} className={styles.column}>
+          <div 
+            key={status} 
+            data-column-status={status}
+            className={`${styles.column} ${dragOverCol === status ? styles.columnDragOver : ''}`}
+            onDragOver={(e) => handleDragOver(e, status)}
+            onDragEnter={(e) => handleDragEnter(e, status)}
+            onDragLeave={(e) => handleDragLeave(e, status)}
+            onDrop={(e) => handleDrop(e, status)}
+          >
             <div className={styles.colHeader}>
               <span className={styles.colDot} data-status={status} />
-              <span className={styles.colTitle}>{STATUS_LABELS[status]}</span>
+              <span className={styles.colTitle}>{STATUS_LABELS[status as keyof typeof STATUS_LABELS]}</span>
               <span className={styles.colCount}>{tasks.filter(t => t.status === status).length}</span>
             </div>
-            <div className={styles.colCards}>
+            <div 
+              className={styles.colCards}
+              onDragOver={(e) => handleDragOver(e, status)}
+              onDrop={(e) => handleDrop(e, status)}
+            >
               {tasks.filter(t => t.status === status).map(task => (
-                <TaskCard key={task.id} task={task} onStatusChange={updateTaskStatus} />
+                <TaskCard 
+                  key={task.id} 
+                  task={task} 
+                  onStatusChange={updateTaskStatus} 
+                  isDragging={draggedTaskId === task.id}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                />
               ))}
               {tasks.filter(t => t.status === status).length === 0 && (
-                <div className={styles.empty}>No tasks here</div>
+                <div className={`${styles.empty} ${dragOverCol === status ? styles.emptyDragOver : ''}`}>
+                  {dragOverCol === status ? 'Drop task here' : 'No tasks here'}
+                </div>
               )}
             </div>
           </div>
@@ -148,11 +243,87 @@ export default function TasksTab() {
   )
 }
 
-function TaskCard({ task, onStatusChange }) {
-  const [anchorEl, setAnchorEl] = useState(null)
+interface TaskCardProps {
+  task: any
+  onStatusChange: (id: string, status: string) => void
+  isDragging?: boolean
+  onDragStart?: (e: React.DragEvent, taskId: string) => void
+  onDragEnd?: () => void
+  onTouchMove?: (taskId: string, x: number, y: number) => void
+  onTouchEnd?: (taskId: string) => void
+}
+
+function TaskCard({ 
+  task, 
+  onStatusChange,
+  isDragging,
+  onDragStart,
+  onDragEnd,
+  onTouchMove,
+  onTouchEnd
+}: TaskCardProps) {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const isDraggingRef = useRef(false)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const touchMovedRef = useRef(false)
+
+  const handleNativeDragStart = (e: React.DragEvent) => {
+    isDraggingRef.current = true
+    if (onDragStart) onDragStart(e, task.id)
+  }
+
+  const handleNativeDragEnd = () => {
+    if (onDragEnd) onDragEnd()
+    setTimeout(() => {
+      isDraggingRef.current = false
+    }, 120)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0]
+    touchStartRef.current = { x: t.clientX, y: t.clientY }
+    touchMovedRef.current = false
+  }
+
+  const handleTouchMoveInternal = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
+    const t = e.touches[0]
+    const dist = Math.hypot(t.clientX - touchStartRef.current.x, t.clientY - touchStartRef.current.y)
+    if (dist > 8) {
+      touchMovedRef.current = true
+      isDraggingRef.current = true
+      if (onTouchMove) onTouchMove(task.id, t.clientX, t.clientY)
+    }
+  }
+
+  const handleTouchEndInternal = () => {
+    if (touchMovedRef.current) {
+      if (onTouchEnd) onTouchEnd(task.id)
+      setTimeout(() => {
+        isDraggingRef.current = false
+        touchMovedRef.current = false
+      }, 120)
+    }
+    touchStartRef.current = null
+  }
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isDraggingRef.current || touchMovedRef.current) return
+    setAnchorEl(e.currentTarget)
+  }
+
   return (
     <>
-      <div className={styles.taskCard} onClick={(e) => setAnchorEl(e.currentTarget)}>
+      <div 
+        className={`${styles.taskCard} ${isDragging ? styles.taskCardDragging : ''}`} 
+        draggable={true}
+        onDragStart={handleNativeDragStart}
+        onDragEnd={handleNativeDragEnd}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMoveInternal}
+        onTouchEnd={handleTouchEndInternal}
+        onClick={handleClick}
+      >
         <div className={styles.taskTop}>
           <div className={styles.taskTitle}>{task.title}</div>
         </div>
