@@ -97,9 +97,9 @@
 }
 
 .columnDragOver {
-  border-color: var(--accent) !important;
-  background: rgba(56, 189, 248, 0.05) !important;
-  box-shadow: 0 0 24px rgba(56, 189, 248, 0.18) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 20px 20px 20px rgba(0, 0, 0, 0.15) !important;
 }
 
 .colHeader { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
@@ -124,7 +124,7 @@
 }
 .colCards::-webkit-scrollbar { display: none; }
 .empty { text-align: center; color: var(--text3); font-size: 12px; padding: 20px; border: 1px dashed var(--border); border-radius: 8px; flex: 1; width: 100%; transition: all 0.2s; }
-.emptyDragOver { border-color: var(--accent); color: var(--accent); background: rgba(56, 189, 248, 0.08); }
+.emptyDragOver { border-color: rgba(255, 255, 255, 0.16) !important; color: var(--text2) !important; background: rgba(255, 255, 255, 0.03) !important; }
 
 .taskCard {
   background: rgba(255, 255, 255, 0.03);
@@ -145,10 +145,10 @@
 .taskCard:hover { transform: translateY(-2px); box-shadow: 25px 25px 30px rgba(0, 0, 0, 0.2); background: var(--surface2); }
 .taskCard:active { cursor: grabbing; }
 .taskCardDragging {
-  opacity: 0.45;
-  transform: scale(0.96) !important;
-  border-color: var(--accent) !important;
-  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.25) !important;
+  opacity: 0.35;
+  transform: scale(0.98) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
 }
 .popoverOverlay {
   position: fixed;

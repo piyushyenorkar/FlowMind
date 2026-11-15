@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useApp } from '../context/AppContext'
 import Avatar from './Avatar'
@@ -20,13 +20,118 @@ export default function TasksTab() {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
   const [dragOverCol, setDragOverCol] = useState<string | null>(null)
 
+  // Auto-scroll while dragging
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLElement | null>(null)
+  const scrollSpeedRef = useRef<number>(0)
+  const animationFrameRef = useRef<number | null>(null)
+  const isDraggingAnyRef = useRef<boolean>(false)
+
+  // Find scrollable parent container once mounted
+  useEffect(() => {
+    let current = wrapRef.current?.parentElement
+    while (current && current !== document.body) {
+      const style = window.getComputedStyle(current)
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+        scrollContainerRef.current = current
+        break
+      }
+      current = current.parentElement
+    }
+  }, [])
+
+  const stopAutoScroll = () => {
+    scrollSpeedRef.current = 0
+    if (animationFrameRef.current !== null) {
+      cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = null
+    }
+  }
+
+  const startAutoScrollLoop = () => {
+    if (animationFrameRef.current !== null) return
+
+    const loop = () => {
+      const speed = scrollSpeedRef.current
+      if (speed !== 0 && isDraggingAnyRef.current) {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop += speed
+        }
+        window.scrollBy(0, speed)
+        animationFrameRef.current = requestAnimationFrame(loop)
+      } else {
+        animationFrameRef.current = null
+      }
+    }
+
+    animationFrameRef.current = requestAnimationFrame(loop)
+  }
+
+  const updateAutoScroll = (clientY: number) => {
+    if (!isDraggingAnyRef.current) return
+    const container = scrollContainerRef.current
+    const rect = container ? container.getBoundingClientRect() : { top: 0, bottom: window.innerHeight }
+    
+    // Auto-scroll threshold: 140px from edge of viewport / container
+    const threshold = 140
+    const topZone = rect.top + threshold
+    const bottomZone = rect.bottom - threshold
+
+    if (clientY > bottomZone) {
+      // Near bottom -> scroll down
+      const distance = Math.min(threshold, clientY - bottomZone)
+      const ratio = distance / threshold
+      scrollSpeedRef.current = Math.round(ratio * 22) + 6 // speed 6px to 28px per frame
+      startAutoScrollLoop()
+    } else if (clientY < topZone && clientY >= rect.top - 50) {
+      // Near top -> scroll up
+      const distance = Math.min(threshold, topZone - clientY)
+      const ratio = distance / threshold
+      scrollSpeedRef.current = -(Math.round(ratio * 20) + 6)
+      startAutoScrollLoop()
+    } else {
+      scrollSpeedRef.current = 0
+    }
+  }
+
+  // Global dragover to support auto-scrolling across the entire viewport
+  useEffect(() => {
+    const handleGlobalDragOver = (e: DragEvent) => {
+      if (isDraggingAnyRef.current) {
+        e.preventDefault()
+        updateAutoScroll(e.clientY)
+      }
+    }
+
+    const handleGlobalDragEnd = () => {
+      isDraggingAnyRef.current = false
+      stopAutoScroll()
+      setDraggedTaskId(null)
+      setDragOverCol(null)
+    }
+
+    window.addEventListener('dragover', handleGlobalDragOver)
+    window.addEventListener('dragend', handleGlobalDragEnd)
+    window.addEventListener('drop', handleGlobalDragEnd)
+
+    return () => {
+      window.removeEventListener('dragover', handleGlobalDragOver)
+      window.removeEventListener('dragend', handleGlobalDragEnd)
+      window.removeEventListener('drop', handleGlobalDragEnd)
+      stopAutoScroll()
+    }
+  }, [])
+
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    isDraggingAnyRef.current = true
     e.dataTransfer.setData('text/plain', taskId)
     e.dataTransfer.effectAllowed = 'move'
     setDraggedTaskId(taskId)
   }
 
   const handleDragEnd = () => {
+    isDraggingAnyRef.current = false
+    stopAutoScroll()
     setDraggedTaskId(null)
     setDragOverCol(null)
   }
@@ -34,6 +139,7 @@ export default function TasksTab() {
   const handleDragOver = (e: React.DragEvent, status: string) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
+    updateAutoScroll(e.clientY)
     if (dragOverCol !== status) {
       setDragOverCol(status)
     }
@@ -53,6 +159,8 @@ export default function TasksTab() {
 
   const handleDrop = (e: React.DragEvent, targetStatus: string) => {
     e.preventDefault()
+    isDraggingAnyRef.current = false
+    stopAutoScroll()
     const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId
     if (taskId) {
       const task = tasks.find(t => t.id === taskId)
@@ -66,7 +174,10 @@ export default function TasksTab() {
 
   // Touch drag handlers (supports touchscreens & mobile)
   const handleTouchMove = (taskId: string, clientX: number, clientY: number) => {
+    isDraggingAnyRef.current = true
     setDraggedTaskId(taskId)
+    updateAutoScroll(clientY)
+
     const el = document.elementFromPoint(clientX, clientY)
     const colEl = el?.closest('[data-column-status]') as HTMLElement | null
     const colStatus = colEl?.getAttribute('data-column-status')
@@ -78,6 +189,8 @@ export default function TasksTab() {
   }
 
   const handleTouchEnd = (taskId: string) => {
+    isDraggingAnyRef.current = false
+    stopAutoScroll()
     if (dragOverCol) {
       const task = tasks.find(t => t.id === taskId)
       if (task && task.status !== dragOverCol) {
@@ -98,7 +211,7 @@ export default function TasksTab() {
   }
 
   return (
-    <div className={styles.wrap}>
+    <div ref={wrapRef} className={styles.wrap}>
       <div className={styles.topBar}>
         <div className={styles.segmentedControl}>
           <div
