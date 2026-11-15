@@ -168,10 +168,10 @@
 }
 
 .columnExpanded {
-  padding: 24px 4px 16px 24px !important;
+  padding: 24px 8px 16px 8px !important;
 }
 .columnExpanded .colHeader {
-  padding-right: 20px;
+  padding: 0 16px;
 }
 
 .colHeader { 
@@ -264,30 +264,37 @@
   max-height: 520px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 18px;
-  padding-bottom: 8px;
-  padding-top: 4px;
+  padding: 6px 16px 16px 16px;
   margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
 }
 
 .colCardsExpanded::-webkit-scrollbar {
-  width: 2px !important;
+  width: 4px;
 }
 .colCardsExpanded::-webkit-scrollbar-track {
-  background: transparent !important;
+  background: transparent;
+  margin: 8px 0;
 }
 .colCardsExpanded::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-radius: 4px !important;
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 4px;
 }
 .colCardsExpanded::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .colCardsExpanded .taskCard {
   width: 100%;
   min-width: 0;
   flex-shrink: 1;
+}
+
+.colCardsExpanded .taskCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  background: var(--surface2);
 }
 
 .colCardsExpanded .empty {
