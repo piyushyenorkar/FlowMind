@@ -2,11 +2,8 @@
 // Routes through the backend server for secure API key handling and Neo4j integration
 
 import { supabase } from './supabase';
-const BACKEND_URL = (
-  typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:5000'
-    : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000')
-) + '/api'
+const FALLBACK_CLOUD_BACKEND = 'https://flowmind-4otk.onrender.com'
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || FALLBACK_CLOUD_BACKEND).replace(/\/+$/, '') + '/api'
 
 // ── Hindsight Memory ───────────────────────────────────────────────────────────
 
@@ -571,8 +568,8 @@ export async function fetchGitHubActivity(repoUrl: string, token?: string): Prom
     }
   }
 
-  try {
-    const res = await fetch(`${BACKEND_URL}/github/activity`, {
+  const postActivity = async (targetApiUrl: string) => {
+    const res = await fetch(`${targetApiUrl}/github/activity`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -582,22 +579,25 @@ export async function fetchGitHubActivity(repoUrl: string, token?: string): Prom
     })
     if (!res.ok) {
       const errData = await res.json().catch(() => null)
-      return {
-        success: false,
-        repo: repoUrl,
-        owner: '',
-        repoName: '',
-        defaultBranch: 'main',
-        stats: { commitsFetched: 0, openPrCount: 0, closedPrCount: 0, stars: 0, forks: 0 },
-        commits: [],
-        pullRequests: [],
-        contributors: [],
-        error: errData?.error || `GitHub request failed (${res.status})`
-      }
+      throw new Error(errData?.error || `GitHub request failed (${res.status})`)
     }
     return await res.json()
-  } catch (err: any) {
-    console.warn('[GitHub Activity API Error]:', err.message)
+  }
+
+  try {
+    return await postActivity(BACKEND_URL)
+  } catch (primaryErr: any) {
+    // If primary backend failed (e.g. localhost down), auto-fallback to cloud Render backend
+    if (!BACKEND_URL.includes(FALLBACK_CLOUD_BACKEND)) {
+      try {
+        console.info('[GitHub Activity] Primary backend failed, trying cloud fallback...')
+        return await postActivity(`${FALLBACK_CLOUD_BACKEND}/api`)
+      } catch (fallbackErr: any) {
+        console.warn('[GitHub Activity Cloud Fallback Error]:', fallbackErr.message)
+      }
+    }
+
+    console.warn('[GitHub Activity API Error]:', primaryErr.message)
     return {
       success: false,
       repo: repoUrl,
@@ -608,7 +608,7 @@ export async function fetchGitHubActivity(repoUrl: string, token?: string): Prom
       commits: [],
       pullRequests: [],
       contributors: [],
-      error: err.message || 'Network error reaching backend'
+      error: primaryErr.message || 'Network error reaching backend'
     }
   }
 }
